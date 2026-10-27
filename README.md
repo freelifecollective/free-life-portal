@@ -1,5 +1,6 @@
 # Free Life Collective portal
 
+
 Next.js (App Router) on Vercel, Supabase for auth, database and file storage.
 Built so far: phase 1 (foundation) and phase 2 (first-login flow and profiles). See `../BUILD_PLAN.md`.
 
