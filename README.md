@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Free Life Collective portal
 
-## Getting Started
+Next.js (App Router) on Vercel, Supabase for auth, database and file storage.
+Built so far: phase 1 (foundation) and phase 2 (first-login flow and profiles). See `../BUILD_PLAN.md`.
 
-First, run the development server:
+## Run it locally (preview mode, no accounts needed)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000, open /welcome
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+With no Supabase variables set the app runs in **preview mode**: you can go through the whole first-login flow and
+land in the portal; the profile is kept in a cookie and the picture in the browser. Preview mode is switched off in
+production builds.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Connect Supabase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a Supabase project. Copy the project URL and the anon (publishable) key into `.env.local` (see `.env.example`).
+2. Apply the migrations in `supabase/migrations` (Supabase CLI: `supabase db push`, or paste them into the SQL editor).
+3. Authentication > URL configuration: add your site URL and `<site>/auth/callback` as a redirect URL.
+4. Make yourself the first admin (run once, in the SQL editor, after you have signed in once):
+   `update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');`
+5. Roles are changed only by an admin (or in SQL); a member can never change their own role.
 
-## Learn More
+## Checks
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run check        # types, lint, unit tests, database rules
+npm run test:db      # applies the migrations to a throwaway local Postgres and runs the access-rule tests
+npm run e2e:live     # runs the flow against your real Supabase project with throwaway anonymous visitors, then tries to break the access rules
+                     # (turn on Authentication > Sign In / Providers > Allow anonymous sign-ins first, and off again afterwards; delete the test visitors in Authentication > Users)
+npm run e2e          # drives the first-login flow in a browser (needs `npm run dev` running; BASE=http://localhost:3100)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `supabase/migrations`: roles, profiles, username rules, visibility helper (`can_see`), avatar storage, with row level security.
+- `supabase/tests`: SQL tests for those rules.
+- `src/proxy.ts`: refreshes the session and sends signed-out visitors to `/login` (Next.js 16 calls middleware "proxy").
+- `src/lib/auth/session.ts`: the one place that reads the signed-in user (verified with the auth server).
+- `src/components/first-login`: the first-login flow, ported from the approved prototype.
+- `src/lib/avatar`, `src/lib/cutout`: picture generator and background removal.
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Rank is never stored on profiles. It belongs to the Accountability Buddy answers (phase 7) and is private.
+- Background removal uses the `@imgly/background-removal` model with the prototype's built-in approximation as a fallback.
+  Self-host the model files in production and set `NEXT_PUBLIC_CUTOUT_MODEL_URL` (otherwise they load from the vendor's CDN).
+- Sign-in currently lets any email request a link. Phase 3 (lead registration) restricts account creation.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- In a sandbox that sits behind an HTTP proxy, run Node with `NODE_USE_ENV_PROXY=1` so server-side calls to Supabase get through. A normal machine or Vercel does not need this.
