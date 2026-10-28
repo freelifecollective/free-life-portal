@@ -28,6 +28,9 @@ export async function sendMagicLink(_prev: LoginState, form: FormData): Promise<
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect.toString() } });
-  if (error) return { status: "error", message: "We could not send that link. Please try again in a minute." };
-  return { status: "sent", message: "Check your email for your sign-in link." };
+  // An email that has not been invited is refused by the database. Say the same thing as for a real one,
+  // so nobody can use this form to find out who is a member.
+  const notInvited = error && (error.code === "unexpected_failure" || /database error/i.test(error.message));
+  if (error && !notInvited) return { status: "error", message: "We could not send that link. Please try again in a minute." };
+  return { status: "sent", message: "If that email is on our list, a sign-in link is on its way." };
 }

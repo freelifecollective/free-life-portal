@@ -1,15 +1,16 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
 import type { AppSession } from "@/lib/profile/types";
 import { Avatar } from "./Avatar";
 
-type NavItem = { label: string; href?: string; min: Role };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean };
 
-/** Only Home exists so far. The rest appear (as "Soon") in the phase that builds them. */
+/** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead" },
-  { label: "Calendar", min: "lead" },
+  { label: "Calendar", href: "/calendar", min: "lead" },
   { label: "Channels", min: "lead" },
   { label: "Classroom", min: "lead" },
   { label: "Calls", min: "lead" },
@@ -17,6 +18,9 @@ const NAV: NavItem[] = [
   { label: "Accountability Buddy", min: "member" },
   { label: "Commission calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
+  { label: "Admin", min: "admin", admin: true, heading: true },
+  { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true },
+  { label: "People and invites", href: "/admin/people", min: "admin", admin: true },
 ];
 
 export function AppShell({ session, children }: { session: AppSession; children: ReactNode }) {
@@ -36,13 +40,7 @@ export function AppShell({ session, children }: { session: AppSession; children:
       </header>
       <div className="app-body">
         <nav className="nav" aria-label="Main">
-          <ul>
-            {NAV.filter((n) => canSee(p.role, n.min)).map((n) => (
-              <li key={n.label}>
-                {n.href ? <Link href={n.href} aria-current="page">{n.label}</Link> : <span>{n.label}<span className="soon">Soon</span></span>}
-              </li>
-            ))}
-          </ul>
+          <NavLinks items={NAV.filter((n) => canSee(p.role, n.min)).map(({ label, href, heading }) => ({ label, href, heading }))} />
         </nav>
         <main className="main" id="main">{children}</main>
       </div>

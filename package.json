@@ -12,7 +12,8 @@
     "test:db": "bash scripts/test-db.sh",
     "e2e": "node e2e/first-login.mjs",
     "check": "npm run typecheck && npm run lint && npm test && npm run test:db",
-    "e2e:live": "node e2e/live-supabase.mjs"
+    "e2e:live": "node e2e/live-supabase.mjs",
+    "e2e:live-calendar": "node e2e/live-calendar.mjs"
   },
   "dependencies": {
     "@imgly/background-removal": "^1.7.0",

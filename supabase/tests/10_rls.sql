@@ -37,6 +37,7 @@ grant usage on schema tests to anon, authenticated;
 grant execute on all functions in schema tests to anon, authenticated;
 
 -- fixtures: three people (inserting into auth.users fires the profile trigger)
+insert into public.signup_allowlist (email) values ('lead@example.com'), ('member@example.com'), ('admin@example.com');
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'lead@example.com'),
   ('00000000-0000-0000-0000-00000000000b', 'member@example.com'),
