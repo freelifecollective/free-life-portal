@@ -19,13 +19,13 @@ export async function getChat(supabase: SupabaseClient, slug: string): Promise<C
   return (data as ChatInfo | null) ?? null;
 }
 
-type CardRow = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null };
+type CardRow = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; is_admin: boolean };
 
 export async function authorsById(supabase: SupabaseClient, ids: string[]): Promise<Map<string, Author>> {
   const out = new Map<string, Author>();
   if (!ids.length) return out;
-  const { data } = await supabase.from("profile_cards").select("id, first_name, last_name, username, avatar_url").in("id", [...new Set(ids)]);
-  for (const r of (data ?? []) as CardRow[]) out.set(r.id, { id: r.id, name: [r.first_name, r.last_name].filter(Boolean).join(" ") || "Member", username: r.username, avatar_url: r.avatar_url });
+  const { data } = await supabase.from("profile_cards").select("id, first_name, last_name, username, avatar_url, is_admin").in("id", [...new Set(ids)]);
+  for (const r of (data ?? []) as CardRow[]) out.set(r.id, { id: r.id, name: [r.first_name, r.last_name].filter(Boolean).join(" ") || "Member", username: r.username, avatar_url: r.avatar_url, is_admin: !!r.is_admin });
   return out;
 }
 
@@ -47,7 +47,7 @@ export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: st
       ])
     : [{ data: [] }, { data: [] }, { data: [] }];
   const authors = await authorsById(supabase, [...page.map((p) => p.author_id), ...(comments ?? []).map((c) => c.author_id), ...(reactions ?? []).map((r) => r.user_id)]);
-  const who = (id: string): Author => authors.get(id) ?? { id, name: "Member", username: null, avatar_url: null };
+  const who = (id: string): Author => authors.get(id) ?? { id, name: "Member", username: null, avatar_url: null, is_admin: false };
 
   const posts = page.map<PostView>((p) => {
     const rx = (reactions ?? []).filter((r) => r.post_id === p.id);

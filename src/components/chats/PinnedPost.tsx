@@ -21,7 +21,7 @@ export function PinnedPost({ post, slug, voting, isAdmin }: { post: PostView; sl
     <button type="button" className="pinned card-s" onClick={() => setOpen(true)} aria-label={`Important pinned message from ${post.author.name}. Click to read`}>
       <span className="pin-flag"><i className="pin-dot" aria-hidden="true" /><span className="pin-text">IMPORTANT - CLICK TO READ</span></span>
       <span className="pin-body">
-        <span className="who"><Avatar url={post.author.avatar_url} initials={post.author.name.charAt(0).toUpperCase() || "?"} size={32} /><strong>{post.author.name}</strong><span className="when">{formatInZone(new Date(post.created_at))}</span></span>
+        <span className="who"><Avatar url={post.author.avatar_url} initials={post.author.name.charAt(0).toUpperCase() || "?"} size={32} /><span className="who-name"><strong>{post.author.name}</strong>{post.author.is_admin ? <small className="admin-tag">Admin</small> : null}</span><span className="when">{formatInZone(new Date(post.created_at))}</span></span>
         <span className="pin-preview">{post.body}</span>
       </span>
     </button>

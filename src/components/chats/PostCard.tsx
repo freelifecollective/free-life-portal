@@ -13,7 +13,7 @@ function When({ iso }: { iso: string }) {
 
 function Who({ a, size = 40 }: { a: Author; size?: number }) {
   const initials = a.name.charAt(0).toUpperCase() || "?";
-  const inner = <><Avatar url={a.avatar_url} initials={initials} size={size} /><strong>{a.name}</strong></>;
+  const inner = <><Avatar url={a.avatar_url} initials={initials} size={size} /><span className="who-name"><strong>{a.name}</strong>{a.is_admin ? <small className="admin-tag">Admin</small> : null}</span></>;
   return <span className="who">{inner}</span>;
 }
 
