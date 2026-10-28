@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { registerForCall, type RegisterState } from "@/app/register/[callId]/actions";
+import { registerForCall } from "@/app/register/[callId]/actions";
+import type { RegisterState } from "@/lib/registration";
 
 export function RegisterForm({ callId }: { callId: string }) {
   const [state, run, pending] = useActionState(registerForCall.bind(null, callId), { status: "idle", message: "" } as RegisterState);
@@ -17,7 +18,8 @@ export function RegisterForm({ callId }: { callId: string }) {
   }
   return (
     <form action={run} noValidate>
-      <div className="field"><label htmlFor="name">Your name</label><input id="name" name="name" type="text" autoComplete="name" maxLength={80} required /></div>
+      <div className="row"><div className="field"><label htmlFor="first">First name</label><input id="first" name="first" type="text" autoComplete="given-name" maxLength={40} required /></div>
+      <div className="field"><label htmlFor="last">Last name</label><input id="last" name="last" type="text" autoComplete="family-name" maxLength={40} required /></div></div>
       <div className="field" style={{ marginTop: 14 }}><label htmlFor="email">Email</label><input id="email" name="email" type="email" autoComplete="email" inputMode="email" required /></div>
       <label className="check"><input type="checkbox" name="consent" /><span>I agree to receive emails about this call and the Free Life Collective community. I can unsubscribe at any time.</span></label>
       <p className="err" role="alert" style={{ minHeight: 24 }}>{state.status === "error" ? state.message : ""}</p>
