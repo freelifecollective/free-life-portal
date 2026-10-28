@@ -10,7 +10,7 @@ export function LoginForm({ next }: { next: string }) {
   if (state.status === "sent") {
     return (
       <p role="status" className="status ok" style={{ fontSize: 16 }}>
-        {state.message} It can take a minute to arrive.
+        {state.message} It can take a minute to arrive. No email? Check your spam folder, and make sure you use the address you registered with.
       </p>
     );
   }

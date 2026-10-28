@@ -27,3 +27,5 @@ grant select on storage.buckets to anon, authenticated, service_role;
 -- Supabase's default grants on the public schema
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+-- Phase 3 additions: the real auth.users has more columns
+alter table auth.users add column is_anonymous boolean not null default false;
