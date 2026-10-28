@@ -4,6 +4,7 @@ import { ChatList } from "@/components/chats/ChatList";
 import { Composer } from "@/components/chats/Composer";
 import { LiveRefresh } from "@/components/chats/LiveRefresh";
 import { PostCard } from "@/components/chats/PostCard";
+import { canSee } from "@/lib/roles";
 import { requireMember } from "@/lib/auth/guards";
 import { getChat, listChatSections, listPosts } from "@/lib/chats/queries";
 
@@ -22,6 +23,22 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
   if (!supabase) notFound();
   const chat = await getChat(supabase, slug);
   if (!chat) notFound();
+  const role = session.profile.role;
+  if (!canSee(role, chat.min_role)) {
+    const sections = await listChatSections(supabase);
+    return (
+      <>
+        <PageHeading>{chat.name}</PageHeading>
+        <div className="chats">
+          <ChatList sections={sections} current={slug} role={role} />
+          <section className="card-s" style={{ maxWidth: 520 }}>
+            <h2 className="qh" style={{ marginTop: 0 }}>This chat is for affiliates</h2>
+            <p style={{ margin: 0 }}>It unlocks when you join the Free Life Collective as an affiliate. Until then, you are welcome in the New Members chats.</p>
+          </section>
+        </div>
+      </>
+    );
+  }
   const limit = Math.min(300, Math.max(PAGE, Number(Array.isArray(sp.limit) ? sp.limit[0] : sp.limit) || PAGE));
   const [sections, { posts, more }] = await Promise.all([listChatSections(supabase), listPosts(supabase, chat, session.user.id, limit)]);
   const isAdmin = session.profile.role === "admin";
@@ -30,7 +47,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     <>
       <PageHeading lede={chat.description ?? undefined}>{chat.name}</PageHeading>
       <div className="chats">
-        <ChatList sections={sections} current={slug} />
+        <ChatList sections={sections} current={slug} role={role} />
         <div className="chat-main">
           <LiveRefresh />
           <Composer chatId={chat.id} slug={slug} placeholder={chat.votes_on ? "Suggest how to respond…" : "Write a post…"} />

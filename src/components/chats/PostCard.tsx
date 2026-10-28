@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
-import { addComment, deleteComment, deletePost, toggleReaction, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
+import { addComment, deleteComment, deletePost, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
 import { Avatar } from "@/components/Avatar";
-import { COMMENT_MAX, REACTIONS, type Author, type PostView } from "@/lib/chats/types";
+import { COMMENT_MAX, type Author, type PostView } from "@/lib/chats/types";
+import { Reactions } from "./Reactions";
 import { formatInZone } from "@/lib/time";
 
 function When({ iso }: { iso: string }) {
@@ -33,8 +34,6 @@ function CommentForm({ postId, slug }: { postId: string; slug: string }) {
 export function PostCard({ post, slug, voting, isAdmin }: { post: PostView; slug: string; voting: boolean; isAdmin: boolean }) {
   const [, start] = useTransition();
   const [error, setError] = useState("");
-  const [rx, setRx] = useOptimistic(post.reactions, (cur, kind: string) =>
-    cur.map((r) => (r.kind === kind ? { ...r, mine: !r.mine, count: r.count + (r.mine ? -1 : 1) } : r)));
   const [vote, setVote] = useOptimistic({ votes: post.votes, voted: post.voted }, (cur, next: boolean) => (next === cur.voted ? cur : { votes: cur.votes + (next ? 1 : -1), voted: next }));
   const canDelete = post.mine || isAdmin;
 
@@ -51,15 +50,7 @@ export function PostCard({ post, slug, voting, isAdmin }: { post: PostView; slug
       </header>
       <p className="post-body">{post.body}</p>
       <div className="post-actions">
-        {rx.map((r) => {
-          const def = REACTIONS.find((d) => d.kind === r.kind)!;
-          return (
-            <button key={r.kind} type="button" className={"react" + (r.mine ? " on" : "")} aria-pressed={r.mine} aria-label={`${def.label}${r.count ? `, ${r.count}` : ""}`}
-              onClick={() => run(() => toggleReaction(post.id, slug, r.kind, !r.mine), () => setRx(r.kind))}>
-              <span aria-hidden="true">{def.icon}</span>{r.count > 0 ? <span className="n">{r.count}</span> : null}
-            </button>
-          );
-        })}
+        <Reactions postId={post.id} slug={slug} reactions={post.reactions} mine={post.myReaction} onError={setError} />
         {voting && !post.mine ? (
           <button type="button" className={"vote" + (vote.voted ? " on" : "")} aria-pressed={vote.voted}
             onClick={() => run(() => toggleVote(post.id, slug, !vote.voted), () => setVote(!vote.voted))}>

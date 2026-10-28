@@ -43,8 +43,8 @@ create function tests.chat(s text) returns uuid language sql as $$ select id fro
 -- what each audience can see
 do $$ begin
   perform tests.login('00000000-0000-0000-0000-0000000000a3');
-  perform tests.eq('a lead sees the two New Members chats', (select count(*) from public.chats), 2::bigint);
-  perform tests.eq('a lead sees one section', (select count(*) from public.chat_sections), 1::bigint);
+  perform tests.eq('a lead sees every chat name (locked ones show a lock)', (select count(*) from public.chats), 10::bigint);
+  perform tests.eq('a lead sees both sections', (select count(*) from public.chat_sections), 2::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
   perform tests.eq('a member sees all ten chats', (select count(*) from public.chats), 10::bigint);
@@ -67,9 +67,11 @@ do $$ declare pid uuid; begin
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
   perform tests.eq('a member sees the lead post', (select count(*) from public.chat_posts), 1::bigint);
   insert into public.chat_comments (post_id, author_id, body) values (pid, auth.uid(), 'Congrats!');
-  insert into public.chat_reactions (post_id, user_id, kind) values (pid, auth.uid(), 'fire'), (pid, auth.uid(), 'like');
-  perform tests.fails('an unknown reaction is refused', format('insert into public.chat_reactions values (%L, auth.uid(), %L)', pid, 'poop'), '23514');
-  perform tests.eq('reaction recorded', (select count(*) from public.chat_reactions), 2::bigint);
+  insert into public.chat_reactions (post_id, user_id, kind) values (pid, auth.uid(), '🔥');
+  perform tests.fails('letters are not a reaction', format('insert into public.chat_reactions (post_id, user_id, kind) values (%L, auth.uid(), %L)', pid, 'hello'), '23514');
+  perform tests.fails('one reaction per person', format('insert into public.chat_reactions (post_id, user_id, kind) values (%L, auth.uid(), %L)', pid, '👍'), '23505');
+  perform tests.eq('changing your reaction works', tests.rows(format('update public.chat_reactions set kind = %L where post_id = %L', '😂', pid)), 1::bigint);
+  perform tests.eq('reaction recorded with a time', (select count(*) from public.chat_reactions where created_at is not null), 1::bigint);
   perform tests.eq('a member cannot delete someone elses post', tests.rows(format('delete from public.chat_posts where id = %L', pid)), 0::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a3');
@@ -88,7 +90,7 @@ do $$ declare pid uuid; begin
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a3');
   perform tests.eq('a lead cannot see affiliate posts', (select count(*) from public.chat_posts where body = 'Members only'), 0::bigint);
-  perform tests.fails('a lead cannot react there', format('insert into public.chat_reactions values (%L, auth.uid(), %L)', pid, 'like'), '42501');
+  perform tests.fails('a lead cannot react there', format('insert into public.chat_reactions (post_id, user_id, kind) values (%L, auth.uid(), %L)', pid, '👍'), '42501');
   perform tests.logout();
 end $$;
 

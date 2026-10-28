@@ -1,25 +1,27 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
 import { authorsById } from "@/lib/chats/queries";
 
 export const instant = false;
-export const metadata = { title: "How to respond to leads" };
+export const metadata = { title: "Verbiage + Objections" };
 
 type Row = { id: string; author_id: string; body: string; votes: number };
 
 export default async function ResponsesPage() {
-  const { supabase } = await requireMember();
-  if (!supabase) return <><PageHeading>How to respond to leads</PageHeading><p className="page-lede">This needs the database.</p></>;
+  const { session, supabase } = await requireMember();
+  if (session.profile.role === "lead") redirect("/chats");
+  if (!supabase) return <><PageHeading>Verbiage + Objections</PageHeading><p className="page-lede">This needs the database.</p></>;
   const { data } = await supabase.from("top_responses").select("id, author_id, body, votes").order("votes", { ascending: false });
   const rows = (data ?? []) as Row[];
   const authors = await authorsById(supabase, rows.map((r) => r.author_id));
   return (
     <>
-      <PageHeading lede="Answers the community has voted for. An answer appears here once it has more than 15 votes in the Verbiage/Objections chat.">How to respond to leads</PageHeading>
+      <PageHeading lede="How to respond to leads: the answers the community has voted for. An answer appears here once it has more than 15 votes in the Verbiage/Objections chat.">Verbiage + Objections</PageHeading>
       {rows.length === 0 ? (
         <section className="card-s" style={{ maxWidth: 560 }}>
-          <p style={{ margin: 0 }}>Nothing has reached 15 votes yet. Add and vote on answers in <Link href="/chats/verbiage-objections">Verbiage/Objections</Link>.</p>
+          <p style={{ margin: 0 }}>Nothing has reached 15 votes yet. Add and vote on answers in <Link href="/chats/verbiage-objections">Verbiage/Objections chat</Link>.</p>
         </section>
       ) : (
         <div className="chat-main">
