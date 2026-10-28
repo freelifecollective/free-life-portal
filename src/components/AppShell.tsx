@@ -12,6 +12,7 @@ const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead" },
   { label: "Calendar", href: "/calendar", min: "lead" },
   { label: "Chats", href: "/chats", min: "lead" },
+  { label: "Verbiage + Objections", href: "/responses", min: "member" },
   { label: "Classroom", min: "lead" },
   { label: "Calls", min: "lead" },
   { label: "Documents", min: "lead" },

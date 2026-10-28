@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
-import { COMMENT_MAX, POST_MAX, REACTIONS } from "@/lib/chats/types";
+import { EMOJI_SET } from "@/lib/chats/emoji";
+import { COMMENT_MAX, POST_MAX } from "@/lib/chats/types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export type ChatFormState = { error: string; sent?: number };
@@ -36,13 +37,14 @@ export async function addComment(postId: string, slug: string, prev: ChatFormSta
   return { error: "", sent: (prev.sent ?? 0) + 1 };
 }
 
-export async function toggleReaction(postId: string, slug: string, kind: string, on: boolean): Promise<Result> {
-  if (!UUID.test(postId) || !REACTIONS.some((r) => r.kind === kind)) return { ok: false, error: "Something went wrong." };
+/** Choose an emoji, change it, or take it back (emoji = null). One reaction per person per post, like Facebook. */
+export async function setReaction(postId: string, slug: string, emoji: string | null): Promise<Result> {
+  if (!UUID.test(postId) || (emoji !== null && !EMOJI_SET.has(emoji))) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Needs the database." };
-  const { error } = on
-    ? await supabase.from("chat_reactions").upsert({ post_id: postId, user_id: session.user.id, kind }, { onConflict: "post_id,user_id,kind", ignoreDuplicates: true })
-    : await supabase.from("chat_reactions").delete().eq("post_id", postId).eq("user_id", session.user.id).eq("kind", kind);
+  const { error } = emoji
+    ? await supabase.from("chat_reactions").upsert({ post_id: postId, user_id: session.user.id, kind: emoji, created_at: new Date().toISOString() }, { onConflict: "post_id,user_id" })
+    : await supabase.from("chat_reactions").delete().eq("post_id", postId).eq("user_id", session.user.id);
   if (error) return { ok: false, error: "We could not save that." };
   refresh(slug);
   return { ok: true };
