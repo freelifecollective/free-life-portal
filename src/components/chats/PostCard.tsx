@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
-import { addComment, deleteComment, deletePost, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
+import { addComment, deleteComment, deletePost, pinPost, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
 import { Avatar } from "@/components/Avatar";
 import { COMMENT_MAX, type Author, type PostView } from "@/lib/chats/types";
 import { Reactions } from "./Reactions";
@@ -57,6 +57,9 @@ export function PostCard({ post, slug, voting, isAdmin }: { post: PostView; slug
             {vote.voted ? "Voted" : "Vote for this answer"}<span className="n">{vote.votes}</span>
           </button>
         ) : voting ? <span className="vote-count">{vote.votes} {vote.votes === 1 ? "vote" : "votes"}</span> : null}
+        {isAdmin ? (
+          <button type="button" className="linkbtn" onClick={() => run(() => pinPost(post.id, slug, !post.pinned))}>{post.pinned ? "Unpin" : "Pin to top"}</button>
+        ) : null}
         {canDelete ? (
           <button type="button" className="linkbtn danger" onClick={() => { if (window.confirm("Delete this post?")) run(() => deletePost(post.id, slug)); }}>Delete</button>
         ) : null}

@@ -14,6 +14,7 @@ export type PostView = {
   body: string;
   created_at: string;
   edited: boolean;
+  pinned: boolean;
   mine: boolean;
   comments: CommentView[];
   /** One entry per emoji that was used, most popular first. */

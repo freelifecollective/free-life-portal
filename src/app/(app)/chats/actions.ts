@@ -82,3 +82,14 @@ export async function deleteComment(commentId: string, slug: string): Promise<Re
   refresh(slug);
   return { ok: true };
 }
+
+/** Admins only: pin a post to the top of its chat, or take it down again. */
+export async function pinPost(postId: string, slug: string, on: boolean): Promise<Result> {
+  if (!UUID.test(postId)) return { ok: false, error: "Something went wrong." };
+  const { session, supabase } = await requireMember();
+  if (!supabase || session.profile.role !== "admin") return { ok: false, error: "Only admins can pin posts." };
+  const { error } = await supabase.rpc("set_post_pinned", { p_post: postId, p_pinned: on });
+  if (error) return { ok: false, error: "We could not pin that." };
+  refresh(slug);
+  return { ok: true };
+}
