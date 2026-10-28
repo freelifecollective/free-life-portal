@@ -47,7 +47,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
 
   return (
     <>
-      <PageHeading lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading>
+      <PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading>
       <div className="chats">
         <ChatList sections={sections} current={slug} role={role} />
         <div className="chat-main">

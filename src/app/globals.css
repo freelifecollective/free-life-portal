@@ -323,3 +323,6 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .rs-items { margin: 8px 0; padding-left: 18px; overflow-wrap: anywhere; }
 .rs-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
 .rs-actions input { flex: 1 1 220px; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+
+/* chat subtitles stay on one line on desktop (long ones wrap only if the screen is too narrow) */
+@media (min-width: 900px) { .page-lede.chat-lede { max-width: none; } }
