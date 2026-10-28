@@ -30,10 +30,11 @@ export async function authorsById(supabase: SupabaseClient, ids: string[]): Prom
 }
 
 /** Newest first. Comments, reactions and votes are fetched in one go for just these posts. */
-export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: string, limit: number): Promise<{ posts: PostView[]; more: boolean }> {
-  const { data: rows } = await supabase
-    .from("chat_posts").select("id, author_id, body, created_at, edited_at")
-    .eq("chat_id", chat.id).order("created_at", { ascending: false }).limit(limit + 1);
+export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: string, limit: number, pinned = false): Promise<{ posts: PostView[]; more: boolean }> {
+  const base = supabase.from("chat_posts").select("id, author_id, body, created_at, edited_at, pinned_at").eq("chat_id", chat.id);
+  const { data: rows } = await (pinned
+    ? base.not("pinned_at", "is", null).order("pinned_at", { ascending: false }).limit(10)
+    : base.is("pinned_at", null).order("created_at", { ascending: false }).limit(limit + 1));
   const all = rows ?? [];
   const more = all.length > limit;
   const page = all.slice(0, limit);
@@ -52,7 +53,7 @@ export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: st
     const rx = (reactions ?? []).filter((r) => r.post_id === p.id);
     const vs = (votes ?? []).filter((v) => v.post_id === p.id);
     return {
-      id: p.id, author: who(p.author_id), body: p.body, created_at: p.created_at, edited: !!p.edited_at, mine: p.author_id === me,
+      id: p.id, author: who(p.author_id), body: p.body, created_at: p.created_at, edited: !!p.edited_at, pinned: !!p.pinned_at, mine: p.author_id === me,
       comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({ id: c.id, author: who(c.author_id), body: c.body, created_at: c.created_at, mine: c.author_id === me })),
       reactions: summarize(rx, who), myReaction: rx.find((x) => x.user_id === me)?.kind ?? null,
       votes: vs.length, voted: vs.some((v) => v.user_id === me),

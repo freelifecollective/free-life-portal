@@ -37,7 +37,7 @@ update public.profiles set first_name='Lena', last_name='L', username='lenalead'
 update public.profiles set first_name='Ada', last_name='A', username='adaadmin', role='admin', onboarded_at=now() where id='00000000-0000-0000-0000-0000000000a4';
 
 select tests.eq('welcome chat has a lead subtitle', (select description_lead from public.chats where slug='welcome-discussion'), 'Welcome to the family, feel free to introduce yourself and ask any questions you may have.');
-select tests.eq('only Social Media has no subtitle yet', (select count(*) from public.chats where min_role='member' and description is null), 1::bigint);
+select tests.eq('every affiliate chat has a subtitle', (select count(*) from public.chats where min_role='member' and description is null), 0::bigint);
 
 do $$ declare sid uuid; begin
   perform tests.login('00000000-0000-0000-0000-0000000000a1');

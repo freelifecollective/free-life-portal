@@ -3,6 +3,7 @@ import { PageHeading } from "@/components/PageHeading";
 import { ChatList } from "@/components/chats/ChatList";
 import { Composer } from "@/components/chats/Composer";
 import { LiveRefresh } from "@/components/chats/LiveRefresh";
+import { PinnedPost } from "@/components/chats/PinnedPost";
 import { PostCard } from "@/components/chats/PostCard";
 import { canSee } from "@/lib/roles";
 import { SubmitResource } from "@/components/chats/SubmitResource";
@@ -42,7 +43,11 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     );
   }
   const limit = Math.min(300, Math.max(PAGE, Number(Array.isArray(sp.limit) ? sp.limit[0] : sp.limit) || PAGE));
-  const [sections, { posts, more }] = await Promise.all([listChatSections(supabase), listPosts(supabase, chat, session.user.id, limit)]);
+  const [sections, { posts, more }, { posts: pinned }] = await Promise.all([
+    listChatSections(supabase),
+    listPosts(supabase, chat, session.user.id, limit),
+    listPosts(supabase, chat, session.user.id, limit, true),
+  ]);
   const isAdmin = session.profile.role === "admin";
 
   return (
@@ -54,7 +59,8 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
           <LiveRefresh />
           {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
           <Composer chatId={chat.id} slug={slug} placeholder={chat.votes_on ? "Suggest how to respond…" : "Write a post…"} />
-          {posts.length === 0 ? <p className="page-lede">Nothing here yet. Be the first to post!</p> : null}
+          {pinned.map((p) => <PinnedPost key={p.id} post={p} slug={slug} voting={chat.votes_on} isAdmin={isAdmin} />)}
+          {posts.length === 0 && pinned.length === 0 ? <p className="page-lede">Nothing here yet. Be the first to post!</p> : null}
           {posts.map((p) => <PostCard key={p.id} post={p} slug={slug} voting={chat.votes_on} isAdmin={isAdmin} />)}
           {more ? <p><a className="btn" href={`/chats/${slug}?limit=${limit + PAGE}`}>Show older posts</a></p> : null}
         </div>
