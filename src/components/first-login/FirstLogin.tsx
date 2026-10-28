@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { saveAvatar } from "@/app/(app)/settings/actions";
 import { saveProfileAction } from "@/app/welcome/actions";
 import { PREVIEW_AVATAR_KEY } from "@/components/Avatar";
 import { renderAvatar } from "@/lib/avatar/render";
@@ -29,11 +31,15 @@ const KEEP = "flc_welcome";
 const INTRO_SEEN = "flc_intro_seen";
 type Saved = Pick<Flow, "first" | "last" | "username" | "usernameFor" | "ig" | "fb" | "fbSame" | "igTouched">;
 
-export function FirstLogin({ env, alreadyOnboarded }: { env: Env; alreadyOnboarded: boolean }) {
+export function FirstLogin({ env, alreadyOnboarded, pictureOnly }: {
+  env: Env; alreadyOnboarded: boolean;
+  /** Set when a finished member is only changing their picture (from Settings). */
+  pictureOnly?: { first: string; last: string; username: string };
+}) {
   const router = useRouter();
   /* only the value at first load counts: saving flips it, and the flow must not jump away mid-way */
   const [wasOnboarded] = useState(alreadyOnboarded);
-  const [f, setF] = useState<Flow>(freshFlow);
+  const [f, setF] = useState<Flow>(() => (pictureOnly ? { ...freshFlow(), ...pictureOnly } : freshFlow()));
   const fRef = useRef(f);
   useEffect(() => { fRef.current = f; });
   const [step, setStep] = useState<StepId | null>(null);
@@ -67,6 +73,7 @@ export function FirstLogin({ env, alreadyOnboarded }: { env: Env; alreadyOnboard
 
   /* start: restore typed answers, then play the intro once per visit */
   useEffect(() => {
+    if (pictureOnly) { queueMicrotask(() => { setIntro("done"); move("picture", false); }); return; }
     if (wasOnboarded) { router.replace("/"); return; }
     queueMicrotask(() => {
       try {
@@ -77,7 +84,7 @@ export function FirstLogin({ env, alreadyOnboarded }: { env: Env; alreadyOnboard
       try { seen = sessionStorage.getItem(INTRO_SEEN) === "1"; } catch { /* ignore */ }
       if (seen) { setIntro("done"); move("name", false); } else setIntro("playing");
     });
-  }, [move, router, wasOnboarded]);
+  }, [move, router, wasOnboarded, pictureOnly]);
 
   /* keep typed answers if the page is refreshed */
   useEffect(() => {
@@ -108,6 +115,14 @@ export function FirstLogin({ env, alreadyOnboarded }: { env: Env; alreadyOnboard
       } else {
         try { localStorage.setItem(PREVIEW_AVATAR_KEY, s.pic.url); } catch { /* picture just will not show in the shell */ }
       }
+      if (pictureOnly) {
+        if (env.mode === "supabase") {
+          const r = await saveAvatar(KIND_OF[s.mode], avatarUrl ?? "");
+          if (!r.ok) { set({ saveError: r.error ?? "We could not save your picture." }); return; }
+        }
+        router.push("/settings");
+        return;
+      }
       const r = await saveProfileAction({
         first: s.first, last: s.last, username: s.username, instagram: s.ig, facebook: s.fb,
         avatarKind: KIND_OF[s.mode], avatarUrl,
@@ -126,7 +141,7 @@ export function FirstLogin({ env, alreadyOnboarded }: { env: Env; alreadyOnboard
     } finally { setSaving(false); }
   }
 
-  if (wasOnboarded) return null;
+  if (wasOnboarded && !pictureOnly) return null;
   const p: StepProps = { f, set, go, goBack, env };
   const dots = step ? DOT_OF[step] : 0;
 
@@ -141,6 +156,7 @@ export function FirstLogin({ env, alreadyOnboarded }: { env: Env; alreadyOnboard
           ) : null}
           <div className="brand">Free Life Collective</div>
         </div>
+        {pictureOnly ? <Link className="linkbtn" href="/settings" style={{ marginLeft: "auto" }}>Cancel</Link> : null}
         <div className="dots" role="img" aria-label={`Step ${Math.min(dots + 1, 4)} of 4`}>
           {[0, 1, 2, 3].map((i) => <i key={i} className={i <= dots ? "on" : ""} />)}
         </div>

@@ -339,3 +339,20 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .pin-preview { white-space: pre-wrap; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 @keyframes pin-flash { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(217,45,32,.5); } 50% { opacity: .25; box-shadow: 0 0 0 6px rgba(217,45,32,0); } }
 @media (prefers-reduced-motion: reduce) { .pin-dot { animation: none; } }
+
+/* admin tag, settings */
+.who-name { display: inline-flex; flex-direction: column; line-height: 1.2; }
+.admin-tag { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-deep); }
+.avatar-link { display: inline-flex; border-radius: 50%; }
+.avatar-link:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+.settings { display: flex; flex-direction: column; gap: 18px; max-width: 620px; }
+.set-head { gap: 16px; }
+.set-form { display: flex; flex-direction: column; gap: 14px; }
+.set-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 480px) { .set-form .row { grid-template-columns: 1fr; } }
+.set-form input[type="text"], .set-form input[type="email"], .set-form select { width: 100%; }
+.set-actions { display: flex; align-items: center; gap: 14px; }
+.set-list { margin: 0; display: grid; gap: 8px; }
+.set-list > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.set-list dt { font-weight: 600; } .set-list dd { margin: 0; color: var(--muted); }
+.qh { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 28px 0 12px; }

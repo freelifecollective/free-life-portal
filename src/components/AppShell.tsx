@@ -36,7 +36,7 @@ export function AppShell({ session, badges = {}, children }: { session: AppSessi
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
         <div className="top-right">
-          <Avatar url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} />
+          <Link href="/settings" className="avatar-link" aria-label="Your profile and settings"><Avatar url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} /></Link>
           <form action="/logout" method="post"><button className="linkbtn" type="submit" style={{ padding: "8px 4px" }}>Sign out</button></form>
         </div>
       </header>
