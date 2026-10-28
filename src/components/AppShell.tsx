@@ -21,10 +21,11 @@ const NAV: NavItem[] = [
   { label: "Graphic maker", min: "member" },
   { label: "Admin", min: "admin", admin: true, heading: true },
   { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true },
+  { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true },
   { label: "People and invites", href: "/admin/people", min: "admin", admin: true },
 ];
 
-export function AppShell({ session, children }: { session: AppSession; children: ReactNode }) {
+export function AppShell({ session, badges = {}, children }: { session: AppSession; badges?: Record<string, number>; children: ReactNode }) {
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   return (
@@ -41,7 +42,7 @@ export function AppShell({ session, children }: { session: AppSession; children:
       </header>
       <div className="app-body">
         <nav className="nav" aria-label="Main">
-          <NavLinks items={NAV.filter((n) => canSee(p.role, n.min)).map(({ label, href, heading }) => ({ label, href, heading }))} />
+          <NavLinks items={NAV.filter((n) => canSee(p.role, n.min)).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined }))} />
         </nav>
         <main className="main" id="main">{children}</main>
       </div>

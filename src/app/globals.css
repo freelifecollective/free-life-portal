@@ -311,3 +311,15 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .rx-tip li { display: flex; flex-direction: column; padding: 5px 0; font-size: 14px; }
 .rx-tip li + li { border-top: 1px solid var(--line); }
 .rx-tip span { color: var(--muted); font-size: 12px; }
+
+/* resource submissions, nav badge */
+.badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 8px; border-radius: 999px; background: #d92d20; color: #fff; font-size: 12px; font-weight: 700; line-height: 1; }
+.rs-dialog { border: 0; border-radius: 16px; padding: 26px; width: min(560px, calc(100vw - 32px)); max-height: 90dvh; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.rs-dialog::backdrop { background: rgba(0,0,0,.45); }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.rs-mine { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.rs-mine li { display: flex; justify-content: space-between; gap: 12px; }
+.rs-status { font-weight: 600; } .rs-status.accepted { color: #1a7f4b; } .rs-status.declined { color: #9b2c2c; } .rs-status.pending { color: var(--muted); }
+.rs-items { margin: 8px 0; padding-left: 18px; overflow-wrap: anywhere; }
+.rs-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.rs-actions input { flex: 1 1 220px; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }

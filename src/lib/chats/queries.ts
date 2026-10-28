@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Author, ChatInfo, ChatSection, PostView } from "./types";
 import type { Role } from "@/lib/roles";
 
-const CHAT_COLUMNS = "id, section_id, slug, name, description, sort, votes_on, min_role";
+const CHAT_COLUMNS = "id, section_id, slug, name, description, sort, votes_on, min_role, description_lead";
 
 /** Sections and their chats. Row level security hides what this person may not see. */
 export async function listChatSections(supabase: SupabaseClient): Promise<ChatSection[]> {
