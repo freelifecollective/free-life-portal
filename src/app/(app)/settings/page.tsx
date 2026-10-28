@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { PageHeading } from "@/components/PageHeading";
+import { InstallApp } from "@/components/settings/InstallApp";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { requireMember } from "@/lib/auth/guards";
 
@@ -52,6 +53,12 @@ export default async function SettingsPage() {
             <p className="when" style={{ margin: "10px 0 0" }}>These will fill in once monthly payments are connected to the portal.</p>
           </section>
         ) : null}
+
+        <section className="card-s">
+          <h2 className="qh" style={{ marginTop: 0 }}>The app</h2>
+          <p className="when" style={{ margin: "0 0 12px" }}>Put the portal on your home screen so it opens like an app. It is free and needs no app store.</p>
+          <InstallApp />
+        </section>
 
         <section className="card-s">
           <h2 className="qh" style={{ marginTop: 0 }}>General</h2>
