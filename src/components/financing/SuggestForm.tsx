@@ -1,10 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { suggestFinancing, type FinancingState } from "@/app/(app)/financing/actions";
+import { addFinancing, suggestFinancing, type FinancingState } from "@/app/(app)/financing/actions";
 
 export function SuggestForm({ isAdmin }: { isAdmin: boolean }) {
-  const [state, action, pending] = useActionState(suggestFinancing, { error: "" } as FinancingState);
+  const [state, action, pending] = useActionState(isAdmin ? addFinancing : suggestFinancing, { error: "" } as FinancingState);
   const form = useRef<HTMLFormElement>(null);
   useEffect(() => { if (state.sent) form.current?.reset(); }, [state]);
   return (
@@ -16,7 +16,7 @@ export function SuggestForm({ isAdmin }: { isAdmin: boolean }) {
       <div className="field"><label htmlFor="f-l">Link (optional)</label><input id="f-l" name="link" type="text" inputMode="url" placeholder="https://" /></div>
       <div className="set-actions">
         <button className="btn primary" type="submit" disabled={pending}>{pending ? "Sending…" : isAdmin ? "Add to the list" : "Submit for review"}</button>
-        <span role="status" className="when">{state.sent ? (state.approved ? "Added." : "Thank you! We will review it and let you know.") : ""}</span>
+        <span role="status" className="when">{state.sent ? (state.approved ? "Added." : "Submitted successfully. Thank you for your submission and helping to improve our community!") : ""}</span>
       </div>
       <p className="err" role="alert">{state.error}</p>
     </form>

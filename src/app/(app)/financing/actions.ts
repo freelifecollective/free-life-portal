@@ -5,8 +5,8 @@ import { requireMember } from "@/lib/auth/guards";
 
 export type FinancingState = { error: string; sent?: number; approved?: boolean };
 
-/** An affiliate suggests an option (waits for review). An admin's suggestion is approved straight away. */
-export async function suggestFinancing(_prev: FinancingState, form: FormData): Promise<FinancingState> {
+/** Anyone suggesting an option sends it for review. Admins publish directly from the Admin page instead (`direct`). */
+async function save(direct: boolean, form: FormData): Promise<FinancingState> {
   const title = String(form.get("title") ?? "").trim();
   const description = String(form.get("description") ?? "").trim();
   const link = String(form.get("link") ?? "").trim();
@@ -16,7 +16,8 @@ export async function suggestFinancing(_prev: FinancingState, form: FormData): P
   const { session, supabase } = await requireMember();
   if (!supabase) return { error: "Needs the database." };
   if (session.profile.role === "lead") return { error: "Only affiliates can suggest financing options." };
-  const admin = session.profile.role === "admin";
+  const admin = direct && session.profile.role === "admin";
+  if (direct && !admin) return { error: "Only admins can publish directly." };
   const { error } = await supabase.from("financing_options").insert({
     title, description, link: link || null, submitted_by: session.user.id,
     ...(admin ? { status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: session.user.id } : {}),
@@ -28,3 +29,6 @@ export async function suggestFinancing(_prev: FinancingState, form: FormData): P
   revalidatePath("/financing"); revalidatePath("/admin/financing"); revalidatePath("/", "layout");
   return { error: "", sent: 1, approved: admin };
 }
+
+export async function suggestFinancing(_prev: FinancingState, form: FormData): Promise<FinancingState> { return save(false, form); }
+export async function addFinancing(_prev: FinancingState, form: FormData): Promise<FinancingState> { return save(true, form); }

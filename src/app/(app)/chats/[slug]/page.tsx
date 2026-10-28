@@ -31,8 +31,8 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     const sections = await listChatSections(supabase);
     return (
       <>
-        <PageHeading>{chat.name}</PageHeading>
         <div className="chats">
+          <div className="chats-head"><PageHeading>{chat.name}</PageHeading></div>
           <ChatList sections={sections} current={slug} role={role} />
           <section className="card-s" style={{ maxWidth: 520 }}>
             <h2 className="qh" style={{ marginTop: 0 }}>This chat is for affiliates</h2>
@@ -52,8 +52,8 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
 
   return (
     <>
-      <PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading>
       <div className="chats">
+        <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
         <ChatList sections={sections} current={slug} role={role} />
         <div className="chat-main">
           <LiveRefresh />

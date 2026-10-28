@@ -139,6 +139,17 @@ async function nameAndUsername(p, first, last, wantUsername) {
   ok(/soon/i.test(await p.locator(".nav").innerText()) && !/accountability/i.test(await p.locator(".nav").innerText()), "a lead does not see member-only items");
   ok(await p.locator(".app-top .avatar").first().isVisible(), "profile picture appears in the header");
   await shot(p, "portal");
+  /* phone: the tabs sit behind a three-line button */
+  await p.setViewportSize({ width: 390, height: 800 });
+  ok(await p.locator(".menu-btn").isVisible() && !(await p.locator(".nav").isVisible()), "phone: tabs are hidden until the menu button is pressed");
+  await p.click(".menu-btn");
+  ok(await p.locator(".nav").isVisible() && (await p.locator(".nav").innerText()).includes("Calendar"), "phone: the menu button opens the tabs");
+  await shot(p, "phone-menu");
+  await p.click(".nav >> text=Calendar");
+  await p.waitForURL(/calendar/);
+  ok(!(await p.locator(".nav").isVisible()), "phone: choosing a tab closes the menu");
+  await p.setViewportSize({ width: 1000, height: 900 });
+  await p.goto(BASE + "/");
   /* a finished member cannot re-run the flow */
   await p.goto(BASE + "/welcome");
   await p.waitForURL(BASE + "/");
