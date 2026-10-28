@@ -56,7 +56,7 @@ export function PostCard({ post, slug, voting, isAdmin }: { post: PostView; slug
             onClick={() => run(() => toggleVote(post.id, slug, !vote.voted), () => setVote(!vote.voted))}>
             {vote.voted ? "Voted" : "Vote for this answer"}<span className="n">{vote.votes}</span>
           </button>
-        ) : voting ? <span className="vote-count">{vote.votes} {vote.votes === 1 ? "vote" : "votes"}</span> : null}
+        ) : voting ? <span className="vote-count">{vote.votes} {vote.votes === 1 ? "vote" : "votes"} · you cannot vote for your own answer</span> : null}
         {isAdmin ? (
           <button type="button" className="linkbtn" onClick={() => run(() => pinPost(post.id, slug, !post.pinned))}>{post.pinned ? "Unpin" : "Pin to top"}</button>
         ) : null}
