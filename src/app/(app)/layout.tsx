@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { pendingFinancingCount } from "@/lib/financing/queries";
 import { pendingSubmissionCount } from "@/lib/resources/queries";
 
 /* Every page here depends on who is signed in, so it renders per request. Revisit when adopting instant navigation. */
@@ -14,7 +15,12 @@ async function SessionGate({ children }: { children: ReactNode }) {
   if (!session) redirect("/login");
   if (!session.profile.onboarded_at) redirect("/welcome");
   const badges: Record<string, number> = {};
-  if (session.mode === "supabase" && session.profile.role === "admin") badges["/admin/resources"] = await pendingSubmissionCount(await createClient());
+  if (session.mode === "supabase" && session.profile.role === "admin") {
+    const supabase = await createClient();
+    const [resources, financing] = await Promise.all([pendingSubmissionCount(supabase), pendingFinancingCount(supabase)]);
+    badges["/admin/resources"] = resources;
+    badges["/admin/financing"] = financing;
+  }
   return (
     <AppShell session={session} badges={badges}>
       <Suspense fallback={<div aria-busy="true" style={{ minHeight: 240 }} />}>{children}</Suspense>
