@@ -22,7 +22,7 @@ export default async function FinancingPage() {
             {o.link ? <a className="btn small" href={o.link} target="_blank" rel="noopener noreferrer nofollow" style={{ textDecoration: "none" }}>Learn more</a> : null}
           </article>
         ))}
-        {role !== "lead" ? <SuggestForm isAdmin={role === "admin"} /> : null}
+        {role !== "lead" ? <SuggestForm isAdmin={false} /> : null}
         {mine.length ? (
           <section className="card-s">
             <h2 className="qh" style={{ marginTop: 0 }}>Your suggestions</h2>
