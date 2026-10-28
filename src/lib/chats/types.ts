@@ -3,7 +3,7 @@ import type { Role } from "@/lib/roles";
 export const POST_MAX = 4000;
 export const COMMENT_MAX = 2000;
 
-export type ChatInfo = { id: string; section_id: number; slug: string; name: string; description: string | null; sort: number; votes_on: boolean; min_role: Role };
+export type ChatInfo = { id: string; section_id: number; slug: string; name: string; description: string | null; sort: number; votes_on: boolean; min_role: Role; description_lead: string | null };
 export type ChatSection = { id: number; name: string; min_role: Role; chats: ChatInfo[] };
 
 export type Author = { id: string; name: string; username: string | null; avatar_url: string | null };

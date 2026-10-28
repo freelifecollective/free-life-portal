@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getSession } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
+import { pendingSubmissionCount } from "@/lib/resources/queries";
 
 /* Every page here depends on who is signed in, so it renders per request. Revisit when adopting instant navigation. */
 export const instant = false;
@@ -11,8 +13,10 @@ async function SessionGate({ children }: { children: ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (!session.profile.onboarded_at) redirect("/welcome");
+  const badges: Record<string, number> = {};
+  if (session.mode === "supabase" && session.profile.role === "admin") badges["/admin/resources"] = await pendingSubmissionCount(await createClient());
   return (
-    <AppShell session={session}>
+    <AppShell session={session} badges={badges}>
       <Suspense fallback={<div aria-busy="true" style={{ minHeight: 240 }} />}>{children}</Suspense>
     </AppShell>
   );

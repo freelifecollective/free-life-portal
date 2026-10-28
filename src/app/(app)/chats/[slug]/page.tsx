@@ -5,7 +5,9 @@ import { Composer } from "@/components/chats/Composer";
 import { LiveRefresh } from "@/components/chats/LiveRefresh";
 import { PostCard } from "@/components/chats/PostCard";
 import { canSee } from "@/lib/roles";
+import { SubmitResource } from "@/components/chats/SubmitResource";
 import { requireMember } from "@/lib/auth/guards";
+import { mySubmissions } from "@/lib/resources/queries";
 import { getChat, listChatSections, listPosts } from "@/lib/chats/queries";
 
 export const instant = false;
@@ -45,11 +47,12 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
 
   return (
     <>
-      <PageHeading lede={chat.description ?? undefined}>{chat.name}</PageHeading>
+      <PageHeading lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading>
       <div className="chats">
         <ChatList sections={sections} current={slug} role={role} />
         <div className="chat-main">
           <LiveRefresh />
+          {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
           <Composer chatId={chat.id} slug={slug} placeholder={chat.votes_on ? "Suggest how to respond…" : "Write a post…"} />
           {posts.length === 0 ? <p className="page-lede">Nothing here yet. Be the first to post!</p> : null}
           {posts.map((p) => <PostCard key={p.id} post={p} slug={slug} voting={chat.votes_on} isAdmin={isAdmin} />)}
