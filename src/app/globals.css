@@ -122,9 +122,12 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .app-body { display: grid; grid-template-columns: 220px minmax(0, 1fr); }
 @media (max-width: 768px) { .app-body { grid-template-columns: minmax(0, 1fr); } .search { display: none; } .top-right { margin-left: auto; } }
 .nav { padding: 20px 12px 20px max(12px, env(safe-area-inset-left)); border-right: 1px solid var(--line); }
+.menu-btn { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; color: var(--ink); cursor: pointer; }
 @media (max-width: 768px) {
-  .nav { border-right: 0; border-bottom: 1px solid var(--line); padding: 8px 16px; overflow-x: auto; }
-  .nav ul { display: flex; gap: 6px; }
+  .menu-btn { display: inline-flex; }
+  .nav { display: none; position: fixed; z-index: 15; inset: 0; top: calc(env(safe-area-inset-top, 0px) + 69px); background: var(--bg); border-right: 0; padding: 12px 16px 40px; overflow-y: auto; }
+  .nav.open { display: block; }
+  .nav li > * { padding: 14px; font-size: 16px; }
 }
 .nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .nav li > * {
@@ -171,7 +174,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .day-label + .call-card { margin-bottom: 12px; }
 .call-card + .call-card { margin-top: 12px; }
 .nav .nav-heading { font-family: var(--font-label); font-weight: 600; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); padding: 18px 14px 6px; display: block; }
-@media (max-width: 768px) { .nav .nav-heading { display: none; } }
+@media (max-width: 768px) { .nav .nav-heading { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 16px; border-radius: 0; } }
 
 /* Admin */
 .admin-form { display: grid; gap: 16px; }
@@ -268,7 +271,10 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .check input { width: 20px; height: 20px; accent-color: var(--accent); margin: 1px 0 0; flex: none; cursor: pointer; }
 
 /* ---------------------------------------------------------------- chats */
-.chats { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start; max-width: 1000px; }
+.chats { display: grid; grid-template-columns: 240px minmax(0, 1fr); grid-template-areas: "head head" "list main"; column-gap: 32px; row-gap: 0; align-items: start; max-width: 1000px; }
+.chats-head { grid-area: head; }
+.chats > .chat-list { grid-area: list; }
+.chats > .chat-main, .chats > .card-s { grid-area: main; }
 .chat-list section + section { margin-top: 22px; }
 .chat-section { font-family: var(--font-label); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 8px; color: var(--ink); }
 .chat-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -295,7 +301,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .comments .linkbtn { margin: 0 0 0 36px; padding: 2px 0; font-size: 13px; }
 .comment-form { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .comment-form input { flex: 1 1 200px; padding: 9px 12px; }
-@media (max-width: 760px) { .chats { grid-template-columns: 1fr; gap: 18px; } .chat-list ul { flex-direction: row; flex-wrap: wrap; } }
+@media (max-width: 760px) { .chats { grid-template-columns: minmax(0, 1fr); grid-template-areas: "list" "head" "main"; row-gap: 18px; } .chats-head { margin-top: 6px; } .chat-list ul { flex-direction: row; flex-wrap: wrap; } }
 
 /* chats: locked, reactions */
 .chat-list .locked { opacity: 0.55; }
