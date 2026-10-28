@@ -266,3 +266,33 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .handle input { padding-left: 38px !important; }
 .check { display: flex; gap: 12px; align-items: flex-start; margin: 18px 0 16px; cursor: pointer; font-size: 15px; line-height: 1.45; }
 .check input { width: 20px; height: 20px; accent-color: var(--accent); margin: 1px 0 0; flex: none; cursor: pointer; }
+
+/* ---------------------------------------------------------------- chats */
+.chats { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start; max-width: 1000px; }
+.chat-list section + section { margin-top: 22px; }
+.chat-section { font-family: var(--font-label); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin: 0 0 8px; color: var(--ink); }
+.chat-list ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.chat-list a { display: block; padding: 8px 12px; border-radius: 8px; color: var(--ink); text-decoration: none; font-size: 15px; }
+.chat-list a:hover { background: var(--surface); }
+.chat-list a[aria-current="page"] { background: var(--tint); font-weight: 600; }
+.chat-answers { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 14px !important; font-weight: 600; }
+.chat-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.composer textarea, .comment-form input { width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fff; resize: vertical; }
+.composer-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+.post-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.who { display: inline-flex; align-items: center; gap: 10px; }
+.when { color: var(--muted); font-size: 13px; }
+.post-body { white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0; line-height: 1.55; }
+.post-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.react, .vote { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 14px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; }
+.react.on, .vote.on { background: var(--tint); border-color: var(--accent-deep); }
+.react:hover, .vote:hover { background: var(--surface); }
+.n { font-weight: 600; font-size: 13px; }
+.vote-count { color: var(--muted); font-size: 14px; }
+.danger { color: #9b2c2c; margin-left: auto; padding: 6px 4px; }
+.comments { list-style: none; margin: 14px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+.comments p { margin: 4px 0 0 36px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.comments .linkbtn { margin: 0 0 0 36px; padding: 2px 0; font-size: 13px; }
+.comment-form { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.comment-form input { flex: 1 1 200px; padding: 9px 12px; }
+@media (max-width: 760px) { .chats { grid-template-columns: 1fr; gap: 18px; } .chat-list ul { flex-direction: row; flex-wrap: wrap; } }
