@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { isReserved } from "@/lib/username";
 
 const PUBLIC_PREFIXES = ["/login", "/auth", "/register"];
 
@@ -24,7 +25,9 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const signedIn = Boolean(data?.claims?.sub);
   const path = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+  // A single word that is not one of the portal's own pages is a member's public landing page (/their-username).
+  const isLanding = /^\/[a-z0-9_-]{3,30}\/?$/i.test(path) && !isReserved(path.replace(/\//g, ""));
+  const isPublic = isLanding || PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
 
   if (!signedIn && !isPublic) {
     const url = request.nextUrl.clone();

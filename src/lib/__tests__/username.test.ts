@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { RESERVED_USERNAMES, checkUsernameFormat, makeUsername, slug } from "../username";
@@ -49,10 +49,19 @@ describe("makeUsername", () => {
 });
 
 describe("reserved list", () => {
-  it("matches the database seed exactly", () => {
-    const sql = readFileSync(join(__dirname, "../../../supabase/migrations/0001_foundation.sql"), "utf8");
-    const block = sql.slice(sql.indexOf("insert into public.reserved_usernames"), sql.indexOf("alter table public.reserved_usernames"));
-    const inDb = [...block.matchAll(/\('([a-z0-9_-]+)'\)/g)].map((m) => m[1]).sort();
-    expect([...RESERVED_USERNAMES].sort()).toEqual(inDb);
+  it("matches the database seed exactly (all migrations together)", () => {
+    const dir = join(__dirname, "../../../supabase/migrations");
+    const inDb = new Set<string>();
+    for (const f of readdirSync(dir).filter((x) => x.endsWith(".sql"))) {
+      const sql = readFileSync(join(dir, f), "utf8");
+      for (const m of sql.matchAll(/insert into public\.reserved_usernames \(username\) values([\s\S]*?)(?:on conflict do nothing)?;/g)) {
+        for (const v of m[1].matchAll(/\('([a-z0-9_-]+)'\)/g)) inDb.add(v[1]);
+      }
+    }
+    expect([...RESERVED_USERNAMES].sort()).toEqual([...inDb].sort());
+  });
+  it("covers every top-level page of the site", () => {
+    const pages = ["admin", "login", "auth", "logout", "calendar", "register", "welcome", "api"];
+    for (const p of pages) expect(RESERVED_USERNAMES as readonly string[]).toContain(p);
   });
 });

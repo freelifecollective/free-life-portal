@@ -29,3 +29,5 @@ alter default privileges in schema public grant all on tables to anon, authentic
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 -- Phase 3 additions: the real auth.users has more columns
 alter table auth.users add column is_anonymous boolean not null default false;
+-- Phase 4 additions
+create publication supabase_realtime;

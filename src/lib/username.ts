@@ -6,6 +6,8 @@ export const RESERVED_USERNAMES = [
   "calendar", "classroom", "profile", "dashboard", "team", "calls", "documents", "search",
   "welcome", "auth", "logout", "signup", "channels", "courses", "recordings", "buddy",
   "calculator", "graphics", "messages", "notifications", "onboarding", "privacy", "terms",
+  "register", "join", "invite", "home", "public", "static", "assets", "images", "favicon", "robots", "sitemap",
+  "manifest", "unsubscribe", "thanks", "links",
 ] as const;
 
 export type UsernameProblem = "too_short" | "too_long" | "bad_chars" | "reserved" | "taken";
