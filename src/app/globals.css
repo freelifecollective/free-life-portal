@@ -918,3 +918,6 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 }
 .account .settings { margin-top: 10px; }
 .account .fl { max-width: none; padding: 0 0 56px; }
+.bq-restart { display: flex; justify-content: flex-end; margin: -14px 0 20px; }
+.bq-top { justify-content: flex-start; }
+.bq-restart .linkbtn { padding-right: 0; }
