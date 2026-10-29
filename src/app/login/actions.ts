@@ -31,6 +31,9 @@ export async function sendMagicLink(_prev: LoginState, form: FormData): Promise<
   // An email that has not been invited is refused by the database. Say the same thing as for a real one,
   // so nobody can use this form to find out who is a member.
   const notInvited = error && (error.code === "unexpected_failure" || /database error/i.test(error.message));
+  if (error && (error.status === 429 || error.code === "over_email_send_rate_limit" || /rate limit/i.test(error.message))) {
+    return { status: "error", message: "Too many sign-in emails have been requested. Please wait about an hour and try again." };
+  }
   if (error && !notInvited) return { status: "error", message: "We could not send that link. Please try again in a minute." };
   return { status: "sent", message: "If that email is on our list, a sign-in link is on its way." };
 }
