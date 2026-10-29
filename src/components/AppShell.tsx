@@ -23,7 +23,7 @@ const NAV: NavItem[] = [
   { label: "Calls", min: "lead" },
   { label: "Documents", min: "lead" },
   { label: "Accountability Buddy", min: "member" },
-  { label: "Commission calculator", min: "member" },
+  { label: "Commission calculator", href: "/calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
   { label: "Admin only", min: "admin", admin: true, heading: true },
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true },
