@@ -471,3 +471,9 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .star-pick { display: flex; gap: 2px; }
 .star-pick button { border: 0; background: none; font-size: 26px; line-height: 1; cursor: pointer; color: #d6cfc6; padding: 2px 4px; }
 .star-pick button.on { color: #c28a1e; }
+.offer-pick { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 16px; background: #fff; }
+.offer-pick legend { padding: 0 6px; font-weight: 600; font-size: 14px; }
+.provider-head { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.offer-label { margin: 12px 0 6px; font-family: var(--font-label); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.provider-more { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.rate-line { margin: 0; font-size: 17px; }

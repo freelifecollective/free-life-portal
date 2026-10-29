@@ -37,12 +37,13 @@ update public.profiles set first_name='Lena', last_name='L', username='lenalead'
 
 do $$ declare hid uuid; begin
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  insert into public.outsourcing_profiles (member_id, headline, tasks, hourly_rate_cents) values (auth.uid(), 'Graphic design', array['logos', 'ads'], 3500);
-  perform tests.fails('a rate under $1 is refused', format('insert into public.outsourcing_profiles (member_id, headline, tasks, hourly_rate_cents) values (%L, %L, %L, 5)', '00000000-0000-0000-0000-0000000000a5', 'x', '{a}'), '42501');
+  insert into public.outsourcing_profiles (member_id, headline, tasks, hourly_rate_cents) values (auth.uid(), 'Graphic design', array['Ads Creation', 'Canva Presentations'], 3500);
+  perform tests.fails('a rate under $1 is refused', format('insert into public.outsourcing_profiles (member_id, headline, tasks, hourly_rate_cents) values (%L, %L, %L, 5)', '00000000-0000-0000-0000-0000000000a5', 'x', '{Ads Creation}'), '42501');
+  perform tests.fails('only offerings from the list are accepted', format('insert into public.outsourcing_profiles (member_id, tasks, hourly_rate_cents) values (%L, %L, 2000)', '00000000-0000-0000-0000-0000000000a1', '{Underwater basket weaving}'), '23514');
   perform tests.logout();
 
   perform tests.login('00000000-0000-0000-0000-0000000000a3');
-  perform tests.fails('leads cannot list themselves', format('insert into public.outsourcing_profiles (member_id, headline, tasks, hourly_rate_cents) values (auth.uid(), %L, %L, 2000)', 'x', '{a}'), '42501');
+  perform tests.fails('leads cannot list themselves', format('insert into public.outsourcing_profiles (member_id, headline, tasks, hourly_rate_cents) values (auth.uid(), %L, %L, 2000)', 'x', '{Ads Creation}'), '42501');
   perform tests.eq('leads cannot see the directory', (select count(*) from public.outsourcing_directory()), 0::bigint);
   perform tests.logout();
 
