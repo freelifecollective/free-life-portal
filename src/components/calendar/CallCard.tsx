@@ -25,7 +25,7 @@ export function CallCard({ call, summary, featured = false, now }: { call: Call;
         <LocalTime iso={call.starts_at} />
       </p>
       {call.description ? <p className="call-desc">{call.description}</p> : null}
-      {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} /></p> : null}
+      {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} durationMinutes={call.duration_minutes} /></p> : null}
       <RsvpControls callId={call.id} mine={summary.mine} />
       <Attendees summary={summary} />
     </article>

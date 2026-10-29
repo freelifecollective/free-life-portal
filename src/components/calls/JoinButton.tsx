@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { joinCall } from "@/app/(app)/calls/actions";
+import { LiveDot } from "@/components/LiveBadge";
 import { formatInZone } from "@/lib/time";
 
 const OPENS_BEFORE_MS = 10 * 60_000;
@@ -11,9 +12,11 @@ function subscribe(cb: () => void) { const t = window.setInterval(cb, 10_000); r
  * Joins the live call. The waiting room opens 10 minutes before the start: before that the button looks switched off,
  * and pressing it explains when to come back. Pressing it once it is open also notes that you were there.
  */
-export function JoinButton({ callId, startsAt, label = "Join the call" }: { callId: string; startsAt: string; label?: string }) {
+export function JoinButton({ callId, startsAt, durationMinutes = 60, label = "Join LIVE now!" }: { callId: string; startsAt: string; durationMinutes?: number; label?: string }) {
   const start = new Date(startsAt).getTime();
-  const open = useSyncExternalStore(subscribe, () => Date.now() >= start - OPENS_BEFORE_MS, () => false);
+  const end = start + durationMinutes * 60_000;
+  const phase = useSyncExternalStore(subscribe, () => { const t = Date.now(); return t >= start && t < end ? "live" : t >= start - OPENS_BEFORE_MS ? "open" : "locked"; }, () => "locked");
+  const open = phase !== "locked";
   const [pending, run] = useTransition();
   const [error, setError] = useState("");
   const dlg = useRef<HTMLDialogElement>(null);
@@ -31,7 +34,7 @@ export function JoinButton({ callId, startsAt, label = "Join the call" }: { call
 
   return (
     <span className="join-wrap">
-      <button type="button" className={"btn primary join-btn" + (open ? "" : " is-locked")} aria-disabled={!open} disabled={pending} onClick={press}>{pending ? "Opening…" : label}</button>
+      <button type="button" className={"btn primary join-btn" + (open ? "" : " is-locked")} aria-disabled={!open} disabled={pending} onClick={press}>{pending ? "Opening…" : label}{phase === "live" && !pending ? <LiveDot size={10} /> : null}</button>
       {error ? <span className="err" role="alert">{error}</span> : null}
       <dialog ref={dlg} className="rs-dialog" aria-labelledby="jw-title">
         <h2 id="jw-title" className="qh" style={{ marginTop: 0 }}>Not open yet</h2>

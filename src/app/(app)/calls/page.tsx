@@ -3,6 +3,7 @@ import { PageHeading } from "@/components/PageHeading";
 import { JoinButton } from "@/components/calls/JoinButton";
 import { requireMember } from "@/lib/auth/guards";
 import { LiveBadge } from "@/components/LiveBadge";
+import { Attendees } from "@/components/calendar/Attendees";
 import { RsvpControls } from "@/components/calendar/RsvpControls";
 import { listUpcomingCalls, rsvpSummary } from "@/lib/calls/queries";
 import { KIND_LABEL } from "@/lib/calls/types";
@@ -28,7 +29,8 @@ export default async function CallsPage(props: PageProps<"/calls">) {
   const recordings = topic ? published.filter((r) => r.topics.includes(topic)) : published;
   const next = upcoming[0];
   const live = next && now >= new Date(next.starts_at).getTime() && now < endsAt(new Date(next.starts_at), next.duration_minutes).getTime();
-  const mine = next ? (await rsvpSummary(supabase, next.id, 0)).mine : null;
+  const summary = next ? await rsvpSummary(supabase, next.id, 50) : null;
+  const mine = summary?.mine ?? null;
 
   return (
     <>
@@ -42,10 +44,11 @@ export default async function CallsPage(props: PageProps<"/calls">) {
                 <h2 className="qh" style={{ margin: "0 0 4px" }}>{next.title}</h2>
                 <p className="when" style={{ margin: "0 0 14px" }}>{KIND_LABEL[next.kind]} · {formatInZone(new Date(next.starts_at))} · {next.duration_minutes} min</p>
                 <RsvpControls callId={next.id} mine={mine} liveLabel="I'll be there LIVE" liveOn="You're coming LIVE" replayLabel="I'll catch the replay" replayOn="You'll catch the replay" />
+                {summary ? <div style={{ marginTop: 14 }}><Attendees summary={summary} /></div> : null}
               </div>
               {next.join_url ? (
                 <div className="live-right">
-                  <JoinButton callId={next.id} startsAt={next.starts_at} />
+                  <JoinButton callId={next.id} startsAt={next.starts_at} durationMinutes={next.duration_minutes} />
                   <p className="when join-note">The waiting room opens 10 minutes before the call starts.</p>
                 </div>
               ) : null}

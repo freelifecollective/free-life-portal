@@ -18,5 +18,15 @@ export async function setRsvp(callId: string, mode: RsvpMode | null): Promise<{ 
   if (error) return { ok: false, error: "We could not save that. Please try again." };
   revalidatePath("/calendar");
   revalidatePath("/");
+  revalidatePath("/calls");
   return { ok: true };
+}
+
+/** The person's private calendar-feed key. `reset` replaces it, which switches off any calendar still using the old link. */
+export async function calendarToken(reset = false): Promise<string | null> {
+  const { supabase } = await requireMember();
+  if (!supabase) return null;
+  const { data } = await supabase.rpc("my_calendar_token", { p_reset: reset });
+  if (reset) revalidatePath("/calendar");
+  return typeof data === "string" ? data : null;
 }

@@ -3,7 +3,8 @@ import { PageHeading } from "@/components/PageHeading";
 import { LiveBadge } from "@/components/LiveBadge";
 import { LocalTime } from "@/components/calendar/LocalTime";
 import { requireMember } from "@/lib/auth/guards";
-import { listUpcomingCalls, pickFeatured } from "@/lib/calls/queries";
+import { Attendees } from "@/components/calendar/Attendees";
+import { listUpcomingCalls, pickFeatured, rsvpSummary } from "@/lib/calls/queries";
 import { AUDIENCE_LABEL, KIND_LABEL } from "@/lib/calls/types";
 import { endsAt, formatInZone, nowMs } from "@/lib/time";
 
@@ -14,6 +15,7 @@ export default async function HomePage() {
   const { session, supabase } = await requireMember();
   const { profile, mode } = session;
   const next = supabase ? pickFeatured(await listUpcomingCalls(supabase, nowMs())) : null;
+  const summary = supabase && next ? await rsvpSummary(supabase, next.id, 50) : null;
   return (
     <>
       <PageHeading lede="This is your home in the Free Life Collective. More of the portal arrives step by step.">
@@ -28,6 +30,7 @@ export default async function HomePage() {
               <p style={{ margin: 0, fontWeight: 700 }}>{formatInZone(new Date(next.starts_at))}</p>
               <LocalTime iso={next.starts_at} />
               <p className="muted-line" style={{ margin: "6px 0 14px" }}>{KIND_LABEL[next.kind]} · {AUDIENCE_LABEL[next.audience]}</p>
+              {summary ? <div style={{ marginBottom: 14 }}><Attendees summary={summary} /></div> : null}
               <Link className="btn" href="/calendar" style={{ textDecoration: "none", height: 44 }}>RSVP on the calendar</Link>
             </>
           ) : (
