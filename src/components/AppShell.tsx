@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { Tour } from "./notifications/Tour";
+import { BuddyReminder } from "./buddy/BuddyDialog";
 import { MenuButton, MenuProvider, NavPanel } from "./MobileMenu";
 import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
@@ -22,7 +23,7 @@ const NAV: NavItem[] = [
   { label: "Classroom", min: "lead" },
   { label: "Calls", min: "lead" },
   { label: "Documents", min: "lead" },
-  { label: "Accountability Buddy", min: "member" },
+  { label: "Accountability Buddy", href: "/buddy", min: "member" },
   { label: "Commission calculator", href: "/calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
   { label: "Admin only", min: "admin", admin: true, heading: true },
@@ -43,7 +44,7 @@ function ordered(items: NavItem[]): NavItem[] {
   return [...home, ...rest, ...admin.filter((n) => n.heading), ...admin.filter((n) => !n.heading).sort(az)];
 }
 
-export function AppShell({ session, badges = {}, unread = 0, showTour = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; children: ReactNode }) {
+export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; children: ReactNode }) {
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   return (
@@ -72,6 +73,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, c
       </div>
     </div>
     <Tour show={showTour} />
+    {buddyRemind ? <BuddyReminder rank={buddyRemind} /> : null}
     </MenuProvider>
   );
 }

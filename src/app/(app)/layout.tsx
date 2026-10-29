@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { RANKS } from "@/lib/buddy/questions";
 import { TOUR_VERSION } from "@/lib/tour";
 import { unreadMessageCount } from "@/lib/messages/queries";
 import { pendingFinancingCount } from "@/lib/financing/queries";
@@ -19,6 +20,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
   const badges: Record<string, number> = {};
   let unread = 0;
   let showTour = false;
+  let buddyRemind: string | null = null;
   if (session.mode === "supabase") {
     const db = await createClient();
     const [{ count }, { data: tour }] = await Promise.all([
@@ -27,6 +29,12 @@ async function SessionGate({ children }: { children: ReactNode }) {
     ]);
     unread = count ?? 0;
     badges["/messages"] = await unreadMessageCount(db);
+    if (session.profile.role !== "lead") {
+      const [{ data: ab }, { data: mp }] = await Promise.all([db.from("ab_profiles").select("pool_status, in_pool_since, complete").maybeSingle(), db.from("member_private").select("rank_id").maybeSingle()]);
+      const a = ab as { pool_status: string | null; in_pool_since: string | null; complete: boolean } | null;
+      const r = (mp as { rank_id: number | null } | null)?.rank_id;
+      if (a?.complete && a.pool_status === "in_pool" && a.in_pool_since && r && new Date(a.in_pool_since).getTime() <= new Date().setMonth(new Date().getMonth() - 4)) buddyRemind = RANKS[r - 1];
+    }
     showTour = ((tour as { seen_version: number } | null)?.seen_version ?? 0) < TOUR_VERSION;
   }
   if (session.mode === "supabase" && session.profile.role === "admin") {
@@ -36,7 +44,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
     badges["/admin/financing"] = financing;
   }
   return (
-    <AppShell session={session} badges={badges} unread={unread} showTour={showTour}>
+    <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind}>
       <Suspense fallback={<div aria-busy="true" style={{ minHeight: 240 }} />}>{children}</Suspense>
     </AppShell>
   );

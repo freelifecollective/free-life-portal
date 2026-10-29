@@ -30,7 +30,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[user
       {sp.notice === "close" ? <CloseAccountNotice /> : null}
       <div className="settings" style={{ maxWidth: 720 }}>
         <Thread messages={thread} me={session.user.id} />
-        <MessageComposer otherId={other.id} />
+        <MessageComposer otherId={other.id} draft={sp.draft === "ab" ? "You've been matched as potential AB's!" : ""} />
       </div>
     </>
   );
