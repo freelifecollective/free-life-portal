@@ -1,18 +1,18 @@
 import { PageHeading } from "@/components/PageHeading";
 import { InviteForm } from "@/components/admin/InviteForm";
 import { requireAdmin } from "@/lib/auth/guards";
-import { removeInvite, setRole } from "./actions";
+import { removeInvite, setRole, setStanding } from "./actions";
 
 export const instant = false;
 export const metadata = { title: "People and invites" };
 
-type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; email: string | null; role: "lead" | "member" | "admin"; onboarded_at: string | null };
+type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; email: string | null; role: "lead" | "member" | "admin"; onboarded_at: string | null; unpaid_since: string | null; removed_at: string | null };
 type Invite = { email: string; role: string; note: string | null; claimed_at: string | null; created_at: string };
 
 export default async function PeoplePage() {
   const { session, supabase } = await requireAdmin();
   const [people, invites, memberInvites] = await Promise.all([
-    supabase.from("profiles").select("id, first_name, last_name, username, email, role, onboarded_at").order("created_at", { ascending: false }).limit(300),
+    supabase.from("profiles").select("id, first_name, last_name, username, email, role, onboarded_at, unpaid_since, removed_at").order("created_at", { ascending: false }).limit(300),
     supabase.from("signup_allowlist").select("email, role, note, claimed_at, created_at").is("claimed_at", null).order("created_at", { ascending: false }).limit(300),
     supabase.from("signup_allowlist").select("email, created_by, created_at, claimed_at, note").eq("role", "member").order("created_at", { ascending: false }).limit(300),
   ]);
@@ -69,7 +69,7 @@ export default async function PeoplePage() {
       <h2 className="qh" style={{ marginTop: 36 }}>People ({ppl.length})</h2>
       <div className="table-wrap">
         <table className="admin-table">
-          <thead><tr><th>Name</th><th>Email</th><th>Username</th><th>Role</th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Username</th><th>Role</th><th>Standing</th></tr></thead>
           <tbody>
             {ppl.map((p) => (
               <tr key={p.id}>
@@ -82,6 +82,17 @@ export default async function PeoplePage() {
                       <input type="hidden" name="id" value={p.id} />
                       <label className="sr-only" htmlFor={`role-${p.id}`}>Role for {p.email}</label>
                       <select id={`role-${p.id}`} name="role" defaultValue={p.role}><option value="lead">lead</option><option value="member">member</option><option value="admin">admin</option></select>
+                      <button className="btn small" type="submit">Save</button>
+                    </form>
+                  )}
+                </td>
+                <td>
+                  {p.role === "lead" || p.id === session.user.id ? null : (
+                    <form action={setStanding} className="inline-form">
+                      <input type="hidden" name="id" value={p.id} />
+                      <label className="sr-only" htmlFor={`since-${p.id}`}>Date {p.email} stopped paying</label>
+                      <input id={`since-${p.id}`} type="date" name="unpaid_since" defaultValue={p.unpaid_since ?? ""} title="Date they stopped paying (leave empty if paying)" />
+                      <label className="check"><input type="checkbox" name="removed" defaultChecked={!!p.removed_at} /> Removed</label>
                       <button className="btn small" type="submit">Save</button>
                     </form>
                   )}

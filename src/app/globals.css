@@ -460,3 +460,14 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .pick-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; }
 .pick-list button { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 1px; padding: 10px 12px; border: 0; background: none; border-radius: 8px; font: inherit; cursor: pointer; }
 .pick-list button:hover { background: var(--tint); }
+
+/* outsourcing */
+.tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tags li { padding: 4px 10px; border-radius: 999px; background: var(--tint); font-size: 13px; }
+.rate { font-size: 18px; white-space: nowrap; }
+.stars { color: #c28a1e; letter-spacing: 1px; }
+.review-box { margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.review-box textarea { width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: #fff; }
+.star-pick { display: flex; gap: 2px; }
+.star-pick button { border: 0; background: none; font-size: 26px; line-height: 1; cursor: pointer; color: #d6cfc6; padding: 2px 4px; }
+.star-pick button.on { color: #c28a1e; }

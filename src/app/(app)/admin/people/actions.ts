@@ -40,3 +40,15 @@ export async function setRole(form: FormData): Promise<void> {
   await supabase.from("profiles").update({ role }).eq("id", id);
   revalidatePath("/admin/people");
 }
+
+/** Membership standing, until payments can set it automatically: the date someone stopped paying, and whether they were removed from the community. */
+export async function setStanding(form: FormData): Promise<void> {
+  const { session, supabase } = await requireAdmin();
+  const id = String(form.get("id") ?? "");
+  const since = String(form.get("unpaid_since") ?? "").trim();
+  const removed = form.get("removed") === "on";
+  if (!UUID.test(id) || id === session.user.id) return;
+  if (since && !/^\d{4}-\d{2}-\d{2}$/.test(since)) return;
+  await supabase.from("profiles").update({ unpaid_since: since || null, removed_at: removed ? new Date().toISOString() : null }).eq("id", id);
+  revalidatePath("/admin/people");
+}
