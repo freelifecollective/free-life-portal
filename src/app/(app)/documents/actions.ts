@@ -25,14 +25,14 @@ export async function ensureFolder(parentId: string | null, name: string): Promi
   return { ok: true, id: data.id };
 }
 
-export async function registerFile(input: { folderId: string | null; path: string; name: string; mime: string; size: number }): Promise<Result> {
+export async function registerFile(input: { folderId: string | null; path: string; name: string; mime: string; size: number; thumbPath?: string | null }): Promise<Result & { id?: string }> {
   const { session, supabase } = await requireAdmin();
   const name = cleanName(input.name, 200);
   if (!name || !parentOk(input.folderId) || !input.path || input.path.includes("..") || input.size > MAX_FILE_BYTES) return { ok: false, error: "That file could not be added." };
-  const { error } = await supabase.from("doc_files").insert({ folder_id: input.folderId, name, storage_path: input.path, mime: input.mime || "application/octet-stream", size_bytes: Math.max(0, Math.floor(input.size)), created_by: session.user.id });
+  const { data, error } = await supabase.from("doc_files").insert({ folder_id: input.folderId, name, storage_path: input.path, thumb_path: input.thumbPath && !input.thumbPath.includes("..") ? input.thumbPath : null, mime: input.mime || "application/octet-stream", size_bytes: Math.max(0, Math.floor(input.size)), created_by: session.user.id }).select("id").single();
   if (error) return { ok: false, error: "We could not save that file." };
   refresh();
-  return { ok: true };
+  return { ok: true, id: data.id };
 }
 
 export async function renameItem(kind: "folder" | "file", id: string, name: string): Promise<Result> {
@@ -89,11 +89,11 @@ export async function deleteItem(kind: "folder" | "file", id: string): Promise<R
       all.push(...frontier);
     }
     ids = all;
-    const { data: files } = await supabase.from("doc_files").select("storage_path").in("folder_id", ids).limit(5000);
-    paths.push(...(files ?? []).map((f) => f.storage_path));
+    const { data: files } = await supabase.from("doc_files").select("storage_path, thumb_path").in("folder_id", ids).limit(5000);
+    for (const f of files ?? []) { paths.push(f.storage_path); if (f.thumb_path) paths.push(f.thumb_path); }
   } else {
-    const { data } = await supabase.from("doc_files").select("storage_path").eq("id", id).maybeSingle();
-    if (data) paths.push(data.storage_path);
+    const { data } = await supabase.from("doc_files").select("storage_path, thumb_path").eq("id", id).maybeSingle();
+    if (data) { paths.push(data.storage_path); if (data.thumb_path) paths.push(data.thumb_path); }
   }
   const { error } = await supabase.from(kind === "folder" ? "doc_folders" : "doc_files").delete().eq("id", id);
   if (error) return { ok: false, error: "We could not delete that." };
@@ -115,4 +115,24 @@ export async function getFileLinks(id: string): Promise<{ ok: boolean; error?: s
     f.downloadable ? bucket.createSignedUrl(f.storage_path, 120, { download: f.name }) : Promise.resolve({ data: null }),
   ]);
   return { ok: true, view: view.data?.signedUrl, download: dl.data?.signedUrl, mime: f.mime, name: f.name };
+}
+
+/** Attach a preview picture to a document that was added before previews existed. */
+export async function setThumb(id: string, thumbPath: string): Promise<Result> {
+  if (!UUID.test(id) || !thumbPath || thumbPath.includes("..")) return { ok: false, error: "Something went wrong." };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("doc_files").update({ thumb_path: thumbPath }).eq("id", id);
+  if (error) return { ok: false, error: "We could not save that." };
+  refresh();
+  return { ok: true };
+}
+
+/** For a document that was added before previews existed: a short-lived link so the admin's browser can build one. */
+export async function getSourceLink(id: string): Promise<{ ok: boolean; url?: string }> {
+  if (!UUID.test(id)) return { ok: false };
+  const { supabase } = await requireAdmin();
+  const { data: f } = await supabase.from("doc_files").select("storage_path").eq("id", id).maybeSingle();
+  if (!f) return { ok: false };
+  const { data } = await supabase.storage.from("documents").createSignedUrl(f.storage_path, 120);
+  return { ok: !!data?.signedUrl, url: data?.signedUrl };
 }

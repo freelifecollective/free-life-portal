@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DocFile, DocFolder } from "./types";
 
 const FOLDER = "id, parent_id, name, for_leads, for_downline";
-const FILE = "id, folder_id, name, mime, size_bytes, downloadable, for_leads, for_downline, created_at";
+const FILE = "id, folder_id, name, mime, size_bytes, downloadable, for_leads, for_downline, created_at, thumb_path";
 
 /** One folder's contents (null = the top level) plus the path of folders leading to it. Row level security decides what the person may see. */
 export async function openFolder(supabase: SupabaseClient, folderId: string | null) {
@@ -21,7 +21,14 @@ export async function openFolder(supabase: SupabaseClient, folderId: string | nu
     trail.unshift(data as DocFolder);
     cur = (data as DocFolder).parent_id;
   }
-  return { folders: (folders ?? []) as DocFolder[], files: (files ?? []) as DocFile[], trail, exists: !folderId || trail.some((f) => f.id === folderId) };
+  const list = (files ?? []) as DocFile[];
+  const withThumbs = list.filter((f) => f.thumb_path);
+  const thumbUrls: Record<string, string> = {};
+  if (withThumbs.length) {
+    const { data: signed } = await supabase.storage.from("documents").createSignedUrls(withThumbs.map((f) => f.thumb_path!), 3600);
+    (signed ?? []).forEach((s, i) => { if (s.signedUrl) thumbUrls[withThumbs[i].id] = s.signedUrl; });
+  }
+  return { folders: (folders ?? []) as DocFolder[], files: list, thumbUrls, trail, exists: !folderId || trail.some((f) => f.id === folderId) };
 }
 
 /** Every folder, for the "Move to…" list (admins). */
