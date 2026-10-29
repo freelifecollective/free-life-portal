@@ -638,3 +638,4 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .doc-more.over { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.92); font-size: 18px; line-height: 1; padding: 0; }
 .doc-back { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px 7px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
 .doc-back:hover { background: var(--tint); }
+.doc-skipped { margin: 8px 0 14px; } .doc-skipped ul { margin: 0 0 8px; padding-left: 18px; max-height: 220px; overflow: auto; font-size: 14px; overflow-wrap: anywhere; }

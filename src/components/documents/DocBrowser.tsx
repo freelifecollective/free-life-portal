@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { deleteItem, ensureFolder, getFileLinks, getSourceLink, moveItem, registerFile, renameItem, setFileAccess, setFolderAccess, setThumb } from "@/app/(app)/documents/actions";
 import { createClient } from "@/lib/supabase/client";
 import { makeThumb } from "@/lib/documents/thumbs";
-import { MAX_FILE_BYTES, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
+import { MAX_FILE_BYTES, MAX_UPLOAD_MB, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
 import type { Role } from "@/lib/roles";
 
 type Item = { kind: "folder"; f: DocFolder } | { kind: "file"; f: DocFile };
@@ -46,6 +46,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   const [msg, setMsg] = useState("");
   const [progress, setProgress] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [skipped, setSkipped] = useState<{ name: string; size: number; why: string }[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const zipInput = useRef<HTMLInputElement>(null);
 
@@ -77,9 +78,10 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
       return parent;
     };
     let done = 0, failed = 0;
+    const notAdded: { name: string; size: number; why: string }[] = [];
     for (const f of list) {
       try {
-        if (f.size > MAX_FILE_BYTES) throw new Error("over 50 MB");
+        if (f.size > MAX_FILE_BYTES) throw new Error(`over ${MAX_UPLOAD_MB} MB`);
         const where = await folderFor(relFolders?.get(f) ?? []);
         const mime = f.type || mimeFor(f.name);
         const path = `${crypto.randomUUID()}/${safeName(f.name)}`;
@@ -91,14 +93,15 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         const r = await registerFile({ folderId: where, path, name: f.name, mime, size: f.size, thumbPath });
         if (!r.ok) throw new Error(r.error ?? "not saved");
         done++; log(`Added ${f.name} (${done}/${list.length})`);
-      } catch (e) { failed++; log(`Could not add ${f.name}: ${e instanceof Error ? e.message : "error"}`); }
+      } catch (e) { failed++; const why = e instanceof Error ? e.message : "error"; notAdded.push({ name: f.name, size: f.size, why }); log(`Could not add ${f.name}: ${why}`); }
     }
+    setSkipped((cur) => [...cur, ...notAdded]);
     return { done, failed };
   }
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return;
-    setBusy(true); setProgress([]); setMsg("");
+    setBusy(true); setProgress([]); setMsg(""); setSkipped([]);
     const r = await upload([...files], folderId);
     setBusy(false); setMsg(`${r.done} added${r.failed ? `, ${r.failed} could not be added` : ""}.`); router.refresh();
   }
@@ -106,7 +109,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   async function onZip(files: FileList | null) {
     const zip = files?.[0];
     if (!zip) return;
-    setBusy(true); setProgress([]); setMsg("");
+    setBusy(true); setProgress([]); setMsg(""); setSkipped([]);
     try {
       const { unzipSync } = await import("fflate");
       log("Opening the zip…");
@@ -178,6 +181,16 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
       ) : null}
       {progress.length ? <ul className="doc-progress" aria-live="polite">{progress.map((p, i) => <li key={i}>{p}</li>)}</ul> : null}
       <p role="status" className="when">{msg}</p>
+      {skipped.length ? (
+        <section className="card-s doc-skipped" aria-label="Files that were not added">
+          <h2 className="qh" style={{ margin: "0 0 6px", fontSize: 18 }}>Not added ({skipped.length})</h2>
+          <p className="when" style={{ margin: "0 0 8px" }}>
+            {skipped.some((x) => x.why.startsWith("over")) ? `Files over ${MAX_UPLOAD_MB} MB can't be uploaded yet. Shrink them (for PDFs, try a free "compress PDF" tool), or keep them as a link and tell me, and I'll add links to the portal.` : "These could not be added. You can try them again."}
+          </p>
+          <ul>{skipped.map((x, i) => <li key={i}>{x.name} <span className="when">({sizeLabel(x.size)}, {x.why})</span></li>)}</ul>
+          <button type="button" className="linkbtn" style={{ padding: 0 }} onClick={() => { void navigator.clipboard?.writeText(skipped.map((x) => `${x.name} (${sizeLabel(x.size)}, ${x.why})`).join("\n")); }}>Copy this list</button>
+        </section>
+      ) : null}
 
       {itemsEmpty ? <section className="card-s"><p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p></section> : layout === "grid" ? (
         <ul className="doc-grid">
