@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { Tour } from "./notifications/Tour";
 import { BuddyReminder } from "./buddy/BuddyDialog";
+import { FeedbackPrompt, type PendingCall } from "./calls/FeedbackPrompt";
 import { MenuButton, MenuProvider, NavPanel } from "./MobileMenu";
 import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
@@ -21,7 +22,7 @@ const NAV: NavItem[] = [
   { label: "Chats", href: "/chats", min: "lead" },
   { label: "Verbiage + Objections", href: "/responses", min: "member" },
   { label: "Classroom", min: "lead" },
-  { label: "Calls", min: "lead" },
+  { label: "Calls", href: "/calls", min: "lead" },
   { label: "Documents", href: "/documents", min: "lead" },
   { label: "Accountability Buddy", href: "/buddy", min: "member" },
   { label: "Commission calculator", href: "/calculator", min: "member" },
@@ -30,6 +31,7 @@ const NAV: NavItem[] = [
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true },
   { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true },
   { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true },
+  { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true },
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true },
   { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true },
   { label: "People and invites", href: "/admin/people", min: "admin", admin: true },
@@ -45,7 +47,7 @@ function ordered(items: NavItem[]): NavItem[] {
   return [...home, ...rest, ...admin.filter((n) => n.heading), ...admin.filter((n) => !n.heading).sort(az)];
 }
 
-export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; children: ReactNode }) {
+export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; children: ReactNode }) {
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   return (
@@ -80,6 +82,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
     </div>
     <Tour show={showTour} />
     {buddyRemind ? <BuddyReminder rank={buddyRemind} /> : null}
+    {pendingFeedback.length ? <FeedbackPrompt calls={pendingFeedback} /> : null}
     </MenuProvider>
   );
 }

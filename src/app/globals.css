@@ -663,3 +663,13 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .doc-area.selectable:not(.has-sel) .doc-list .doc-row { padding-left: 14px; }
 .doc-area.selectable.has-sel .doc-list .doc-row { padding-left: 42px; }
 body.doc-dragging { user-select: none; -webkit-user-select: none; }
+
+/* calls and recordings */
+.live-card.on { border-color: #d92d20; box-shadow: 0 0 0 1px #d92d20; }
+.rec-player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; }
+.rec-player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.rec-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.fb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.fb-list li { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.fb-list p { margin: 6px 0 0; overflow-wrap: anywhere; }
+.rec-row { display: flex; justify-content: space-between; gap: 14px; align-items: center; flex-wrap: wrap; }

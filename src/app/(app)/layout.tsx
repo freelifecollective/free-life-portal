@@ -21,6 +21,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
   let unread = 0;
   let showTour = false;
   let buddyRemind: string | null = null;
+  let pendingFeedback: { call_id: string; title: string }[] = [];
   if (session.mode === "supabase") {
     const db = await createClient();
     const [{ count }, { data: tour }] = await Promise.all([
@@ -28,6 +29,8 @@ async function SessionGate({ children }: { children: ReactNode }) {
       db.from("member_tour").select("seen_version").maybeSingle(),
     ]);
     unread = count ?? 0;
+    const { data: pf } = await db.rpc("pending_feedback");
+    pendingFeedback = ((pf ?? []) as { call_id: string; title: string }[]);
     badges["/messages"] = await unreadMessageCount(db);
     if (session.profile.role !== "lead") {
       const [{ data: ab }, { data: mp }] = await Promise.all([db.from("ab_profiles").select("pool_status, in_pool_since, complete").maybeSingle(), db.from("member_private").select("rank_id").maybeSingle()]);
@@ -44,7 +47,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
     badges["/admin/financing"] = financing;
   }
   return (
-    <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind}>
+    <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind} pendingFeedback={pendingFeedback}>
       <Suspense fallback={<div aria-busy="true" style={{ minHeight: 240 }} />}>{children}</Suspense>
     </AppShell>
   );
