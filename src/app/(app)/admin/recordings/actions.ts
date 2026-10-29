@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guards";
+import { isTopic, LEAD_TOPIC } from "@/lib/recordings/topics";
 import { parseTime, parseVimeo } from "@/lib/recordings/vimeo";
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -31,6 +32,7 @@ export async function saveRecording(id: string | null, _prev: RecordingState, fo
   if (start === undefined || end === undefined) return { error: "Times look like 5:30 or 1:05:30." };
   if (end !== null && end <= (start ?? 0)) return { error: "The end time must be after the start time." };
   if (description.length > 2000) return { error: "Keep the description under 2000 characters." };
+  const topics = form.getAll("topics").map(String).filter(isTopic);
   const { session, supabase } = await requireAdmin();
   const meta = await vimeoMeta(url);
   if (!title) title = meta.title ?? "";
@@ -40,7 +42,7 @@ export async function saveRecording(id: string | null, _prev: RecordingState, fo
     call_id: UUID.test(callId) ? callId : null,
     recorded_at: when ? new Date(when).toISOString() : new Date().toISOString(),
     start_secs: start ?? 0, end_secs: end,
-    for_leads: form.get("for_leads") === "on", for_downline: form.get("for_downline") === "on", published: form.get("published") === "on",
+    topics, for_leads: form.get("for_leads") === "on" || topics.includes(LEAD_TOPIC), for_downline: form.get("for_downline") === "on", published: form.get("published") === "on",
     ...(meta.thumb ? { thumb_url: meta.thumb } : {}), ...(meta.duration ? { duration_secs: meta.duration } : {}),
   };
   const { error } = id && UUID.test(id) ? await supabase.from("recordings").update(row).eq("id", id) : await supabase.from("recordings").insert({ ...row, created_by: session.user.id });

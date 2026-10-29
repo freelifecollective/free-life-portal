@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { deleteRecording, saveRecording, setPublished, type RecordingState } from "@/app/(app)/admin/recordings/actions";
+import { LEAD_TOPIC, TOPICS } from "@/lib/recordings/topics";
 import { formatTime } from "@/lib/recordings/vimeo";
 import type { Recording } from "@/lib/recordings/queries";
 import { formatInZone, toZonedInput } from "@/lib/time";
@@ -18,6 +19,11 @@ function RecordingForm({ rec, calls, onDone }: { rec: Recording | null; calls: C
       <div className="field"><label htmlFor="r-title">Title (leave empty to use the Vimeo title)</label><input id="r-title" name="title" type="text" maxLength={160} defaultValue={rec?.title} /></div>
       <div className="field"><label htmlFor="r-call">Which call is this?</label>
         <select id="r-call" name="call_id" defaultValue={rec?.call_id ?? ""}><option value="">Not linked to a call</option>{calls.map((c) => <option key={c.id} value={c.id}>{c.title} ({formatInZone(new Date(c.starts_at)).split(",").slice(0, 2).join(",")})</option>)}</select></div>
+      <fieldset className="offer-pick">
+        <legend>Topics (choose all that apply, it will show under each one)</legend>
+        {TOPICS.map((t) => <label key={t} className="check"><input type="checkbox" name="topics" value={t} defaultChecked={rec?.topics.includes(t)} /> {t}</label>)}
+      </fieldset>
+      <p className="when" style={{ margin: "-6px 0 0" }}>&quot;{LEAD_TOPIC}&quot; recordings are open to leads automatically.</p>
       <div className="row">
         <div className="field"><label htmlFor="r-start">Start at (optional)</label><input id="r-start" name="start" type="text" placeholder="5:30" defaultValue={formatTime(rec?.start_secs || null)} /></div>
         <div className="field"><label htmlFor="r-end">Stop at (optional)</label><input id="r-end" name="end" type="text" placeholder="1:02:15" defaultValue={formatTime(rec?.end_secs)} /></div>
@@ -49,7 +55,7 @@ export function RecordingsAdmin({ recordings, calls }: { recordings: Recording[]
       {recordings.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>No recordings yet.</p></section> : recordings.map((r) => (
         <article key={r.id} className="card-s rec-row">
           <div>
-            <strong>{r.title}</strong> {!r.published ? <span className="doc-tag">Draft</span> : null} {r.for_leads ? <span className="doc-tag">Leads</span> : null} {r.for_downline ? <span className="doc-tag">Downline</span> : null}
+            <strong>{r.title}</strong> {!r.published ? <span className="doc-tag">Draft</span> : null} {r.for_leads ? <span className="doc-tag">Leads</span> : null} {r.for_downline ? <span className="doc-tag">Downline</span> : null} {r.topics.map((t) => <span key={t} className="doc-tag">{t}</span>)}
             <div className="when">{formatInZone(new Date(r.recorded_at))}{r.start_secs || r.end_secs ? ` · plays ${formatTime(r.start_secs)}–${r.end_secs ? formatTime(r.end_secs) : "end"}` : ""}</div>
           </div>
           <div className="rs-actions" style={{ marginTop: 0 }}>

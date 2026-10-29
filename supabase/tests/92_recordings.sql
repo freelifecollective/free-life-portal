@@ -96,5 +96,14 @@ do $$ declare link text; begin
   perform tests.login('00000000-0000-0000-0000-0000000000a5');
   perform tests.eq('people who were not on it are not pinged', (select count(*) from public.notifications where kind = 'recording' and title like '%Community call%'), 0::bigint);
   perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a4');
+  insert into public.recordings (title, vimeo_id, topics, for_leads, published) values ('Weekly community', '555555555', array['Community calls', 'Strategy'], false, true);
+  perform tests.eq('community-call recordings are open to leads automatically', (select for_leads from public.recordings where title = 'Weekly community'), true);
+  perform tests.eq('a recording can sit under several topics', (select cardinality(topics) from public.recordings where title = 'Weekly community'), 2);
+  perform tests.fails('only the listed topics are accepted', format('insert into public.recordings (title, vimeo_id, topics) values (%L, %L, array[%L])', 'x', '123456789', 'Cooking'), '23514');
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a3');
+  perform tests.eq('leads can see it', (select count(*) from public.recordings where title = 'Weekly community'), 1::bigint);
+  perform tests.logout();
 end $$;
 rollback;
