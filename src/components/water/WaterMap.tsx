@@ -70,7 +70,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
     <div className="ws-wrap">
       <form className="ws-search" onSubmit={submit} role="search">
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a town or city, e.g. Brisbane, Australia" aria-label="Search a town or city" />
-        <button type="submit" className="btn primary" disabled={pending}>{pending ? "Searching…" : "Find closest"}</button>
+        <button type="submit" className="btn primary" disabled={pending}>{pending ? "Searching…" : "Find Closest Water Share"}</button>
       </form>
       {error ? <p className="err" role="alert">{error}</p> : null}
       <div className="ws-grid">

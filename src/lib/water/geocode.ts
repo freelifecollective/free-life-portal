@@ -1,4 +1,5 @@
 import "server-only";
+import { parsePhoton, type Suggestion } from "./photon";
 import type { Place } from "./types";
 
 type Hit = { lat: string; lon: string; display_name: string; address?: Record<string, string> };
@@ -31,5 +32,22 @@ export async function geocode(query: string): Promise<Place | null> {
     return { lat, lng, label: labelOf(h) };
   } catch {
     return null;
+  }
+}
+
+/** Dropdown choices while someone types a store or address (Photon, a free search built on OpenStreetMap for exactly this). */
+export async function suggest(query: string): Promise<Suggestion[]> {
+  const q = query.trim();
+  if (q.length < 3 || q.length > 120) return [];
+  try {
+    const res = await fetch(`https://photon.komoot.io/api/?limit=8&lang=en&q=${encodeURIComponent(q)}`, {
+      headers: { "User-Agent": "FreeLifeCollectivePortal/1.0", Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    return parsePhoton(await res.json());
+  } catch {
+    return [];
   }
 }

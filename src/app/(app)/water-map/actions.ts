@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
-import { geocode } from "@/lib/water/geocode";
+import { geocode, suggest } from "@/lib/water/geocode";
+import type { Suggestion } from "@/lib/water/photon";
 import type { Place } from "@/lib/water/types";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
@@ -16,8 +17,15 @@ export async function searchPlace(query: string): Promise<Result<{ place: Place 
   return { ok: true, place };
 }
 
+/** Choices for the address box while typing, like Google Maps. */
+export async function suggestPlaces(query: string): Promise<Suggestion[]> {
+  const { supabase } = await requireMember();
+  if (!supabase) return [];
+  return suggest(String(query ?? ""));
+}
+
 /** Adds the signed-in affiliate to the map, or moves their dot. A blank address keeps the current spot when they are editing. */
-export async function saveWaterShare(input: { address: string; prefilter: boolean | null; waterType: string }): Promise<Result> {
+export async function saveWaterShare(input: { address: string; chosen?: Place | null; prefilter: boolean | null; waterType: string }): Promise<Result> {
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Needs the database." };
   if (session.profile.role === "lead") return { ok: false, error: "The map is for affiliates." };
@@ -26,9 +34,12 @@ export async function saveWaterShare(input: { address: string; prefilter: boolea
   const address = String(input.address ?? "").trim();
   const me = session.user.id;
   const { data: existing } = await supabase.from("water_share").select("member_id").eq("member_id", me).maybeSingle();
-  if (!address && !existing) return { ok: false, error: "Please type an address near you." };
+  const c = input.chosen;
+  const chosen = c && Number.isFinite(c.lat) && Number.isFinite(c.lng) && Math.abs(c.lat) <= 90 && Math.abs(c.lng) <= 180 && typeof c.label === "string" && c.label.trim() ? { lat: c.lat, lng: c.lng, place: c.label.trim().slice(0, 160) } : null;
+  if (!address && !chosen && !existing) return { ok: false, error: "Please type an address near you." };
   let where: { lat: number; lng: number; place: string } | null = null;
-  if (address) {
+  if (chosen) where = chosen;
+  else if (address) {
     const hit = await geocode(address);
     if (!hit) return { ok: false, error: "We could not find that address. Try a nearby gas station, grocery store or just the town and country." };
     where = { lat: hit.lat, lng: hit.lng, place: hit.label };
