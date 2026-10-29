@@ -57,7 +57,7 @@ export function InstallApp() {
     );
   }
   if (os === "ios") {
-    return <p style={{ margin: 0 }}>To install on iPhone or iPad: open this page in <strong>Safari</strong>, tap the <strong>three dots</strong> at the bottom of the screen, tap <strong>Share</strong>, then tap <strong>View More</strong> and <strong>Add to Home Screen</strong>. A picture guide is below.</p>;
+    return <p style={{ margin: 0 }}>Already added it? Open the <strong>FLC</strong> icon on your home screen and this page will show a tick. To install on iPhone or iPad: open this page in <strong>Safari</strong>, tap the <strong>three dots</strong> at the bottom of the screen, tap <strong>Share</strong>, then tap <strong>View More</strong> and <strong>Add to Home Screen</strong>. A picture guide is below.</p>;
   }
-  return <p style={{ margin: 0 }}>To install: open your browser menu and choose <strong>Install app</strong> or <strong>Add to Home Screen</strong>.</p>;
+  return <p style={{ margin: 0 }}>The browser is not offering an install button right now. If you already installed the app, open it once from your computer or phone (look for <strong>Free Life Collective</strong> or <strong>FLC</strong>) and this page will show a tick from then on. If you have not, open your browser menu and choose <strong>Install app</strong> or <strong>Add to Home Screen</strong>.</p>;
 }
