@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { Tour } from "./notifications/Tour";
 import { BuddyReminder } from "./buddy/BuddyDialog";
+import { WaterPrompt } from "./water/WaterShareDialog";
 import { FeedbackPrompt, type PendingCall } from "./calls/FeedbackPrompt";
 import { MenuButton, MenuProvider, NavPanel } from "./MobileMenu";
 import { NavLinks } from "./NavLinks";
@@ -27,7 +28,9 @@ const NAV: NavItem[] = [
   { label: "Accountability Buddy", href: "/buddy", min: "member" },
   { label: "Commission calculator", href: "/calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
-  { label: "Water Share Map", min: "member" },
+  { label: "Water Share Map", href: "/water-map", min: "member" },
+  { label: "Call Closers for Hire", min: "member" },
+  { label: "Free Life AI", min: "member" },
   { label: "Facebook Follows", min: "member" },
   { label: "Admin only", min: "admin", admin: true, heading: true },
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true },
@@ -49,7 +52,7 @@ function ordered(items: NavItem[]): NavItem[] {
   return [...home, ...rest, ...admin.filter((n) => n.heading), ...admin.filter((n) => !n.heading).sort(az)];
 }
 
-export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; children: ReactNode }) {
+export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   return (
@@ -84,6 +87,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
     </div>
     <Tour show={showTour} />
     {buddyRemind ? <BuddyReminder rank={buddyRemind} /> : null}
+    {waterPrompt ? <WaterPrompt /> : null}
     {pendingFeedback.length ? <FeedbackPrompt calls={pendingFeedback} /> : null}
     </MenuProvider>
   );

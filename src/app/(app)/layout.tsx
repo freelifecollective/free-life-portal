@@ -25,6 +25,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
   let buddyRemind: string | null = null;
   let pendingFeedback: { call_id: string; title: string }[] = [];
   let liveNow = false;
+  let waterPrompt = false;
   if (session.mode === "supabase") {
     const db = await createClient();
     const [{ count }, { data: tour }] = await Promise.all([
@@ -38,6 +39,8 @@ async function SessionGate({ children }: { children: ReactNode }) {
     pendingFeedback = ((pf ?? []) as { call_id: string; title: string }[]);
     badges["/messages"] = await unreadMessageCount(db);
     if (session.profile.role !== "lead") {
+      const { data: asked } = await db.from("water_share_asked").select("member_id").maybeSingle();
+      waterPrompt = !asked;
       const [{ data: ab }, { data: mp }] = await Promise.all([db.from("ab_profiles").select("pool_status, in_pool_since, complete").maybeSingle(), db.from("member_private").select("rank_id").maybeSingle()]);
       const a = ab as { pool_status: string | null; in_pool_since: string | null; complete: boolean } | null;
       const r = (mp as { rank_id: number | null } | null)?.rank_id;
@@ -52,7 +55,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
     badges["/admin/financing"] = financing;
   }
   return (
-    <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind} pendingFeedback={pendingFeedback} liveNow={liveNow}>
+    <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind} pendingFeedback={pendingFeedback} liveNow={liveNow} waterPrompt={waterPrompt}>
       <Suspense fallback={<div aria-busy="true" style={{ minHeight: 240 }} />}>{children}</Suspense>
     </AppShell>
   );
