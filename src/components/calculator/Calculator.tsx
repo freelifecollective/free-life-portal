@@ -46,19 +46,18 @@ export function Calculator() {
           <select id="calc-country" value={country} onChange={(e) => { setCountry(e.target.value); setQty({}); }}>{countries.map((x) => <option key={x.name} value={x.name}>{x.name}</option>)}</select></div>
         <div className="field"><label htmlFor="calc-points">Points</label>
           <select id="calc-points" value={points} onChange={(e) => setPoints(Number(e.target.value))}>{POINTS.map((p) => <option key={p} value={p}>{p === 1 ? "1 point" : `${p} points`}</option>)}</select></div>
-      </div>
-      <div className="calc-total" aria-live="polite">
-        <div>
-          <div className="lbl">Total commission</div>
-          <div className="sub">{n ? `${n} ${n === 1 ? "item" : "items"}, ${points} ${points === 1 ? "point each" : "points each"}` : "Select products to add them up"}</div>
+        <div className="calc-total" aria-live="polite">
+          <div>
+            <div className="lbl">Total commission</div>
+            <div className="sub">{n ? `${n} ${n === 1 ? "item" : "items"}, ${points} ${points === 1 ? "point each" : "points each"}` : "Select products to add them up"}</div>
+          </div>
+          <div className="right">
+            <button type="button" className="clear" disabled={!n} onClick={() => setQty({})}>Clear</button>
+            <div className="sum">{fmt.format(sum)}</div>
+          </div>
         </div>
-        <div className="right">
-          <button type="button" className="clear" disabled={!n} onClick={() => setQty({})}>Clear</button>
-          <div className="sum">{fmt.format(sum)}</div>
-        </div>
       </div>
-      <div className="calc-bubbles">{c.products.filter((p) => !COMBO.test(p.name)).map(bubble)}</div>
-      <div className="calc-bubbles">{c.products.filter((p) => COMBO.test(p.name)).map(bubble)}</div>
+      <div className="calc-bubbles">{[...c.products.filter((p) => !COMBO.test(p.name)), ...c.products.filter((p) => COMBO.test(p.name))].map(bubble)}</div>
     </div>
   );
 }
