@@ -31,7 +31,7 @@ export function UserMenu({ url, initials, preview, label, showSubscription }: { 
         <div className="user-pop" role="menu">
           <Link href="/settings" role="menuitem">Profile</Link>
           {showSubscription ? <Link href="/settings/subscription" role="menuitem">Subscription Settings</Link> : null}
-          <Link href="/settings/app" role="menuitem">The App</Link>
+          <Link href="/settings/app" role="menuitem">Get the App</Link>
           <form action="/logout" method="post"><button type="submit" role="menuitem">Sign out</button></form>
         </div>
       ) : null}
