@@ -5,6 +5,15 @@ import { COMMISSIONS } from "@/lib/calculator/data";
 
 const COMBO = /^(K8 \+ Ukon|Trifecta|Quad)/;
 const POINTS = [1, 2, 3, 4, 5, 6, 7, 8];
+const COLS = 6; // products per row on a full-width screen
+
+/** Products that start a new row on a full-width screen (the row before it is left short). Narrow screens ignore this. */
+const ROW_STARTS: Record<string, string[]> = {
+  "United States": ["SD501U", "Beaute DD"],
+  Europe: ["JRIV"],
+  "New Zealand": ["JRIV"],
+  Mexico: ["JRIV"],
+};
 const countries = [...COMMISSIONS.countries].sort((a, b) => a.name.localeCompare(b.name));
 
 /** Pick a country and your points, then tap products (and use + / − for more than one) to add up your estimated commission. */
@@ -17,6 +26,13 @@ export function Calculator() {
 
   let sum = 0, n = 0;
   for (const pr of c.products) { const q = qty[pr.name] ?? 0; sum += (pr.rates[String(points)] ?? 0) * q; n += q; }
+
+  /* the products in order (packages last), with empty slots where a row must start fresh */
+  const layout: ((typeof c.products)[number] | null)[] = [];
+  for (const pr of [...c.products.filter((p) => !COMBO.test(p.name)), ...c.products.filter((p) => COMBO.test(p.name))]) {
+    if ((ROW_STARTS[c.name] ?? []).includes(pr.name) && layout.length % COLS !== 0) while (layout.length % COLS !== 0) layout.push(null);
+    layout.push(pr);
+  }
 
   const add = (name: string, d: number) => setQty((s) => ({ ...s, [name]: Math.max(0, Math.min(99, (s[name] ?? 0) + d)) }));
   const toggle = (name: string) => setQty((s) => ({ ...s, [name]: s[name] ? 0 : 1 }));
@@ -57,7 +73,7 @@ export function Calculator() {
           </div>
         </div>
       </div>
-      <div className="calc-bubbles">{[...c.products.filter((p) => !COMBO.test(p.name)), ...c.products.filter((p) => COMBO.test(p.name))].map(bubble)}</div>
+      <div className="calc-bubbles">{layout.map((item, i) => item === null ? <span key={`gap-${i}`} className="calc-gap" aria-hidden="true" /> : bubble(item))}</div>
     </div>
   );
 }

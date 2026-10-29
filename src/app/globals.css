@@ -481,7 +481,7 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .rate-line { margin: 0; font-size: 17px; }
 
 /* commission calculator */
-.calc { max-width: 960px; }
+.calc { max-width: 960px; container-type: inline-size; }
 .calc-fine { color: var(--accent); opacity: .85; font-size: 14px; font-style: italic; margin: -14px 0 26px; }
 .calc-selects { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; align-items: flex-end; }
 .calc-selects select { height: 44px; padding: 0 12px; font: inherit; font-size: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
@@ -890,3 +890,8 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .va-length { display: flex; align-items: center; gap: 10px; }
 .va-length label { font-size: 14px; color: var(--muted); white-space: nowrap; }
 .va-length select { height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font: inherit; background: #fff; color: var(--ink); }
+.calc-gap { display: none; }
+@container (min-width: 920px) {
+  .calc-bubbles { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .calc-gap { display: block; }
+}
