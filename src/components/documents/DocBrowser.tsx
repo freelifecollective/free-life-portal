@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteItem, ensureFolder, getFileLinks, getSourceLink, moveItem, registerFile, renameItem, setFileAccess, setFolderAccess, setThumb } from "@/app/(app)/documents/actions";
 import { createClient } from "@/lib/supabase/client";
+import { BulkDialog, type Picked } from "./BulkDialog";
 import { makeThumb } from "@/lib/documents/thumbs";
 import { MAX_FILE_BYTES, MAX_UPLOAD_MB, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
 import type { Role } from "@/lib/roles";
@@ -47,6 +48,64 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   const [progress, setProgress] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [skipped, setSkipped] = useState<{ name: string; size: number; why: string }[]>([]);
+  /* selection (Update Documents only): click, ctrl/cmd-click, tick boxes, or drag a box around items */
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [bulk, setBulk] = useState<"move" | "copy" | "delete" | null>(null);
+  const area = useRef<HTMLDivElement>(null);
+  const bulkDlg = useRef<HTMLDialogElement>(null);
+  const lastPointer = useRef("mouse");
+  const dragged = useRef(false);
+  const k = (kind: "folder" | "file", id: string) => `${kind}:${id}`;
+  const picked: Picked[] = [...folders.map((f) => ({ kind: "folder" as const, id: f.id, name: f.name })), ...files.map((f) => ({ kind: "file" as const, id: f.id, name: f.name }))].filter((i) => sel.has(k(i.kind, i.id)));
+  const toggle = (key: string) => setSel((cur) => { const n = new Set(cur); if (n.has(key)) n.delete(key); else n.add(key); return n; });
+
+  useEffect(() => {
+    if (!manage) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !bulkDlg.current?.open) setSel(new Set()); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [manage]);
+
+  function startMarquee(e: React.PointerEvent<HTMLDivElement>) {
+    if (!manage) return;
+    lastPointer.current = e.pointerType;
+    dragged.current = false;
+    if (e.button !== 0 || e.pointerType === "touch" || (e.target as HTMLElement).closest(".doc-more, .doc-check")) return;
+    const host = area.current; if (!host) return;
+    const sx = e.clientX + window.scrollX, sy = e.clientY + window.scrollY;
+    const additive = e.metaKey || e.ctrlKey || e.shiftKey;
+    const base = additive ? new Set(sel) : new Set<string>();
+    const onBackground = !(e.target as HTMLElement).closest("[data-sel]");
+    let moved = false;
+    const move = (ev: PointerEvent) => {
+      const cx = ev.clientX + window.scrollX, cy = ev.clientY + window.scrollY;
+      if (!moved && Math.hypot(cx - sx, cy - sy) < 6) return;
+      moved = true; dragged.current = true;
+      const x1 = Math.min(sx, cx), x2 = Math.max(sx, cx), y1 = Math.min(sy, cy), y2 = Math.max(sy, cy);
+      const hr = host.getBoundingClientRect();
+      setBox({ x: x1 - (hr.left + window.scrollX), y: y1 - (hr.top + window.scrollY), w: x2 - x1, h: y2 - y1 });
+      const hit = new Set(base);
+      host.querySelectorAll<HTMLElement>("[data-sel]").forEach((el) => { const r = el.getBoundingClientRect(); const l = r.left + window.scrollX, t = r.top + window.scrollY; if (l < x2 && l + r.width > x1 && t < y2 && t + r.height > y1) hit.add(el.dataset.sel!); });
+      setSel(hit);
+    };
+    const up = () => {
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up);
+      setBox(null);
+      if (!moved && onBackground && !additive) setSel(new Set());
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+  }
+
+  /** In Update Documents a mouse click selects and a double click opens. A tap opens, like on a phone. */
+  function itemClick(e: React.MouseEvent, key: string, openIt: () => void) {
+    if (!manage) return openIt();
+    if (dragged.current) { e.preventDefault(); dragged.current = false; return; }
+    if (lastPointer.current === "touch") return openIt();
+    e.preventDefault();
+    if (e.metaKey || e.ctrlKey || e.shiftKey) toggle(key); else setSel(new Set([key]));
+  }
+
   const fileInput = useRef<HTMLInputElement>(null);
   const zipInput = useRef<HTMLInputElement>(null);
 
@@ -192,11 +251,24 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         </section>
       ) : null}
 
+      {manage ? <div className="doc-selslot">
+      {sel.size ? (
+        <div className="doc-selbar" role="toolbar" aria-label="Selected items">
+          <strong>{sel.size} selected</strong>
+          <button className="btn small" type="button" onClick={() => { setBulk("move"); bulkDlg.current?.showModal(); }}>Move</button>
+          <button className="btn small" type="button" onClick={() => { setBulk("copy"); bulkDlg.current?.showModal(); }}>Copy</button>
+          <button className="btn small danger-btn" type="button" onClick={() => { setBulk("delete"); bulkDlg.current?.showModal(); }}>Delete</button>
+          <button className="linkbtn" type="button" onClick={() => setSel(new Set())}>Clear</button>
+        </div>
+      ) : !itemsEmpty ? <p className="when" style={{ margin: 0, paddingTop: 14 }}>Tip: drag a box around items to select several, or tick the boxes. Double-click to open.</p> : null}
+      </div> : null}
+      <div ref={area} className={"doc-area" + (manage ? " selectable" : "")} onPointerDown={startMarquee}>
       {itemsEmpty ? <section className="card-s"><p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p></section> : layout === "grid" ? (
         <ul className="doc-grid">
           {folders.map((f) => (
-            <li key={f.id} className="doc-card">
-              <Link href={`${basePath}?f=${f.id}`} className="doc-card-main">
+            <li key={f.id} className={"doc-card" + (sel.has(k("folder", f.id)) ? " selected" : "")} data-sel={manage ? k("folder", f.id) : undefined}>
+              {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("folder", f.id))} onChange={() => toggle(k("folder", f.id))} /> : null}
+              <Link href={`${basePath}?f=${f.id}`} className="doc-card-main" onClick={(e) => itemClick(e, k("folder", f.id), () => {})} onDoubleClick={() => manage && router.push(`${basePath}?f=${f.id}`)} draggable={false}>
                 <span className="doc-cover folder" aria-hidden="true">📁</span>
                 <span className="doc-card-name">{f.name}</span>
                 {isAdmin && (f.for_leads || f.for_downline) ? <span className="doc-tags">{f.for_leads ? <Tag>Leads</Tag> : null}{f.for_downline ? <Tag>Downline</Tag> : null}</span> : null}
@@ -205,8 +277,9 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
             </li>
           ))}
           {files.map((f) => (
-            <li key={f.id} className="doc-card">
-              <button type="button" className="doc-card-main" onClick={() => open(f)}>
+            <li key={f.id} className={"doc-card" + (sel.has(k("file", f.id)) ? " selected" : "")} data-sel={manage ? k("file", f.id) : undefined}>
+              {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("file", f.id))} onChange={() => toggle(k("file", f.id))} /> : null}
+              <button type="button" className="doc-card-main" onClick={(e) => itemClick(e, k("file", f.id), () => open(f))} onDoubleClick={() => manage && open(f)}>
                 <Cover f={f} url={thumbUrls[f.id]} />
                 <span className="doc-card-name">{f.name}</span>
                 <span className="doc-tags">
@@ -221,8 +294,9 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
       ) : (
         <ul className="doc-list">
           {folders.map((f) => (
-            <li key={f.id}>
-              <Link href={`${basePath}?f=${f.id}`} className="doc-row">
+            <li key={f.id} className={"" + (sel.has(k("folder", f.id)) ? " selected" : "")} data-sel={manage ? k("folder", f.id) : undefined}>
+              {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("folder", f.id))} onChange={() => toggle(k("folder", f.id))} /> : null}
+              <Link href={`${basePath}?f=${f.id}`} className="doc-row" onClick={(e) => itemClick(e, k("folder", f.id), () => {})} onDoubleClick={() => manage && router.push(`${basePath}?f=${f.id}`)} draggable={false}>
                 <span className="doc-ico" aria-hidden="true">📁</span>
                 <span className="doc-name">{f.name}</span>
                 {isAdmin ? <span className="doc-tags">{f.for_leads ? <Tag>Leads</Tag> : null}{f.for_downline ? <Tag>Lacey&apos;s downline</Tag> : null}</span> : null}
@@ -231,8 +305,9 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
             </li>
           ))}
           {files.map((f) => (
-            <li key={f.id}>
-              <button type="button" className="doc-row" onClick={() => open(f)}>
+            <li key={f.id} className={"" + (sel.has(k("file", f.id)) ? " selected" : "")} data-sel={manage ? k("file", f.id) : undefined}>
+              {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("file", f.id))} onChange={() => toggle(k("file", f.id))} /> : null}
+              <button type="button" className="doc-row" onClick={(e) => itemClick(e, k("file", f.id), () => open(f))} onDoubleClick={() => manage && open(f)}>
                 <span className="doc-ico" aria-hidden="true">{f.mime.startsWith("image/") ? "🖼️" : f.mime.startsWith("video/") ? "🎬" : f.mime.startsWith("audio/") ? "🎧" : f.mime === "application/pdf" ? "📕" : "📄"}</span>
                 <span className="doc-name">{f.name}</span>
                 <span className="doc-tags">
@@ -246,6 +321,8 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           ))}
         </ul>
       )}
+      {box ? <div className="doc-marquee" style={{ left: box.x, top: box.y, width: box.w, height: box.h }} aria-hidden="true" /> : null}
+      </div>
       {role === "lead" ? <p className="when" style={{ marginTop: 18 }}>More documents unlock when you join the Free Life Collective as an affiliate.</p> : null}
 
       <dialog ref={viewer} className="rs-dialog doc-viewer" aria-labelledby="dv-title" onClose={() => setView(null)}>
@@ -265,6 +342,10 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           <button className="btn" type="button" onClick={() => viewer.current?.close()}>Close</button>
           {view?.download ? <a className="btn primary" href={view.download} style={{ textDecoration: "none" }}>Download</a> : null}
         </div>
+      </dialog>
+
+      <dialog ref={bulkDlg} className="rs-dialog" aria-labelledby="bulk-title" onClose={() => setBulk(null)}>
+        {bulk ? <BulkDialog key={bulk + picked.length} mode={bulk} items={picked} folders={allFolders} currentFolder={folderId} onClose={() => bulkDlg.current?.close()} onDone={() => { bulkDlg.current?.close(); setSel(new Set()); router.refresh(); }} /> : null}
       </dialog>
 
       <dialog ref={editor} className="rs-dialog" aria-labelledby="de-title" onClose={() => setEdit(null)}>
