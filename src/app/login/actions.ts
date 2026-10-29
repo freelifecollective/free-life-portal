@@ -1,10 +1,11 @@
 "use server";
 
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { supabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
-export type LoginState = { status: "idle" | "sent" | "error"; message: string };
+export type LoginState = { status: "idle" | "sent" | "error"; message: string; email?: string; next?: string };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -35,5 +36,22 @@ export async function sendMagicLink(_prev: LoginState, form: FormData): Promise<
     return { status: "error", message: "Too many sign-in emails have been requested. Please wait about an hour and try again." };
   }
   if (error && !notInvited) return { status: "error", message: "We could not send that link. Please try again in a minute." };
-  return { status: "sent", message: "If that email is on our list, a sign-in link is on its way." };
+  return { status: "sent", message: "If that email is on our list, a sign-in email is on its way.", email, next };
+}
+
+export type CodeState = { error: string };
+
+/** Signs in with the 6-digit code from the email. Works in the same browser or app where the code was asked for. */
+export async function verifyCode(email: string, next: string, _prev: CodeState, form: FormData): Promise<CodeState> {
+  const token = String(form.get("code") ?? "").replace(/\D/g, "");
+  if (!EMAIL.test(email)) return { error: "Please start again and request a new code." };
+  if (token.length !== 6) return { error: "Enter the 6-digit code from the email." };
+  if (!supabaseConfigured) return { error: "Sign-in is not configured yet." };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+  if (error) {
+    if (error.status === 429) return { error: "Too many tries. Please wait a few minutes and try again." };
+    return { error: "That code did not work. It may have been typed wrong or expired. Check it, or request a new one." };
+  }
+  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/");
 }
