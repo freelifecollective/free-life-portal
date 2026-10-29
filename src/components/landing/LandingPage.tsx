@@ -3,6 +3,7 @@ import { LocalTime } from "@/components/calendar/LocalTime";
 import { formatInZone } from "@/lib/time";
 import { REGISTRATION_GOAL, type PublicCall, type PublicLanding } from "@/lib/landing/types";
 import { GoalBar } from "./GoalBar";
+import { LandingTracker } from "./LandingTracker";
 import { LandingRegister } from "./LandingRegister";
 import { OwnerTools } from "./OwnerTools";
 import { SocialButtons } from "./SocialButtons";
@@ -20,6 +21,7 @@ export function LandingPage({ page, call, owner }: { page: PublicLanding; call: 
   const initials = (page.first_name.charAt(0) + (page.last_name ?? "").charAt(0)).toUpperCase();
   return (
     <div className="lp">
+      <LandingTracker username={page.username} skip={owner !== null} />
       <header className="lp-top"><span className="brand">Free Life Collective</span></header>
 
       <section className="lp-hero">

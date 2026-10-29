@@ -14,6 +14,7 @@ export type Call = {
   duration_minutes: number;
   pinned: boolean;
   join_url: string | null;
+  host: string | null;
 };
 
 export type Person = { name: string; username: string | null; avatar_url: string | null; mode: RsvpMode };
@@ -27,4 +28,4 @@ export function defaultAudience(kind: CallKind): Audience {
   return kind === "masterclass" ? "affiliates_only" : "leads_open";
 }
 
-export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url";
+export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host";

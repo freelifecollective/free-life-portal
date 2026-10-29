@@ -20,7 +20,7 @@ export default async function RecordingPage(props: PageProps<"/calls/[id]">) {
       <p style={{ margin: "0 0 8px" }}><Link className="doc-back" href="/calls">← Back to Calls</Link></p>
       <PageHeading lede={formatInZone(new Date(rec.recorded_at))}>{rec.title}</PageHeading>
       <div style={{ maxWidth: 900 }}>
-        <RecordingPlayer vimeoId={rec.vimeo_id} hash={rec.vimeo_hash} start={rec.start_secs} end={rec.end_secs} title={rec.title} />
+        <RecordingPlayer recordingId={rec.id} vimeoId={rec.vimeo_id} hash={rec.vimeo_hash} start={rec.start_secs} end={rec.end_secs} title={rec.title} />
         {rec.topics.length ? <p className="tags-row">{rec.topics.map((t) => <Link key={t} className="doc-tag" href={`/calls?topic=${encodeURIComponent(t)}`} style={{ textDecoration: "none", color: "inherit" }}>{t}</Link>)}</p> : null}
         {rec.description ? <p className="post-body" style={{ marginTop: 16 }}>{rec.description}</p> : null}
         {rec.call_id ? <p style={{ marginTop: 16 }}><SeeFeedback callId={rec.call_id} /></p> : null}

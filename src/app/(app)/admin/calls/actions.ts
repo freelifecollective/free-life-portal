@@ -18,16 +18,18 @@ function parse(form: FormData): Parsed {
   const duration = Number(form.get("duration"));
   const description = String(form.get("description") ?? "").trim();
   const joinUrl = String(form.get("join_url") ?? "").trim();
+  const host = String(form.get("host") ?? "").trim();
   if (!title || title.length > 120) return { ok: false, error: "Give the call a title of up to 120 characters." };
   if (!CALL_KINDS.includes(kind)) return { ok: false, error: "Choose what kind of call it is." };
   if (!AUDIENCES.includes(audience)) return { ok: false, error: "Choose who the call is for." };
   if (!starts) return { ok: false, error: "Enter a start date and time. If you did, that time does not exist because the clocks change (try an hour later)." };
   if (!Number.isInteger(duration) || duration < 15 || duration > 480) return { ok: false, error: "The length must be between 15 and 480 minutes." };
+  if (host.length > 80) return { ok: false, error: "Keep the name of who is leading the call under 80 characters." };
   if (description.length > 2000) return { ok: false, error: "Keep the description under 2000 characters." };
   if (joinUrl && !/^https:\/\/\S+$/.test(joinUrl)) return { ok: false, error: "The join link must start with https://" };
   return {
     ok: true,
-    value: { title, kind, audience, starts_at: starts.toISOString(), duration_minutes: duration, description: description || null, join_url: joinUrl || null, pinned: form.get("pinned") === "on" },
+    value: { title, kind, audience, starts_at: starts.toISOString(), duration_minutes: duration, description: description || null, join_url: joinUrl || null, host: host || null, pinned: form.get("pinned") === "on" },
   };
 }
 
