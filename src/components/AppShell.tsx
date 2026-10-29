@@ -28,6 +28,15 @@ const NAV: NavItem[] = [
   { label: "People and invites", href: "/admin/people", min: "admin", admin: true },
 ];
 
+/** Home first, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
+function ordered(items: NavItem[]): NavItem[] {
+  const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
+  const home = items.filter((n) => n.label === "Home");
+  const rest = items.filter((n) => n.label !== "Home" && !n.admin).sort(az);
+  const admin = items.filter((n) => n.admin);
+  return [...home, ...rest, ...admin.filter((n) => n.heading), ...admin.filter((n) => !n.heading).sort(az)];
+}
+
 export function AppShell({ session, badges = {}, children }: { session: AppSession; badges?: Record<string, number>; children: ReactNode }) {
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
@@ -46,7 +55,7 @@ export function AppShell({ session, badges = {}, children }: { session: AppSessi
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={NAV.filter((n) => canSee(p.role, n.min)).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>
