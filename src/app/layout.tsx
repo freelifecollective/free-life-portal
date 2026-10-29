@@ -21,6 +21,7 @@ const raleway = Raleway({
 export const metadata: Metadata = {
   title: { default: "Free Life Collective", template: "%s | Free Life Collective" },
   description: "The Free Life Collective community portal.",
+  manifest: "/manifest.webmanifest",
   icons: { apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "FLC", statusBarStyle: "default" },
 };
