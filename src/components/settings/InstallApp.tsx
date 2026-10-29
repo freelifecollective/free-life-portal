@@ -30,7 +30,7 @@ export function InstallApp() {
     return <button className="btn primary" type="button" onClick={async () => { await evt.prompt(); const c = await evt.userChoice; if (c.outcome === "accepted") setDone(true); setEvt(null); }}>Install the app</button>;
   }
   if (env.startsWith("ios")) {
-    return <p style={{ margin: 0 }}>To install on iPhone or iPad: open this page in <strong>Safari</strong>, tap the <strong>Share</strong> button (the square with an arrow), then tap <strong>View More</strong> (the down arrow) and <strong>Add to Home Screen</strong>. A picture guide is below.</p>;
+    return <p style={{ margin: 0 }}>To install on iPhone or iPad: open this page in <strong>Safari</strong>, tap the <strong>three dots</strong> at the bottom of the screen, tap <strong>Share</strong>, then tap <strong>View More</strong> and <strong>Add to Home Screen</strong>. A picture guide is below.</p>;
   }
   return <p style={{ margin: 0 }}>To install: open your browser menu and choose <strong>Install app</strong> or <strong>Add to Home Screen</strong>.</p>;
 }

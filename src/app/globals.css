@@ -436,3 +436,27 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .activity li:first-child { border-top: 0; }
 .activity li.undone .act-main strong { text-decoration: line-through; color: var(--muted); }
 .act-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+
+/* plan buttons, messages */
+.plan-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.plan-actions .btn { width: 100%; }
+.thread { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.thread li { display: flex; flex-direction: column; gap: 3px; max-width: 82%; }
+.thread li.mine { align-self: flex-end; align-items: flex-end; }
+.thread li.theirs { align-self: flex-start; }
+.bubble { padding: 10px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+.thread li.mine .bubble { background: var(--tint); }
+.convo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.convo-list li { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.convo-list li.unread { border-color: var(--accent); background: #fff; }
+.convo-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: inherit; text-decoration: none; }
+.convo-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.convo-last { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.convo-list li.unread .convo-last { color: var(--ink); font-weight: 600; }
+.convo-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+.convo-meta .badge { margin: 0; }
+.peek { flex: none; width: 40px; height: 40px; margin-right: 10px; display: inline-grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: var(--ink); cursor: pointer; }
+.peek:hover { background: var(--tint); }
+.pick-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; }
+.pick-list button { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 1px; padding: 10px 12px; border: 0; background: none; border-radius: 8px; font: inherit; cursor: pointer; }
+.pick-list button:hover { background: var(--tint); }
