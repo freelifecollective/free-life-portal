@@ -7,7 +7,7 @@ import { isViewable, MAX_FILE_BYTES } from "@/lib/documents/types";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Result = { ok: boolean; error?: string };
 type IdResult = { ok: boolean; error?: string; id?: string };
-const refresh = () => revalidatePath("/documents");
+const refresh = () => { revalidatePath("/documents"); revalidatePath("/admin/documents"); };
 const cleanName = (s: unknown, max: number) => String(s ?? "").trim().replace(/[\\/]+/g, "-").slice(0, max);
 const parentOk = (p: string | null) => p === null || UUID.test(p);
 
