@@ -12,7 +12,7 @@ import type { AppSession } from "@/lib/profile/types";
 import { SearchIcon } from "./SearchIcon";
 import { UserMenu } from "./UserMenu";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
@@ -25,31 +25,34 @@ const NAV: NavItem[] = [
   { label: "Classroom", min: "lead" },
   { label: "Calls", href: "/calls", min: "lead" },
   { label: "Documents", href: "/documents", min: "lead" },
-  { label: "Accountability Buddy", href: "/buddy", min: "member" },
+  { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
+  { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
   { label: "Commission calculator", href: "/calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
   { label: "Water Share Map", href: "/water-map", min: "member" },
   { label: "Call Closers for Hire", min: "member" },
   { label: "Free Life AI", min: "member" },
-  { label: "Facebook Follows", min: "member" },
-  { label: "Admin only", min: "admin", admin: true, heading: true },
-  { label: "Activity log", href: "/admin/activity", min: "admin", admin: true },
-  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true },
-  { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true },
-  { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true },
-  { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true },
-  { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true },
-  { label: "People and invites", href: "/admin/people", min: "admin", admin: true },
-  { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true },
+  { label: "Facebook Follows", min: "member", group: "Onboarding" },
+  { label: "Admin only", min: "admin", admin: true, heading: true, group: "Admin only" },
+  { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Admin only" },
+  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Admin only" },
+  { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Admin only" },
+  { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Admin only" },
+  { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Admin only" },
+  { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true, group: "Admin only" },
+  { label: "People and invites", href: "/admin/people", min: "admin", admin: true, group: "Admin only" },
+  { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Admin only" },
 ];
 
-/** Home first, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
+/** Home first, then the "Onboarding" section, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
 function ordered(items: NavItem[]): NavItem[] {
   const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
   const home = items.filter((n) => n.label === "Home");
-  const rest = items.filter((n) => n.label !== "Home" && !n.admin).sort(az);
+  const onboarding = items.filter((n) => n.group === "Onboarding");
+  const rest = items.filter((n) => n.label !== "Home" && !n.admin && !n.group).sort(az);
   const admin = items.filter((n) => n.admin);
-  return [...home, ...rest, ...admin.filter((n) => n.heading), ...admin.filter((n) => !n.heading).sort(az)];
+  const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
+  return [...home, ...sections(onboarding), ...rest, ...sections(admin)];
 }
 
 export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {
@@ -80,7 +83,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>

@@ -753,3 +753,4 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .ws-choice legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
 .ws-choice label { display: inline-flex; align-items: center; gap: 6px; }
 .ws-policy { margin: 0; }
+.nav li.nav-sub { margin-left: 8px; border-left: 2px solid var(--line); }
