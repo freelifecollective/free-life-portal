@@ -50,7 +50,7 @@ export function AppShell({ session, badges = {}, children }: { session: AppSessi
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
         <div className="top-right">
-          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} />
+          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
         </div>
       </header>
       <div className="app-body">
