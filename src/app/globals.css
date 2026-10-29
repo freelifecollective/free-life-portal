@@ -111,7 +111,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
   border-bottom: 1px solid var(--line); background: var(--bg);
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
 }
-.brand { font-family: var(--font-display); font-weight: 600; font-size: 17px; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.brand { font-family: var(--font-label); font-weight: 600; font-size: 19px; letter-spacing: 0.01em; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .brand-logo { display: none; width: 34px; height: 34px; flex: none; }
 @media (min-width: 769px) { .brand-logo { display: block; } }
 .search { flex: 1; max-width: 460px; margin-inline: auto; }
@@ -370,7 +370,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .user-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; min-width: 210px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 8px 28px rgba(0,0,0,.14); display: flex; flex-direction: column; }
 .user-pop a, .user-pop button { display: block; width: 100%; text-align: left; padding: 11px 12px; border: 0; background: none; border-radius: 8px; font: inherit; font-size: 15px; color: var(--ink); text-decoration: none; cursor: pointer; }
 .user-pop a:hover, .user-pop button:hover { background: var(--surface); }
-@media (max-width: 768px) { .app-top { gap: 12px; } .brand { font-size: 16px; } .top-right { margin-left: auto; } }
+@media (max-width: 768px) { .app-top { gap: 10px; } .brand { font-size: 18px; white-space: normal; line-height: 1.12; min-width: 0; flex: 1; } .top-right { margin-left: 0; } }
 
 /* profile picture edit, payments, app steps */
 .avatar-edit { position: relative; display: inline-flex; border-radius: 50%; text-decoration: none; }
@@ -571,3 +571,6 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 }
 .menu-btn:hover, .hdr-btn:hover { background: rgba(43, 37, 34, 0.06); }
 .menu-btn:focus-visible, .hdr-btn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+
+/* the magnifying glass looks left-heavy, so nudge it to sit evenly with the other icons */
+.search-icon .hdr-btn svg { transform: translateX(2px); }
