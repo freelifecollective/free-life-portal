@@ -11,6 +11,7 @@ export function UserMenu({ url, initials, preview, label, showSubscription }: { 
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === path; // changing page closes it
   const box = useRef<HTMLDivElement>(null);
+  const logoutDialog = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -30,12 +31,20 @@ export function UserMenu({ url, initials, preview, label, showSubscription }: { 
       {open ? (
         <div className="user-pop" role="menu">
           <Link href="/settings" role="menuitem">Profile</Link>
-          {showSubscription ? <Link href="/settings/subscription" role="menuitem">Subscription Settings</Link> : null}
+          {showSubscription ? <Link href="/settings/subscription" role="menuitem">My Subscription</Link> : null}
           <Link href="/settings/app" role="menuitem">Get the App</Link>
           <button type="button" role="menuitem" onClick={() => { setOpenAt(null); window.dispatchEvent(new Event("flc:tour")); }}>Take the tour</button>
-          <form action="/logout" method="post"><button type="submit" role="menuitem">Sign out</button></form>
+          <button type="button" role="menuitem" onClick={() => { setOpenAt(null); logoutDialog.current?.showModal(); }}>Log out</button>
         </div>
       ) : null}
+      <dialog ref={logoutDialog} className="rs-dialog" aria-labelledby="logout-title">
+        <h2 id="logout-title" className="qh" style={{ marginTop: 0 }}>Log out</h2>
+        <p>Are you sure you want to log out from the portal?</p>
+        <form action="/logout" method="post" className="dlg-actions">
+          <button type="button" className="btn" onClick={() => logoutDialog.current?.close()}>Cancel</button>
+          <button type="submit" className="btn primary">Log out</button>
+        </form>
+      </dialog>
     </div>
   );
 }

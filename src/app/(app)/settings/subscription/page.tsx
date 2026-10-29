@@ -6,12 +6,12 @@ import { formatMoney, type Payment } from "@/lib/payments/receipt";
 import { formatInZone } from "@/lib/time";
 
 export const instant = false;
-export const metadata = { title: "Subscription settings" };
+export const metadata = { title: "My Subscription" };
 
 export default async function SubscriptionPage() {
   const { session, supabase } = await requireMember();
   if (session.profile.role === "lead") redirect("/settings");
-  if (!supabase) return <><PageHeading>Subscription settings</PageHeading><p className="page-lede">This needs the database.</p></>;
+  if (!supabase) return <><PageHeading>My Subscription</PageHeading><p className="page-lede">This needs the database.</p></>;
   const { data } = await supabase.from("payments")
     .select("id, receipt_no, amount_cents, currency, description, status, paid_at")
     .order("paid_at", { ascending: false }).limit(500);
@@ -21,7 +21,7 @@ export default async function SubscriptionPage() {
 
   return (
     <>
-      <PageHeading>Subscription settings</PageHeading>
+      <PageHeading>My Subscription</PageHeading>
       <div className="settings">
         <section className="card-s">
           <h2 className="qh" style={{ marginTop: 0 }}>Your plan</h2>
@@ -29,7 +29,7 @@ export default async function SubscriptionPage() {
             <div><dt>Current plan</dt><dd>Not connected yet</dd></div>
             <div><dt>Next payment</dt><dd>Not connected yet</dd></div>
           </dl>
-          <div className="set-actions" style={{ marginTop: 14 }}>
+          <div className="plan-actions">
             <button className="btn" type="button" disabled>Upgrade</button>
             <button className="btn" type="button" disabled>Downgrade</button>
           </div>
@@ -83,7 +83,6 @@ export default async function SubscriptionPage() {
         ) : null}
 
         <section className="card-s">
-          <h2 className="qh" style={{ marginTop: 0 }}>Cancel subscription</h2>
           <CancelSubscription />
         </section>
       </div>

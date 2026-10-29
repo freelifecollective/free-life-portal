@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { TOUR_VERSION } from "@/lib/tour";
+import { unreadMessageCount } from "@/lib/messages/queries";
 import { pendingFinancingCount } from "@/lib/financing/queries";
 import { pendingSubmissionCount } from "@/lib/resources/queries";
 
@@ -25,6 +26,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
       db.from("member_tour").select("seen_version").maybeSingle(),
     ]);
     unread = count ?? 0;
+    badges["/messages"] = await unreadMessageCount(db);
     showTour = ((tour as { seen_version: number } | null)?.seen_version ?? 0) < TOUR_VERSION;
   }
   if (session.mode === "supabase" && session.profile.role === "admin") {

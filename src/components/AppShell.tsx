@@ -14,6 +14,7 @@ type NavItem = { label: string; href?: string; min: Role; admin?: boolean; headi
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead" },
   { label: "Calendar", href: "/calendar", min: "lead" },
+  { label: "Messages", href: "/messages", min: "lead" },
   { label: "Financing Options", href: "/financing", min: "lead" },
   { label: "Chats", href: "/chats", min: "lead" },
   { label: "Verbiage + Objections", href: "/responses", min: "member" },
