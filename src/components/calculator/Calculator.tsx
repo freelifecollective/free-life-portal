@@ -9,7 +9,7 @@ const COLS = 6; // products per row on a full-width screen
 
 /** Products that start a new row on a full-width screen (the row before it is left short). Narrow screens ignore this. */
 const ROW_STARTS: Record<string, string[]> = {
-  "United States": ["SD501U", "Beaute DD"],
+  "United States": ["SD501U", "Beaute \u03a3"],
   Europe: ["JRIV"],
   "New Zealand": ["JRIV"],
   Mexico: ["JRIV"],
