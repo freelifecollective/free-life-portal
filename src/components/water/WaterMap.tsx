@@ -3,6 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Map as LMap, Marker, CircleMarker } from "leaflet";
+import { Avatar } from "@/components/Avatar";
 import { searchPlace } from "@/app/(app)/water-map/actions";
 import { formatDistance, nearest } from "@/lib/water/geo";
 import { pinName, WATER_LABEL, type Place, type WaterPin } from "@/lib/water/types";
@@ -83,9 +84,12 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
                 {found.list.map((p) => (
                   <li key={p.member_id}>
                     <button type="button" onClick={() => show(p)}>
-                      <strong>{pinName(p)}{p.member_id === myId ? " (you)" : ""}</strong>
-                      <span>{formatDistance(p.km)} away</span>
-                      <span className="when">{p.place} · {WATER_LABEL[p.water_type]} · {p.prefilter ? "Prefilter" : "No prefilter"}</span>
+                      <Avatar url={p.avatar_url} initials={initialsOf(p)} size={40} label={pinName(p)} />
+                      <span className="ws-res-text">
+                        <strong>{pinName(p)}{p.member_id === myId ? " (you)" : ""}</strong>
+                        <span>{formatDistance(p.km)} away</span>
+                        <span className="when">{p.place} · {WATER_LABEL[p.water_type]} · {p.prefilter ? "Prefilter" : "No prefilter"}</span>
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -103,12 +107,39 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
 function popupFor(p: WaterPin, mine: boolean): HTMLElement {
   const el = document.createElement("div");
   el.className = "ws-pop";
-  const add = (tag: string, text: string, cls?: string) => { const n = document.createElement(tag); n.textContent = text; if (cls) n.className = cls; el.appendChild(n); };
-  add("strong", pinName(p) + (mine ? " (you)" : ""));
-  if (p.username) add("span", "@" + p.username, "when");
+  const head = document.createElement("div");
+  head.className = "ws-pop-head";
+  const size = "56px";
+  if (p.avatar_url) {
+    const img = document.createElement("img");
+    img.className = "avatar";
+    img.src = p.avatar_url;
+    img.alt = "";
+    img.width = img.height = 56;
+    img.style.width = img.style.height = size;
+    head.appendChild(img);
+  } else {
+    const dot = document.createElement("span");
+    dot.className = "avatar";
+    dot.textContent = initialsOf(p);
+    dot.style.width = dot.style.height = size;
+    dot.style.fontSize = "21px";
+    head.appendChild(dot);
+  }
+  const text = document.createElement("div");
+  text.className = "ws-pop-text";
+  head.appendChild(text);
+  el.appendChild(head);
+  const add = (tag: string, line: string, cls?: string, into: HTMLElement = el) => { const n = document.createElement(tag); n.textContent = line; if (cls) n.className = cls; into.appendChild(n); };
+  add("strong", pinName(p) + (mine ? " (you)" : ""), undefined, text);
+  if (p.username) add("span", "@" + p.username, "when", text);
   add("span", p.place);
   if (p.rank) add("span", "Rank: " + p.rank);
   add("span", p.prefilter ? "Has a prefilter" : "No prefilter");
   add("span", WATER_LABEL[p.water_type]);
   return el;
+}
+
+function initialsOf(p: WaterPin): string {
+  return ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
 }
