@@ -7,15 +7,16 @@ import { MenuButton, MenuProvider, NavPanel } from "./MobileMenu";
 import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
 import type { AppSession } from "@/lib/profile/types";
+import { SearchIcon } from "./SearchIcon";
 import { UserMenu } from "./UserMenu";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; desktopOnly?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead" },
   { label: "Calendar", href: "/calendar", min: "lead" },
-  { label: "Messages", href: "/messages", min: "lead" },
+  { label: "Messages", href: "/messages", min: "lead", desktopOnly: true },
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
   { label: "Financing Options", href: "/financing", min: "lead" },
   { label: "Chats", href: "/chats", min: "lead" },
@@ -61,13 +62,18 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
         <div className="top-right">
-          {session.mode === "supabase" ? <NotificationBell count={unread} userId={session.user.id} /> : null}
-          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
+          <SearchIcon />
+          <Link href="/messages" className="hdr-btn phone-only" aria-label={badges["/messages"] ? `Messages, ${badges["/messages"]} unread` : "Messages"}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+            {badges["/messages"] ? <span className="badge bell-badge" aria-hidden="true">{badges["/messages"] > 99 ? "99+" : badges["/messages"]}</span> : null}
+          </Link>
+          {session.mode === "supabase" ? <span className="desk-only"><NotificationBell count={unread} userId={session.user.id} /></span> : null}
+          <UserMenu unread={unread} showNotifications={session.mode === "supabase"} url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
         </div>
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading, desktopOnly }) => ({ label, href, heading, desktopOnly, badge: href ? badges[href] : undefined }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>
