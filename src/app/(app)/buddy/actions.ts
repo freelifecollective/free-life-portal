@@ -51,3 +51,13 @@ export async function chooseBuddy(otherId: string): Promise<Result> {
   return { ok: true };
 }
 
+
+/** Start over: every answer is cleared, as if they had never filled it in. */
+export async function resetBuddyAnswers(): Promise<Result> {
+  const { supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Needs the database." };
+  const { error } = await supabase.rpc("ab_reset");
+  if (error) return { ok: false, error: "We could not clear your answers. Please try again." };
+  revalidatePath("/buddy");
+  return { ok: true };
+}
