@@ -3,12 +3,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type FinancingOption = {
   id: string; title: string; description: string; link: string | null;
-  status: "pending" | "approved" | "declined"; submitted_by: string | null; created_at: string; review_note: string | null;
+  country: string; status: "pending" | "approved" | "declined"; submitted_by: string | null; created_at: string; review_note: string | null;
 };
-const COLS = "id, title, description, link, status, submitted_by, created_at, review_note";
+const COLS = "id, title, description, link, country, status, submitted_by, created_at, review_note";
 
-export async function listApproved(supabase: SupabaseClient): Promise<FinancingOption[]> {
-  const { data } = await supabase.from("financing_options").select(COLS).eq("status", "approved").order("title");
+export async function listApproved(supabase: SupabaseClient, country: string): Promise<FinancingOption[]> {
+  const { data } = await supabase.from("financing_options").select(COLS).eq("status", "approved").eq("country", country).order("title");
   return (data ?? []) as FinancingOption[];
 }
 

@@ -93,3 +93,11 @@ export async function pinPost(postId: string, slug: string, on: boolean): Promis
   refresh(slug);
   return { ok: true };
 }
+
+/** Counts these posts as seen by the signed-in person (only chats that show view counts keep them). */
+export async function markSeen(postIds: string[]): Promise<void> {
+  const ids = postIds.filter((x) => UUID.test(x)).slice(0, 100);
+  if (!ids.length) return;
+  const { supabase } = await requireMember();
+  await supabase?.rpc("mark_posts_seen", { p_posts: ids });
+}

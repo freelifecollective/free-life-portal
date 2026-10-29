@@ -38,7 +38,7 @@ export default async function AdminCallsPage() {
 
   return (
     <>
-      <PageHeading lede="Add the week's calls. Times are Eastern. Community calls are open to leads; masterclasses are for affiliates.">Manage calls</PageHeading>
+      <PageHeading>Manage calls</PageHeading>
       <section className="card-s" style={{ maxWidth: 680 }} aria-label="Add a call">
         <h2 className="qh" style={{ marginTop: 0 }}>Add a call</h2>
         <CallForm action={createCall} submitLabel="Add call" />

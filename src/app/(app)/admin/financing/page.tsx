@@ -17,7 +17,7 @@ export default async function FinancingAdmin() {
   const rest = all.filter((o) => o.status !== "pending");
   return (
     <>
-      <PageHeading lede="Suggestions from affiliates. Approved options appear on the Financing Options page for everyone.">Financing submissions</PageHeading>
+      <PageHeading>Financing submissions</PageHeading>
       <h2 className="qh">Waiting for review ({pending.length})</h2>
       {pending.length === 0 ? <p className="page-lede">Nothing waiting.</p> : pending.map((o) => <FinancingRow key={o.id} o={o} who={who(o)} />)}
       <h2 className="qh" style={{ marginTop: 36 }}>Add one yourself</h2>

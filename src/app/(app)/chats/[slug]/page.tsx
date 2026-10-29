@@ -3,6 +3,7 @@ import { PageHeading } from "@/components/PageHeading";
 import { ChatList } from "@/components/chats/ChatList";
 import { Composer } from "@/components/chats/Composer";
 import { LiveRefresh } from "@/components/chats/LiveRefresh";
+import { SeenReporter } from "@/components/chats/SeenReporter";
 import { PinnedPost } from "@/components/chats/PinnedPost";
 import { PostCard } from "@/components/chats/PostCard";
 import { canSee } from "@/lib/roles";
@@ -58,10 +59,11 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
         <div className="chat-main">
           <LiveRefresh />
           {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
-          <Composer chatId={chat.id} slug={slug} placeholder={chat.votes_on ? "Suggest how to respond…" : "Write a post…"} />
-          {pinned.map((p) => <PinnedPost key={p.id} post={p} slug={slug} voting={chat.votes_on} isAdmin={isAdmin} />)}
+          {chat.posting === "all" || isAdmin ? <Composer chatId={chat.id} slug={slug} placeholder={chat.votes_on ? "Suggest how to respond…" : "Write a post…"} /> : <p className="when" style={{ margin: 0 }}>Only admins can post here. You can react to updates.</p>}
+          {chat.show_views ? <SeenReporter ids={[...pinned, ...posts].map((p) => p.id)} /> : null}
+          {pinned.map((p) => <PinnedPost key={p.id} post={p} slug={slug} voting={chat.votes_on} isAdmin={isAdmin} canReply={chat.replies_allowed || isAdmin} showViews={chat.show_views} />)}
           {posts.length === 0 && pinned.length === 0 ? <p className="page-lede">Nothing here yet. Be the first to post!</p> : null}
-          {posts.map((p) => <PostCard key={p.id} post={p} slug={slug} voting={chat.votes_on} isAdmin={isAdmin} />)}
+          {posts.map((p) => <PostCard key={p.id} post={p} slug={slug} voting={chat.votes_on} isAdmin={isAdmin} canReply={chat.replies_allowed || isAdmin} showViews={chat.show_views} />)}
           {more ? <p><a className="btn" href={`/chats/${slug}?limit=${limit + PAGE}`}>Show older posts</a></p> : null}
         </div>
       </div>

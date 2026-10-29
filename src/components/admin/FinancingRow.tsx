@@ -12,7 +12,7 @@ export function FinancingRow({ o, who }: { o: FinancingOption; who: string }) {
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => start(async () => { setError(""); const r = await fn(); if (!r.ok) setError(r.error ?? "That did not work."); });
   return (
     <article className="post card-s" style={{ marginBottom: 14 }}>
-      <header className="post-head"><strong>{o.title}</strong><span className="when">{who} · {formatInZone(new Date(o.created_at))}</span></header>
+      <header className="post-head"><strong>{o.title} <span className="when">· {o.country}</span></strong><span className="when">{who} · {formatInZone(new Date(o.created_at))}</span></header>
       <p className="post-body">{o.description}</p>
       {o.link ? <p style={{ margin: "0 0 8px", overflowWrap: "anywhere" }}><a href={o.link} target="_blank" rel="noopener noreferrer nofollow">{o.link}</a></p> : null}
       {o.status === "pending" ? (
