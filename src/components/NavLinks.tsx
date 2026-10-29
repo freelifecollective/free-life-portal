@@ -19,18 +19,21 @@ function Item({ n, path }: { n: NavEntry; path: string }) {
 
 /**
  * The left-hand menu. The page you are on is highlighted; pages that do not exist yet say "Soon".
- * A heading (like "Onboarding" or "Admin only") folds away the items listed under it. "Onboarding" starts open, "Admin only" closed.
+ * "Onboarding" is a plain labelled section that is always open. "Admin only" folds away until you open it.
  */
 export function NavLinks({ items }: { items: NavEntry[] }) {
   const path = usePathname();
   const [manual, setManual] = useState<Record<string, boolean>>({});
   const on = (n: NavEntry) => !!n.href && (n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/"));
-  const isOpen = (label: string) => manual[label] ?? (label === "Onboarding" || items.some((g) => g.group === label && !g.heading && on(g)));
+  const isOpen = (label: string) => label === "Onboarding" || (manual[label] ?? items.some((g) => g.group === label && !g.heading && on(g)));
   const waiting = (label: string) => items.filter((g) => g.group === label && !g.heading).reduce((n, g) => n + (g.badge ?? 0), 0);
 
   return (
     <ul>
       {items.map((n) => {
+        if (n.heading && n.label === "Onboarding") {
+          return <li key={n.label} className="nav-group" data-nav={n.label}><span className="nav-toggle nav-static">{n.label}</span></li>;
+        }
         if (n.heading) {
           const open = isOpen(n.label);
           const w = waiting(n.label);
