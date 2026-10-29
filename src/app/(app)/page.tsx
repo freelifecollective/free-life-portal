@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { PageHeading } from "@/components/PageHeading";
 import { LiveBadge } from "@/components/LiveBadge";
 import { LocalTime } from "@/components/calendar/LocalTime";
 import { requireMember } from "@/lib/auth/guards";
 import { Attendees } from "@/components/calendar/Attendees";
+import { AddToCalendar } from "@/components/dashboard/AddToCalendar";
+import { Countdown } from "@/components/dashboard/Countdown";
 import { CopyInvite } from "@/components/dashboard/CopyInvite";
 import { formatMoney } from "@/lib/payments/receipt";
 import { upcomingPayments } from "@/lib/dashboard/payments";
 import { parseRange, presets } from "@/lib/dashboard/range";
 import { listUpcomingCalls, pickFeatured, rsvpSummary } from "@/lib/calls/queries";
-import { AUDIENCE_LABEL, KIND_LABEL } from "@/lib/calls/types";
-import { endsAt, formatInZone, nowMs, toZonedInput } from "@/lib/time";
+import { endsAt, formatDayInZone, formatInZone, nowMs, toZonedInput } from "@/lib/time";
 
 export const instant = false; // renders per signed-in member
 export const metadata = { title: "Home" };
@@ -47,92 +47,120 @@ export default async function HomePage(props: PageProps<"/">) {
   }
   const leadsHref = (show?: string) => `/leads?from=${range.from}&to=${range.to}${show ? `&show=${show}` : ""}`;
 
+  const endIso = next ? endsAt(new Date(next.starts_at), next.duration_minutes).toISOString() : "";
+  const registeredFromLink = stats?.call_registered ?? 0;
+
   return (
-    <>
-      <PageHeading lede={affiliate ? "Your community and your numbers, all in one place." : "This is your home in the Free Life Collective. More of the portal arrives step by step."}>
-        Welcome, {profile.first_name}
-      </PageHeading>
+    <div className="home">
+      <header className="home-head">
+        <p className="home-date"><span>{formatDayInZone(new Date(now)).toUpperCase()}</span></p>
+        <p className="home-eyebrow">Free Life Collective</p>
+        <h1 className="home-title">Welcome, {profile.first_name}</h1>
+      </header>
 
       {supabase ? (
-        <section className={"card-s dash-call" + (isLive ? " live-card on" : "")} aria-label="Next call">
-          <div className="label" style={{ marginBottom: 8 }}>{isLive ? <LiveBadge>LIVE · Happening now</LiveBadge> : "Next community call"}</div>
-          {next ? (
-            <>
-              <p className="dash-call-title">{next.title}</p>
-              {next.host ? <p className="dash-host">Led by <strong>{next.host}</strong></p> : null}
-              <p style={{ margin: "6px 0 0", fontWeight: 700 }}>{formatInZone(new Date(next.starts_at))}</p>
-              <LocalTime iso={next.starts_at} />
-              <p className="muted-line" style={{ margin: "6px 0 14px" }}>{KIND_LABEL[next.kind]} · {AUDIENCE_LABEL[next.audience]}</p>
-              {affiliate && profile.username && next.audience === "leads_open" ? (
-                <div className="dash-invite">
-                  <CopyInvite username={profile.username} />
-                  <p className="when" style={{ margin: 0 }}>Send this link to your leads so they can register for the call.</p>
-                  <p className="dash-count"><strong>{stats?.call_registered ?? 0}</strong> {(stats?.call_registered ?? 0) === 1 ? "lead has" : "leads have"} registered from your link</p>
+        <div className="home-row">
+          <section className={"home-call" + (isLive ? " live" : "")} aria-label="Next call">
+            <div className="hc-top">
+              <span className="hc-label">{affiliate ? "Next community call" : "Next call"}</span>
+              {isLive ? <LiveBadge>LIVE</LiveBadge> : next?.audience === "leads_open" ? <span className="hc-open"><span className="hc-dot" />Registration open</span> : null}
+            </div>
+            {next ? (
+              <>
+                <h2 className="hc-title">{next.title}</h2>
+                <p className="hc-meta">{next.host ? <>Hosted by <strong>{next.host}</strong> · </> : null}{formatInZone(new Date(next.starts_at))}</p>
+                <LocalTime iso={next.starts_at} />
+                <Countdown startsAt={next.starts_at} endsAt={endIso} />
+                <div className="hc-actions">
+                  {affiliate && profile.username && next.audience === "leads_open" ? <CopyInvite username={profile.username} className="dc-btn" /> : <Link className="dc-btn" href="/calendar">RSVP on the calendar</Link>}
+                  <AddToCalendar call={next} />
                 </div>
-              ) : null}
-              {summary ? (
-                <div style={{ margin: "16px 0" }}>
-                  <p className="label" style={{ margin: "0 0 8px" }}>Everyone who has RSVPed</p>
-                  <Attendees summary={summary} />
+              </>
+            ) : <p className="hc-title" style={{ fontSize: 22 }}>No calls are scheduled yet. <Link href="/calendar" style={{ color: "inherit" }}>Open the calendar</Link></p>}
+          </section>
+
+          <section className="home-side" aria-label="Who is coming">
+            {next ? (
+              <>
+                {affiliate && next.audience === "leads_open" ? (
+                  <div className="hs-block">
+                    <span className="hs-label">Registered from your link</span>
+                    <span className="hs-big">{registeredFromLink}</span>
+                    <span className="when">{registeredFromLink === 1 ? "lead has" : "leads have"} registered for this call</span>
+                  </div>
+                ) : null}
+                <div className="hs-block">
+                  <span className="hs-label">Total RSVPs</span>
+                  <span className="hs-big">{(summary?.live ?? 0) + (summary?.recording ?? 0)}</span>
+                  {summary ? <Attendees summary={summary} /> : null}
                 </div>
-              ) : null}
-              <Link className="btn" href="/calendar" style={{ textDecoration: "none", height: 44 }}>RSVP on the calendar</Link>
-            </>
-          ) : (
-            <p style={{ margin: 0 }}>No calls are scheduled yet. <Link className="linkbtn" href="/calendar" style={{ padding: 0 }}>Open the calendar</Link></p>
-          )}
-        </section>
+                <Link className="linkbtn" href="/calendar" style={{ padding: 0 }}>RSVP on the calendar →</Link>
+              </>
+            ) : <p className="when" style={{ margin: 0 }}>When a call is scheduled, everyone who RSVPs shows up here.</p>}
+          </section>
+        </div>
       ) : null}
 
       {supabase && affiliate ? (
         <>
-          <section className="dash-stats" aria-label="Your landing page results">
-            <div className="dash-stats-head">
-              <h2 className="qh" style={{ margin: 0 }}>Your results</h2>
-              <p className="when" style={{ margin: 0 }}>{longDay(range.from)} to {longDay(range.to)}</p>
-            </div>
-            <div className="dash-filter">
-              <div className="dash-presets">
-                {presets(today).map((r) => (
-                  <Link key={r.label} href={`/?from=${r.from}&to=${r.to}`} className={"chip" + (r.from === range.from && r.to === range.to ? " on" : "")}>{r.label}</Link>
-                ))}
+          <section className="home-stats" aria-label="Your landing page results">
+            <div className="hst-bar">
+              <div><h2 className="hst-title">Your results</h2><p className="when" style={{ margin: 0 }}>{longDay(range.from)} to {longDay(range.to)}</p></div>
+              <div className="dash-filter">
+                <div className="dash-presets">
+                  {presets(today).map((r) => (
+                    <Link key={r.label} href={`/?from=${r.from}&to=${r.to}`} className={"chip" + (r.from === range.from && r.to === range.to ? " on" : "")}>{r.label}</Link>
+                  ))}
+                </div>
+                <form action="/" method="get" className="dash-custom">
+                  <label>From <input type="date" name="from" defaultValue={range.from} max={today} /></label>
+                  <label>To <input type="date" name="to" defaultValue={range.to} max={today} /></label>
+                  <button className="btn" type="submit">Apply dates</button>
+                </form>
               </div>
-              <form action="/" method="get" className="dash-custom">
-                <label>From <input type="date" name="from" defaultValue={range.from} max={today} /></label>
-                <label>To <input type="date" name="to" defaultValue={range.to} max={today} /></label>
-                <button className="btn" type="submit">Apply dates</button>
-              </form>
             </div>
-            <div className="dash-tiles">
-              <div className="stat-tile"><span className="stat-n">{stats?.visitors ?? 0}</span><span className="stat-l">People who visited your page</span></div>
-              <div className="stat-tile"><span className="stat-n">{stats?.clicks ?? 0}</span><span className="stat-l">Clicks on &ldquo;save my spot&rdquo;</span><span className="stat-s">{pct(stats?.clicks ?? 0, stats?.visitors ?? 0)} of visitors</span></div>
-              <Link href={leadsHref()} className="stat-tile link"><span className="stat-n">{stats?.forms ?? 0}</span><span className="stat-l">Form fill-outs</span><span className="stat-s">{pct(stats?.forms ?? 0, stats?.visitors ?? 0)} of visitors · see your leads →</span></Link>
-              <Link href={leadsHref("registered")} className="stat-tile link"><span className="stat-n">{stats?.registered ?? 0}</span><span className="stat-l">Registered in the portal</span><span className="stat-s">{pct(stats?.registered ?? 0, stats?.forms ?? 0)} of fill-outs · see who →</span></Link>
+            <div className="hst-strip">
+              <div className="hst-cell"><span className="hst-l">Visited your page</span><span className="hst-n">{stats?.visitors ?? 0}</span></div>
+              <div className="hst-cell"><span className="hst-l">Clicks</span><span className="hst-n">{stats?.clicks ?? 0}</span><span className="stat-s">{pct(stats?.clicks ?? 0, stats?.visitors ?? 0)} of visitors</span></div>
+              <Link href={leadsHref()} className="hst-cell link"><span className="hst-l">Form fill-outs</span><span className="hst-n">{stats?.forms ?? 0}</span><span className="stat-s">{pct(stats?.forms ?? 0, stats?.visitors ?? 0)} of visitors · see your leads →</span></Link>
+              <Link href={leadsHref("registered")} className="hst-cell link"><span className="hst-l">Registered in the portal</span><span className="hst-n">{stats?.registered ?? 0}</span><span className="stat-s">{pct(stats?.registered ?? 0, stats?.forms ?? 0)} of fill-outs · see who →</span></Link>
             </div>
           </section>
 
-          <section className="card-s dash-pay" aria-label="Upcoming payments">
-            <h2 className="qh" style={{ margin: "0 0 10px" }}>Upcoming subscription payments</h2>
-            {payments.length ? (
-              <>
-                <ul className="kv">
-                  {payments.map((p) => <li key={p.date}><span>{longDay(p.date)}</span><span>{formatMoney(p.amount_cents, p.currency)} · {p.description}</span></li>)}
-                </ul>
-                <p className="when" style={{ margin: "10px 0 0" }}>Estimated from your last payment. <Link href="/settings/subscription">See your subscription</Link></p>
-              </>
-            ) : <p style={{ margin: 0 }}>No payments to show yet. <Link href="/settings/subscription">See your subscription</Link></p>}
-          </section>
+          <div className="home-row two">
+            <section className="home-card" aria-label="Upcoming payments">
+              <h2 className="hst-title">Upcoming subscription payments</h2>
+              {payments.length ? (
+                <>
+                  <ul className="kv">
+                    {payments.map((p) => <li key={p.date}><span>{longDay(p.date)}</span><span>{formatMoney(p.amount_cents, p.currency)} · {p.description}</span></li>)}
+                  </ul>
+                  <p className="when" style={{ margin: "10px 0 0" }}>Estimated from your last payment. <Link href="/settings/subscription">See your subscription</Link></p>
+                </>
+              ) : <p style={{ margin: 0 }}>No payments to show yet. <Link href="/settings/subscription">See your subscription</Link></p>}
+            </section>
+            <section className="home-card" aria-label="Your profile">
+              <h2 className="hst-title">Your profile</h2>
+              <ul className="kv">
+                <li><span>Username</span><span>@{profile.username}</span></li>
+                <li><span>Instagram</span><span>{profile.instagram ? "@" + profile.instagram : "Not added yet"}</span></li>
+                <li><span>Facebook</span><span>{profile.facebook ? "@" + profile.facebook : "Not added yet"}</span></li>
+              </ul>
+              {mode === "preview" ? <p className="status" style={{ marginBottom: 0 }}>Preview mode: nothing here is saved to a real account.</p> : null}
+            </section>
+          </div>
         </>
-      ) : null}
-
-      <section className="card-s" style={{ maxWidth: 460, marginTop: 20 }} aria-label="Your profile">
-        <ul className="kv">
-          <li><span>Username</span><span>@{profile.username}</span></li>
-          <li><span>Instagram</span><span>{profile.instagram ? "@" + profile.instagram : "Not added yet"}</span></li>
-          <li><span>Facebook</span><span>{profile.facebook ? "@" + profile.facebook : "Not added yet"}</span></li>
-        </ul>
-        {mode === "preview" ? <p className="status" style={{ marginBottom: 0 }}>Preview mode: nothing here is saved to a real account.</p> : null}
-      </section>
-    </>
+      ) : (
+        <section className="home-card" style={{ marginTop: 20 }} aria-label="Your profile">
+          <h2 className="hst-title">Your profile</h2>
+          <ul className="kv">
+            <li><span>Username</span><span>@{profile.username}</span></li>
+            <li><span>Instagram</span><span>{profile.instagram ? "@" + profile.instagram : "Not added yet"}</span></li>
+            <li><span>Facebook</span><span>{profile.facebook ? "@" + profile.facebook : "Not added yet"}</span></li>
+          </ul>
+          {mode === "preview" ? <p className="status" style={{ marginBottom: 0 }}>Preview mode: nothing here is saved to a real account.</p> : null}
+        </section>
+      )}
+    </div>
   );
 }
