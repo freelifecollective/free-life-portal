@@ -732,3 +732,25 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .join-btn:not(.is-locked) { background: var(--ink); border-color: var(--ink); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
 .join-btn:not(.is-locked):hover { background: #000; border-color: #000; }
 .join-btn .live-dot { margin-left: 10px; box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
+
+/* ---- Water Share Map ---- */
+.ws-page { display: grid; gap: 16px; max-width: 1100px; }
+.ws-wrap { display: grid; gap: 12px; }
+.ws-search { display: flex; gap: 10px; flex-wrap: wrap; }
+.ws-search input { flex: 1 1 260px; height: 48px; border: 1px solid var(--line); border-radius: 10px; padding: 0 14px; font: inherit; background: var(--surface); color: var(--ink); }
+.ws-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 900px) { .ws-grid:has(.ws-results) { grid-template-columns: minmax(0, 1fr) 320px; } }
+.ws-map { height: min(68dvh, 620px); min-height: 360px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; z-index: 0; }
+.ws-results { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; max-height: min(68dvh, 620px); overflow: auto; }
+.ws-results ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.ws-results li button { width: 100%; text-align: left; display: grid; gap: 2px; background: var(--tint); border: 0; border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--ink); cursor: pointer; }
+.ws-results li button:hover { filter: brightness(0.96); }
+.ws-pop { display: grid; gap: 2px; font-size: 14px; }
+.ws-dlg { width: min(560px, calc(100vw - 32px)); }
+.ws-actions { display: grid; gap: 10px; justify-items: stretch; margin-top: 16px; }
+.ws-actions .linkbtn { justify-self: center; }
+.ws-choice { border: 0; padding: 0; margin: 16px 0 0; display: flex; gap: 18px; flex-wrap: wrap; }
+.ws-choice legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
+.ws-choice label { display: inline-flex; align-items: center; gap: 6px; }
+.ws-policy { margin: 0; }
+.nav li.nav-sub { margin-left: 8px; border-left: 2px solid var(--line); }
