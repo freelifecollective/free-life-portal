@@ -108,16 +108,14 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .app { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr; }
 .app-top {
   display: flex; align-items: center; gap: 16px; padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
-  border-bottom: 1px solid var(--line); background: var(--bg);
+  background: var(--bg);
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
 }
 .brand { font-family: var(--font-display); font-weight: 600; font-size: 19px; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .brand-logo { display: none; width: 34px; height: 34px; flex: none; }
 @media (min-width: 769px) { .brand-logo { display: block; } }
 .search { flex: 0 1 340px; margin-left: auto; }
-.top-date { flex: 1; min-width: 0; margin: 0; display: flex; align-items: center; gap: 22px; font-family: var(--font-label); font-size: 12px; font-weight: 600; letter-spacing: 0.22em; color: var(--muted); white-space: nowrap; }
-.top-date::before, .top-date::after { content: ""; flex: 1; height: 1px; background: var(--line); min-width: 12px; }
-@media (max-width: 1000px) { .top-date { display: none; } .search { flex: 1 1 260px; } }
+@media (max-width: 1000px) { .search { flex: 1 1 260px; } }
 .search input {
   width: 100%; height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line);
   background: var(--surface); font-size: 15px;
@@ -906,6 +904,6 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .qs-opt span { display: grid; gap: 2px; }
 .qs-opt small { color: var(--muted); font-size: 13px; }
 .home-quote { margin: 14px auto 0; max-width: 760px; text-align: center; display: grid; gap: 8px; }
-.home-quote q { quotes: "\201C" "\201D"; font-family: var(--font-display); font-style: italic; font-size: clamp(18px, 2vw, 24px); line-height: 1.45; color: var(--ink); }
+.home-quote q { quotes: "\201C" "\201D"; font-family: var(--font-label); font-weight: 300; font-style: normal; font-size: clamp(18px, 2vw, 23px); line-height: 1.55; color: var(--ink); }
 .home-quote cite { font-family: var(--font-label); font-style: normal; font-size: 12px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
 .home-row.one { grid-template-columns: minmax(0, 1fr); }
