@@ -64,6 +64,9 @@ do $$ declare r jsonb; n integer; begin
   perform tests.logout();
 
   perform tests.login('00000000-0000-0000-0000-0000000000b1');
+  perform tests.eq('the person already in the pool is told when a top-5 match joins', (select count(*) from public.notifications where kind = 'accountability' and body like '%top 5%'), 1::bigint);
+  perform tests.eq('not for the far-away one, nor the one who is out on rank or gender', (select count(*) from public.notifications where kind = 'accountability'), 1::bigint);
+  perform tests.eq('it points to the buddy page', (select url from public.notifications where kind = 'accountability'), '/buddy');
   perform tests.eq('rank 7 is more than two ranks away: not offered', (select count(*) from public.ab_matches_for_me() where username = 'user3'), 0::bigint);
   perform tests.eq('a stated same-gender preference applies in both directions', (select count(*) from public.ab_matches_for_me() where username = 'user5'), 0::bigint);
   perform tests.eq('someone far away in time is listed but not in the top five', (select is_top from public.ab_matches_for_me() where username = 'user4'), false);
