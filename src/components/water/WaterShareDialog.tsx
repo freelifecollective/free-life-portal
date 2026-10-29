@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { declineWaterShare, removeWaterShare, saveWaterShare } from "@/app/(app)/water-map/actions";
+import { declineWaterShare, removeWaterShare, saveWaterShare, suggestPlaces } from "@/app/(app)/water-map/actions";
+
+import type { Suggestion } from "@/lib/water/photon";
+import type { Place } from "@/lib/water/types";
 
 export type WaterMine = { place: string; prefilter: boolean; water_type: "city" | "well" } | null;
 
@@ -15,6 +18,11 @@ export function WaterShareDialog({ open, onClose, start, mine }: { open: boolean
   const router = useRouter();
   const [step, setStep] = useState<"ask" | "form">(start);
   const [address, setAddress] = useState("");
+  const [chosen, setChosen] = useState<Place | null>(null);
+  const [options, setOptions] = useState<Suggestion[]>([]);
+  const [active, setActive] = useState(-1);
+  const [looking, setLooking] = useState(false);
+  const ticket = useRef(0);
   const [prefilter, setPrefilter] = useState<boolean | null>(mine ? mine.prefilter : null);
   const [water, setWater] = useState<string>(mine?.water_type ?? "");
   const [error, setError] = useState("");
@@ -27,12 +35,38 @@ export function WaterShareDialog({ open, onClose, start, mine }: { open: boolean
     if (!open && d.open) d.close();
   }, [open]);
 
+  /** Wait for a pause in typing, then ask for choices. Answers that arrive late for an older word are ignored. */
+  function type(v: string) {
+    setAddress(v); setChosen(null); setActive(-1);
+    const mine = ++ticket.current;
+    if (v.trim().length < 3) { setOptions([]); setLooking(false); return; }
+    setLooking(true);
+    window.setTimeout(async () => {
+      if (mine !== ticket.current) return;
+      const r = await suggestPlaces(v);
+      if (mine !== ticket.current) return;
+      setOptions(r); setLooking(false);
+    }, 300);
+  }
+  function pick(s: Suggestion) {
+    ticket.current++;
+    setAddress([s.title, s.detail].filter(Boolean).join(", "));
+    setChosen(s.place); setOptions([]); setActive(-1); setLooking(false);
+  }
+  function keys(e: React.KeyboardEvent) {
+    if (!options.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive((active + 1) % options.length); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((active - 1 + options.length) % options.length); }
+    else if (e.key === "Enter" && active >= 0) { e.preventDefault(); pick(options[active]); }
+    else if (e.key === "Escape") { e.stopPropagation(); setOptions([]); }
+  }
+
   const done = () => { onClose(); router.refresh(); };
   const no = () => run(async () => { await declineWaterShare(); done(); });
   const save = () => run(async () => {
     setError("");
-    const r = await saveWaterShare({ address, prefilter, waterType: water });
-    if (r.ok) { setAddress(""); done(); } else setError(r.error);
+    const r = await saveWaterShare({ address, chosen, prefilter, waterType: water });
+    if (r.ok) { setAddress(""); setChosen(null); done(); } else setError(r.error);
   });
   const remove = () => run(async () => { const r = await removeWaterShare(); if (r.ok) done(); else setError(r.error); });
 
@@ -55,7 +89,20 @@ export function WaterShareDialog({ open, onClose, start, mine }: { open: boolean
           {mine ? <p className="when">You are on the map near <strong>{mine.place}</strong>. To move your dot, type a new address. To keep it where it is, leave the address blank.</p> : null}
           <div className="field">
             <label htmlFor="ws-address">Address near you</label>
-            <input id="ws-address" type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="e.g. the gas station or grocery store near your home" autoComplete="off" />
+            <div className="ws-combo">
+              <input id="ws-address" type="text" role="combobox" aria-expanded={options.length > 0} aria-controls="ws-options" aria-autocomplete="list" value={address} onChange={(e) => type(e.target.value)} onKeyDown={keys} placeholder="Start typing a store or address, e.g. Walmart Bowmanville" autoComplete="off" />
+              {options.length ? (
+                <ul id="ws-options" role="listbox" className="ws-options">
+                  {options.map((o, i) => (
+                    <li key={i} role="option" aria-selected={i === active} className={i === active ? "on" : undefined} onMouseDown={(e) => { e.preventDefault(); pick(o); }}>
+                      <strong>{o.title}</strong>
+                      <span>{o.detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+            {looking ? <p className="when" style={{ margin: 0 }}>Searching…</p> : chosen ? <p className="when" style={{ margin: 0 }}>✓ Place chosen. We will only show your town on the map.</p> : null}
             <p className="when" style={{ margin: 0 }}>Please do not put your exact address for safety purposes. Choose an address nearby you such as a gas station or grocery store.</p>
           </div>
           <fieldset className="ws-choice">
