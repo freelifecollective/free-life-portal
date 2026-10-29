@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   if (tokenHash && tokenHash.length < 200 && TYPES.includes(type)) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-    if (!error) return NextResponse.redirect(new URL(next, origin), 303);
+    if (!error) return NextResponse.redirect(new URL(`/auth/done?next=${encodeURIComponent(next)}`, origin), 303);
   }
   return NextResponse.redirect(new URL("/login?error=link", origin), 303);
 }

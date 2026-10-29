@@ -1,31 +1,27 @@
 import Link from "next/link";
 import { SplashMark } from "@/components/SplashMark";
+import { AutoSubmit } from "../AutoSubmit";
 
-export const metadata = { title: "Enter the portal" };
+export const metadata = { title: "Opening your portal" };
 export const instant = false;
 
 /**
- * Where the login link in the email lands. It asks for one tap before the link is used up, because some email programs
- * "open" every link to check it for viruses, which would otherwise use the link before the person ever sees it.
+ * Where the login link in the email lands. It shows the "Opening your portal" screen and signs the person in by itself.
+ * The sign-in is sent from the page (not on the first request) because some email programs "open" every link to check
+ * it for viruses, and that would otherwise use the one-time link up before the person ever clicks it.
  */
 export default async function ConfirmPage(props: PageProps<"/auth/confirm">) {
   const sp = await props.searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
   const tokenHash = one(sp.token_hash);
-  const type = one(sp.type) || "email";
-  const next = one(sp.next);
   return (
-    <main className="splash login-splash">
+    <main className="splash login-splash" role="status" aria-label="Opening your portal">
       <SplashMark />
       {tokenHash ? (
         <>
-          <p className="splash-tag">You&rsquo;re almost in</p>
-          <form className="login-form" method="post" action="/auth/verify">
-            <input type="hidden" name="token_hash" value={tokenHash} />
-            <input type="hidden" name="type" value={type} />
-            <input type="hidden" name="next" value={next} />
-            <button className="btn primary" type="submit">Enter the portal</button>
-          </form>
+          <p className="splash-tag">Opening your portal</p>
+          <span className="splash-bar" aria-hidden="true" />
+          <AutoSubmit tokenHash={tokenHash} type={one(sp.type) || "email"} next={one(sp.next)} />
         </>
       ) : (
         <>

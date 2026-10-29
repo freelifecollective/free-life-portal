@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useSyncExternalStore } from "react";
+import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
 import { sendMagicLink, type LoginState } from "./actions";
 
 const initial: LoginState = { status: "idle", message: "" };
@@ -16,6 +16,17 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
   const saved = useSyncExternalStore(none, readSaved, () => "");
   const [typed, setTyped] = useState<string | null>(null);
   const email = typed ?? saved;
+
+  /* Once the emailed link has been used (in another tab), this tab moves into the portal by itself. */
+  useEffect(() => {
+    if (state.status !== "sent") return;
+    let ch: BroadcastChannel | null = null;
+    try {
+      ch = new BroadcastChannel("flc-login");
+      ch.onmessage = (e) => { if (e.data === "signed-in") { ch?.postMessage("ack"); window.location.replace(next.startsWith("/") && !next.startsWith("//") ? next : "/"); } };
+    } catch { /* this browser has no channel; the other tab will open the portal itself */ }
+    return () => ch?.close();
+  }, [state.status, next]);
 
   if (state.status === "sent") {
     return (
