@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Lato, Playfair_Display, Raleway } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -29,7 +30,11 @@ export const viewport: Viewport = { themeColor: "#F6F5F1", viewportFit: "cover" 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${playfair.variable} ${lato.variable} ${raleway.variable}`}>
-      <body>{children}</body>
+      <body>
+        {/* Catches the browser's "install" offer as early as possible; the Get the App page uses it for its Install button. */}
+        <Script id="flc-install-capture" strategy="beforeInteractive">{`window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__flcInstall=e;window.dispatchEvent(new Event("flc:installready"))});window.addEventListener("appinstalled",function(){try{localStorage.setItem("flc_app_installed","1")}catch(e){}window.__flcInstall=null;window.dispatchEvent(new Event("flc:installed"))});`}</Script>
+        {children}
+      </body>
     </html>
   );
 }
