@@ -584,3 +584,24 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .nav-toggle-right .badge { margin: 0; }
 .tour-bubble.arrow-down::before { content: ""; position: absolute; bottom: -9px; left: var(--ax); width: 18px; height: 18px; background: #fff; transform: translateX(-50%) rotate(45deg); border-radius: 3px; }
 .tour-eyebrow { font-family: var(--font-label); font-weight: 600; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-deep); margin: 0 0 4px; }
+
+/* documents */
+.docs { max-width: 860px; }
+.crumbs { margin: 0 0 14px; font-size: 15px; color: var(--muted); overflow-wrap: anywhere; }
+.crumbs a { color: var(--ink); }
+.doc-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.doc-progress { list-style: none; margin: 0 0 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; color: var(--muted); }
+.doc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.doc-list li { display: flex; align-items: stretch; gap: 6px; }
+.doc-row { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: inherit; text-decoration: none; font: inherit; text-align: left; cursor: pointer; }
+.doc-row:hover { border-color: var(--accent); background: #fff; }
+.doc-ico { font-size: 22px; flex: none; }
+.doc-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.doc-tags { display: inline-flex; align-items: center; gap: 6px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+.doc-tag { padding: 2px 8px; border-radius: 999px; background: var(--tint); font-size: 12px; font-weight: 600; }
+.doc-more { flex: none; width: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; font-size: 20px; cursor: pointer; }
+.doc-more:hover { background: var(--tint); }
+.doc-viewer { width: min(900px, calc(100vw - 24px)); }
+.doc-frame { width: 100%; height: min(70vh, 640px); border: 1px solid var(--line); border-radius: 10px; }
+.doc-img { max-width: 100%; max-height: 70vh; display: block; margin: 0 auto; border-radius: 10px; }
+@media (max-width: 560px) { .doc-tags .when { display: none; } .doc-row { padding: 11px 12px; } }

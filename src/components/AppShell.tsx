@@ -22,7 +22,7 @@ const NAV: NavItem[] = [
   { label: "Verbiage + Objections", href: "/responses", min: "member" },
   { label: "Classroom", min: "lead" },
   { label: "Calls", min: "lead" },
-  { label: "Documents", min: "lead" },
+  { label: "Documents", href: "/documents", min: "lead" },
   { label: "Accountability Buddy", href: "/buddy", min: "member" },
   { label: "Commission calculator", href: "/calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
