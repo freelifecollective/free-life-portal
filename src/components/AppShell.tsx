@@ -47,7 +47,7 @@ function ordered(items: NavItem[]): NavItem[] {
   return [...home, ...rest, ...admin.filter((n) => n.heading), ...admin.filter((n) => !n.heading).sort(az)];
 }
 
-export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; children: ReactNode }) {
+export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; children: ReactNode }) {
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   return (
@@ -75,7 +75,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>

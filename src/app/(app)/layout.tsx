@@ -4,6 +4,8 @@ import { AppShell } from "@/components/AppShell";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { RANKS } from "@/lib/buddy/questions";
+import { listUpcomingCalls } from "@/lib/calls/queries";
+import { endsAt, nowMs } from "@/lib/time";
 import { TOUR_VERSION } from "@/lib/tour";
 import { unreadMessageCount } from "@/lib/messages/queries";
 import { pendingFinancingCount } from "@/lib/financing/queries";
@@ -22,6 +24,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
   let showTour = false;
   let buddyRemind: string | null = null;
   let pendingFeedback: { call_id: string; title: string }[] = [];
+  let liveNow = false;
   if (session.mode === "supabase") {
     const db = await createClient();
     const [{ count }, { data: tour }] = await Promise.all([
@@ -29,6 +32,8 @@ async function SessionGate({ children }: { children: ReactNode }) {
       db.from("member_tour").select("seen_version").maybeSingle(),
     ]);
     unread = count ?? 0;
+    const t = nowMs();
+    liveNow = (await listUpcomingCalls(db, t)).some((c) => t >= new Date(c.starts_at).getTime() && t < endsAt(new Date(c.starts_at), c.duration_minutes).getTime());
     const { data: pf } = await db.rpc("pending_feedback");
     pendingFeedback = ((pf ?? []) as { call_id: string; title: string }[]);
     badges["/messages"] = await unreadMessageCount(db);
@@ -47,7 +52,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
     badges["/admin/financing"] = financing;
   }
   return (
-    <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind} pendingFeedback={pendingFeedback}>
+    <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind} pendingFeedback={pendingFeedback} liveNow={liveNow}>
       <Suspense fallback={<div aria-busy="true" style={{ minHeight: 240 }} />}>{children}</Suspense>
     </AppShell>
   );

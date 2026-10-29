@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
 import { JoinButton } from "@/components/calls/JoinButton";
 import { requireMember } from "@/lib/auth/guards";
+import { LiveBadge } from "@/components/LiveBadge";
 import { RsvpControls } from "@/components/calendar/RsvpControls";
 import { listUpcomingCalls, rsvpSummary } from "@/lib/calls/queries";
 import { KIND_LABEL } from "@/lib/calls/types";
@@ -37,7 +38,7 @@ export default async function CallsPage(props: PageProps<"/calls">) {
           {next ? (
             <div className="live-grid">
               <div className="live-left">
-                <p className="offer-label" style={{ margin: "0 0 6px" }}>{live ? "Happening now" : "Next call"}</p>
+                <p className="offer-label" style={{ margin: "0 0 6px" }}>{live ? <LiveBadge>LIVE · Happening now</LiveBadge> : "Next call"}</p>
                 <h2 className="qh" style={{ margin: "0 0 4px" }}>{next.title}</h2>
                 <p className="when" style={{ margin: "0 0 14px" }}>{KIND_LABEL[next.kind]} · {formatInZone(new Date(next.starts_at))} · {next.duration_minutes} min</p>
                 <RsvpControls callId={next.id} mine={mine} liveLabel="I'll be there LIVE" liveOn="You're coming LIVE" replayLabel="I'll catch the replay" replayOn="You'll catch the replay" />

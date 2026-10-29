@@ -687,3 +687,11 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .join-btn.is-locked:hover { background: var(--tint); border-color: var(--line); color: var(--muted); }
 .join-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
 @media (max-width: 640px) { .live-right { width: 100%; padding: 4px 0 0; } }
+
+/* the red pulsing live dot */
+.live-dot { position: relative; display: inline-block; flex: none; border-radius: 50%; background: #e5251b; vertical-align: middle; margin-left: 8px; }
+.live-dot::after { content: ""; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid #e5251b; animation: live-pulse 1.4s ease-out infinite; }
+@keyframes live-pulse { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(2.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .live-dot::after { animation: none; opacity: 0; } }
+.live-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 4px; border-radius: 999px; background: #fdecea; color: #b42318; font-family: var(--font-label); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.live-badge .live-dot { margin-left: 4px; }

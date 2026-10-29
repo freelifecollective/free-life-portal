@@ -1,5 +1,6 @@
 import { AUDIENCE_LABEL, KIND_LABEL, type Call, type RsvpSummary } from "@/lib/calls/types";
 import { endsAt, formatInZone } from "@/lib/time";
+import { LiveBadge } from "@/components/LiveBadge";
 import { JoinButton } from "@/components/calls/JoinButton";
 import { Attendees } from "./Attendees";
 import { LocalTime } from "./LocalTime";
@@ -16,7 +17,7 @@ export function CallCard({ call, summary, featured = false, now }: { call: Call;
         {featured ? <span className="tag tag-pin">Next call</span> : null}
         <span className="tag">{KIND_LABEL[call.kind]}</span>
         <span className={"tag" + (call.audience === "affiliates_only" ? " tag-dark" : "")}>{AUDIENCE_LABEL[call.audience]}</span>
-        {live ? <span className="tag tag-live">Happening now</span> : null}
+        {live ? <LiveBadge>LIVE · Happening now</LiveBadge> : null}
       </div>
       <h2 id={`call-${call.id}`} className="call-title">{call.title}</h2>
       <p className="call-time">
