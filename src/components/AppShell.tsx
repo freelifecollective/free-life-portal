@@ -45,7 +45,11 @@ export function AppShell({ session, badges = {}, children }: { session: AppSessi
     <div className="app">
       <header className="app-top">
         <MenuButton />
-        <Link href="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>Free Life Collective</Link>
+        <Link href="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="brand-logo" src="/icons/icon-192.png" alt="" width={34} height={34} />
+          Free Life Collective
+        </Link>
         <div className="search" role="search">
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
