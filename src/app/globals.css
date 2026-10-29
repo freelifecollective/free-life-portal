@@ -575,3 +575,12 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 /* the magnifying glass looks left-heavy, so nudge it to sit evenly with the other icons */
 .search-icon .hdr-btn svg { transform: translateX(2px); }
 @media (max-width: 768px) { .search-icon { margin-right: -5px; } }
+
+/* collapsible admin group */
+.nav .nav-group { list-style: none; }
+.nav .nav-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; padding: 12px 14px; border: 0; border-top: 1px solid var(--line); border-radius: 0; background: none; font-family: var(--font-label); font-weight: 600; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); cursor: pointer; text-align: left; }
+.nav .nav-toggle:hover { color: var(--ink); }
+.nav-toggle-right { display: inline-flex; align-items: center; gap: 8px; }
+.nav-toggle-right .badge { margin: 0; }
+.tour-bubble.arrow-down::before { content: ""; position: absolute; bottom: -9px; left: var(--ax); width: 18px; height: 18px; background: #fff; transform: translateX(-50%) rotate(45deg); border-radius: 3px; }
+.tour-eyebrow { font-family: var(--font-label); font-weight: 600; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-deep); margin: 0 0 4px; }

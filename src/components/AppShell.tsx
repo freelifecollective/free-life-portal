@@ -10,13 +10,12 @@ import type { AppSession } from "@/lib/profile/types";
 import { SearchIcon } from "./SearchIcon";
 import { UserMenu } from "./UserMenu";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; desktopOnly?: boolean };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead" },
   { label: "Calendar", href: "/calendar", min: "lead" },
-  { label: "Messages", href: "/messages", min: "lead", desktopOnly: true },
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
   { label: "Financing Options", href: "/financing", min: "lead" },
   { label: "Chats", href: "/chats", min: "lead" },
@@ -63,7 +62,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
         </div>
         <div className="top-right">
           <SearchIcon />
-          <Link href="/messages" className="hdr-btn phone-only" aria-label={badges["/messages"] ? `Messages, ${badges["/messages"]} unread` : "Messages"}>
+          <Link href="/messages" className="hdr-btn" data-tour="messages" aria-label={badges["/messages"] ? `Messages, ${badges["/messages"]} unread` : "Messages"}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
             {badges["/messages"] ? <span className="badge bell-badge" aria-hidden="true">{badges["/messages"] > 99 ? "99+" : badges["/messages"]}</span> : null}
           </Link>
@@ -73,7 +72,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading, desktopOnly }) => ({ label, href, heading, desktopOnly, badge: href ? badges[href] : undefined }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading }) => ({ label, href, heading, badge: href ? badges[href] : undefined }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>
