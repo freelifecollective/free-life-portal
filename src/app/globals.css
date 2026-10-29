@@ -695,3 +695,40 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 @media (prefers-reduced-motion: reduce) { .live-dot::after { animation: none; opacity: 0; } }
 .live-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px 3px 4px; border-radius: 999px; background: #fdecea; color: #b42318; font-family: var(--font-label); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 .live-badge .live-dot { margin-left: 4px; }
+
+/* ---- month calendar ---- */
+.cal-wrap { max-width: 1000px; display: grid; gap: 18px; }
+.cal-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cal-title { font-family: var(--font-display); font-size: 26px; margin: 0; }
+.cal-nav { display: flex; gap: 8px; }
+.cal-nav .btn { text-decoration: none; height: 40px; min-width: 40px; display: inline-grid; place-items: center; padding: 0 14px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.cal-dow { padding: 8px 6px; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-align: center; border-bottom: 1px solid var(--line); }
+.cal-cell { min-height: 104px; padding: 6px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cal-cell:nth-child(7n) { border-right: 0; }
+.cal-cell.empty { background: var(--tint); }
+.cal-num { font-size: 13px; font-weight: 600; color: var(--muted); width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; }
+.cal-cell.today .cal-num { background: var(--accent); color: #fff; }
+.cal-chip { display: flex; align-items: center; gap: 4px; width: 100%; text-align: left; border: 0; border-radius: 6px; padding: 4px 6px; font: inherit; font-size: 12px; background: var(--tint); color: var(--ink); cursor: pointer; overflow: hidden; }
+.cal-chip:hover { filter: brightness(0.96); }
+.cal-chip.live { background: #fde8e8; color: #b42318; }
+.cal-chip.past { opacity: 0.6; }
+.cal-chip-time { font-weight: 700; white-space: nowrap; }
+.cal-chip-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-dialog { width: min(620px, calc(100vw - 32px)); }
+.cal-dialog .call-card { border: 0; padding: 0; }
+.cal-feed-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.cal-feed-btns .btn { text-decoration: none; }
+@media (max-width: 640px) {
+  .cal-cell { min-height: 78px; padding: 3px; }
+  .cal-chip { padding: 3px; font-size: 11px; }
+  .cal-chip-title { display: none; }
+}
+.attendees-btn { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; text-align: left; color: inherit; }
+.attendees-btn:hover .attendee-count { text-decoration: underline; }
+.att-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.att-list li { display: flex; align-items: center; gap: 10px; }
+/* Join button: dark, so it stands apart from the tan RSVP buttons; the red dot shows while the call is live */
+.join-btn:not(.is-locked) { background: var(--ink); border-color: var(--ink); color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
+.join-btn:not(.is-locked):hover { background: #000; border-color: #000; }
+.join-btn .live-dot { margin-left: 10px; box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
