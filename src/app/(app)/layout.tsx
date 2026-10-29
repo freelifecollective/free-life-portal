@@ -61,10 +61,20 @@ async function SessionGate({ children }: { children: ReactNode }) {
   );
 }
 
+/** Shown while the portal opens: the logo with water-like ripples, the name, and a soft moving bar. Plain CSS, so it appears instantly. */
 function Loading() {
   return (
-    <div style={{ minHeight: "100dvh", display: "grid", placeItems: "center" }} role="status" aria-label="Loading">
-      <span className="brand">Free Life Collective</span>
+    <div className="splash" role="status" aria-label="Loading the portal">
+      <div className="splash-mark">
+        <span className="splash-ring" />
+        <span className="splash-ring r2" />
+        <span className="splash-ring r3" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/icon-192.png" alt="" width={96} height={96} />
+      </div>
+      <p className="splash-name">Free Life Collective</p>
+      <p className="splash-tag">Opening your portal</p>
+      <span className="splash-bar" aria-hidden="true" />
     </div>
   );
 }
