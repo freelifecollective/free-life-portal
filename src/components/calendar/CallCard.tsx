@@ -1,5 +1,6 @@
 import { AUDIENCE_LABEL, KIND_LABEL, type Call, type RsvpSummary } from "@/lib/calls/types";
 import { endsAt, formatInZone } from "@/lib/time";
+import { JoinButton } from "@/components/calls/JoinButton";
 import { Attendees } from "./Attendees";
 import { LocalTime } from "./LocalTime";
 import { RsvpControls } from "./RsvpControls";
@@ -23,7 +24,7 @@ export function CallCard({ call, summary, featured = false, now }: { call: Call;
         <LocalTime iso={call.starts_at} />
       </p>
       {call.description ? <p className="call-desc">{call.description}</p> : null}
-      {soon && call.join_url ? <p><a className="btn primary" href={call.join_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>Join the call</a></p> : null}
+      {soon && call.join_url ? <p><JoinButton callId={call.id} /></p> : null}
       <RsvpControls callId={call.id} mine={summary.mine} />
       <Attendees summary={summary} />
     </article>
