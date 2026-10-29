@@ -116,6 +116,7 @@ export function DocBrowser({ folderId, trail, folders, files, allFolders, isAdmi
           <button className="btn small" type="button" disabled={busy} onClick={() => zipInput.current?.click()}>Import a zip (Google Drive)</button>
           <input ref={fileInput} type="file" multiple hidden onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
           <input ref={zipInput} type="file" accept=".zip,application/zip" hidden onChange={(e) => { void onZip(e.target.files); e.target.value = ""; }} />
+          <span className="admin-only-note">Admins Only</span>
         </div>
       ) : null}
       {progress.length ? <ul className="doc-progress" aria-live="polite">{progress.map((p, i) => <li key={i}>{p}</li>)}</ul> : null}
