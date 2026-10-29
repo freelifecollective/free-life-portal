@@ -1,11 +1,26 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createClient } from "@supabase/supabase-js";
+import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth/guards";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 
 export type InviteState = { error: string; done: string };
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Emails a login link straight away, so an invite does not depend on the person finding the login page themselves. */
+async function sendLoginEmail(email: string): Promise<boolean> {
+  try {
+    const h = await headers();
+    const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+    /* a plain client with no cookies: the link in the email must not be tied to the admin's browser */
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: `${origin}/auth/callback` } });
+    return !error;
+  } catch { return false; }
+}
 
 /** Let someone create an account: they can sign in with this email from now on. */
 export async function inviteEmail(_prev: InviteState, form: FormData): Promise<InviteState> {
@@ -18,7 +33,8 @@ export async function inviteEmail(_prev: InviteState, form: FormData): Promise<I
   const { error } = await supabase.from("signup_allowlist").insert({ email, role, note: note || null, created_by: session.user.id });
   if (error) return { error: error.code === "23505" ? "That email is already on the list." : "We could not add that email. Please try again.", done: "" };
   revalidatePath("/admin/people");
-  return { error: "", done: `${email} can now sign in as a ${role}.` };
+  const sent = await sendLoginEmail(email);
+  return { error: "", done: sent ? `${email} can now sign in as a ${role}. We emailed them their login link.` : `${email} can now sign in as a ${role}, but we could not email them the link. Ask them to open the portal and enter this email on the login page.` };
 }
 
 /** Take back an invite that has not been used yet. */
