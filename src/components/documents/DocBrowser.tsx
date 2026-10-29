@@ -21,7 +21,7 @@ const readView = (): "grid" | "list" => { try { return localStorage.getItem(VIEW
 
 function Cover({ f, url }: { f: DocFile; url?: string }) {
   // eslint-disable-next-line @next/next/no-img-element
-  if (url) return <img className="doc-cover" src={url} alt="" loading="lazy" />;
+  if (url) return <img className="doc-cover" src={url} alt="" loading="lazy" draggable={false} />;
   const ext = f.name.includes(".") ? f.name.split(".").pop()!.slice(0, 4).toUpperCase() : "FILE";
   const icon = f.mime.startsWith("audio/") ? "🎧" : f.mime.startsWith("video/") ? "🎬" : f.mime.includes("sheet") || f.mime.includes("excel") ? "📊" : f.mime.includes("presentation") || f.mime.includes("powerpoint") ? "📽️" : f.mime === "application/pdf" ? "📕" : "📄";
   return <span className="doc-cover fallback"><span aria-hidden="true">{icon}</span><b>{ext}</b></span>;
@@ -67,35 +67,47 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
     return () => window.removeEventListener("keydown", onKey);
   }, [manage]);
 
-  function startMarquee(e: React.PointerEvent<HTMLDivElement>) {
+  const selRef = useRef(sel);
+  useEffect(() => { selRef.current = sel; });
+
+  /* The drag-a-box selection listens on the whole page area (not just the list), so you can start from any empty space. */
+  useEffect(() => {
     if (!manage) return;
-    lastPointer.current = e.pointerType;
-    dragged.current = false;
-    if (e.button !== 0 || e.pointerType === "touch" || (e.target as HTMLElement).closest(".doc-more, .doc-check")) return;
-    const host = area.current; if (!host) return;
-    const sx = e.clientX + window.scrollX, sy = e.clientY + window.scrollY;
-    const additive = e.metaKey || e.ctrlKey || e.shiftKey;
-    const base = additive ? new Set(sel) : new Set<string>();
-    const onBackground = !(e.target as HTMLElement).closest("[data-sel]");
-    let moved = false;
-    const move = (ev: PointerEvent) => {
-      const cx = ev.clientX + window.scrollX, cy = ev.clientY + window.scrollY;
-      if (!moved && Math.hypot(cx - sx, cy - sy) < 6) return;
-      moved = true; dragged.current = true;
-      const x1 = Math.min(sx, cx), x2 = Math.max(sx, cx), y1 = Math.min(sy, cy), y2 = Math.max(sy, cy);
-      const hr = host.getBoundingClientRect();
-      setBox({ x: x1 - (hr.left + window.scrollX), y: y1 - (hr.top + window.scrollY), w: x2 - x1, h: y2 - y1 });
-      const hit = new Set(base);
-      host.querySelectorAll<HTMLElement>("[data-sel]").forEach((el) => { const r = el.getBoundingClientRect(); const l = r.left + window.scrollX, t = r.top + window.scrollY; if (l < x2 && l + r.width > x1 && t < y2 && t + r.height > y1) hit.add(el.dataset.sel!); });
-      setSel(hit);
+    const main = document.getElementById("main");
+    if (!main) return;
+    const onDown = (e: PointerEvent) => {
+      lastPointer.current = e.pointerType;
+      dragged.current = false;
+      const t = e.target as HTMLElement;
+      if (e.button !== 0 || e.pointerType === "touch" || t.closest(".doc-more, .doc-check, dialog")) return;
+      const onItem = !!t.closest("[data-sel]");
+      if (!onItem && t.closest("button, a, input, select, textarea, label, nav, [role=toolbar], .doc-tools, .doc-view-toggle, .doc-progress, .doc-skipped")) return;
+      const host = area.current; if (!host) return;
+      const sx = e.clientX + window.scrollX, sy = e.clientY + window.scrollY;
+      const additive = e.metaKey || e.ctrlKey || e.shiftKey;
+      const base = additive ? new Set(selRef.current) : new Set<string>();
+      let moved = false;
+      const move = (ev: PointerEvent) => {
+        const cx = ev.clientX + window.scrollX, cy = ev.clientY + window.scrollY;
+        if (!moved && Math.hypot(cx - sx, cy - sy) < 6) return;
+        moved = true; dragged.current = true;
+        const x1 = Math.min(sx, cx), x2 = Math.max(sx, cx), y1 = Math.min(sy, cy), y2 = Math.max(sy, cy);
+        const hr = host.getBoundingClientRect();
+        setBox({ x: x1 - (hr.left + window.scrollX), y: y1 - (hr.top + window.scrollY), w: x2 - x1, h: y2 - y1 });
+        const hit = new Set(base);
+        host.querySelectorAll<HTMLElement>("[data-sel]").forEach((el) => { const r = el.getBoundingClientRect(); const l = r.left + window.scrollX, tp = r.top + window.scrollY; if (l < x2 && l + r.width > x1 && tp < y2 && tp + r.height > y1) hit.add(el.dataset.sel!); });
+        setSel(hit);
+      };
+      const up = () => {
+        window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+        setBox(null);
+        if (!moved && !onItem && !additive) setSel(new Set());
+      };
+      window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
     };
-    const up = () => {
-      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up);
-      setBox(null);
-      if (!moved && onBackground && !additive) setSel(new Set());
-    };
-    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
-  }
+    main.addEventListener("pointerdown", onDown);
+    return () => main.removeEventListener("pointerdown", onDown);
+  }, [manage]);
 
   /** In Update Documents a mouse click selects and a double click opens. A tap opens, like on a phone. */
   function itemClick(e: React.MouseEvent, key: string, openIt: () => void) {
@@ -262,7 +274,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         </div>
       ) : !itemsEmpty ? <p className="when" style={{ margin: 0, paddingTop: 14 }}>Tip: drag a box around items to select several, or tick the boxes. Double-click to open.</p> : null}
       </div> : null}
-      <div ref={area} className={"doc-area" + (manage ? " selectable" : "")} onPointerDown={startMarquee}>
+      <div ref={area} className={"doc-area" + (manage ? " selectable" : "")} onDragStart={(e) => e.preventDefault()}>
       {itemsEmpty ? <section className="card-s"><p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p></section> : layout === "grid" ? (
         <ul className="doc-grid">
           {folders.map((f) => (

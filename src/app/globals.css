@@ -655,3 +655,5 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .danger-btn { color: #9b2c2c; border-color: #9b2c2c; }
 .doc-selslot { min-height: 62px; margin: 0 0 8px; }
 .doc-selslot .doc-selbar { margin: 0; }
+.doc-area.selectable { min-height: 60vh; }
+.doc-area.selectable img, .doc-area.selectable a { -webkit-user-drag: none; user-drag: none; }
