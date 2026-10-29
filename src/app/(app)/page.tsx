@@ -6,8 +6,6 @@ import { Attendees } from "@/components/calendar/Attendees";
 import { AddToCalendar } from "@/components/dashboard/AddToCalendar";
 import { Countdown } from "@/components/dashboard/Countdown";
 import { CopyInvite } from "@/components/dashboard/CopyInvite";
-import { formatMoney } from "@/lib/payments/receipt";
-import { upcomingPayments } from "@/lib/dashboard/payments";
 import { parseRange, presets } from "@/lib/dashboard/range";
 import { isQuoteStyle, quoteFor, type QuoteStyle } from "@/lib/quotes";
 import { listUpcomingCalls, pickFeatured, rsvpSummary } from "@/lib/calls/queries";
@@ -44,14 +42,9 @@ export default async function HomePage(props: PageProps<"/">) {
   const range = parseRange(one(sp.from), one(sp.to), now);
   const today = toZonedInput(new Date(now)).slice(0, 10);
   let stats: Stats | null = null;
-  let payments: ReturnType<typeof upcomingPayments> = [];
   if (supabase && affiliate) {
-    const [{ data: st }, { data: last }] = await Promise.all([
-      supabase.rpc("member_stats", { p_from: range.fromIso, p_to: range.toIso, p_call: next?.id ?? null }),
-      supabase.from("payments").select("paid_at, amount_cents, currency, description").eq("member_id", session.user.id).eq("status", "paid").order("paid_at", { ascending: false }).limit(1).maybeSingle(),
-    ]);
+    const { data: st } = await supabase.rpc("member_stats", { p_from: range.fromIso, p_to: range.toIso, p_call: next?.id ?? null });
     stats = (st as Stats | null) ?? null;
-    if (last) payments = upcomingPayments({ paid_on: toZonedInput(new Date(last.paid_at)).slice(0, 10), amount_cents: last.amount_cents, currency: last.currency, description: last.description }, today);
   }
   const leadsHref = (show?: string) => `/leads?from=${range.from}&to=${range.to}${show ? `&show=${show}` : ""}`;
 
@@ -138,19 +131,6 @@ export default async function HomePage(props: PageProps<"/">) {
             </div>
           </section>
 
-          <div className="home-row one">
-            <section className="home-card" aria-label="Upcoming payments">
-              <h2 className="hst-title">Upcoming subscription payments</h2>
-              {payments.length ? (
-                <>
-                  <ul className="kv">
-                    {payments.map((p) => <li key={p.date}><span>{longDay(p.date)}</span><span>{formatMoney(p.amount_cents, p.currency)} · {p.description}</span></li>)}
-                  </ul>
-                  <p className="when" style={{ margin: "10px 0 0" }}>Estimated from your last payment. <Link href="/settings/subscription">See your subscription</Link></p>
-                </>
-              ) : <p style={{ margin: 0 }}>No payments to show yet. <Link href="/settings/subscription">See your subscription</Link></p>}
-            </section>
-          </div>
         </>
       ) : null}
     </div>
