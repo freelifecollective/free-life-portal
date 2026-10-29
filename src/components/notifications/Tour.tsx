@@ -16,7 +16,7 @@ const TABS: Record<string, string> = {
   "Calls": "Call replays will live here. Coming soon.",
   "Chats": "Talk with the community. New Members chats are open to everyone, and Affiliates Only chats unlock when you join as an affiliate. Important Updates has the latest team news.",
   "Classroom": "Courses and lessons, with your progress saved. Coming soon.",
-  "Commission calculator": "Pick your country and points, then tap products to see what your commissions could be.",
+  "Earnings Estimator": "Pick your country and points, then tap products to see what your commissions could be.",
   "Documents": "Guides and resources to download and share. Coming soon.",
   "Financing Options": "Different ways to fund your business, sorted by country. Affiliates can suggest new ones for approval.",
   "Outsourcing": "Find help from other members, or list what you can do for others. See their rates, how many people hired them, and reviews.",

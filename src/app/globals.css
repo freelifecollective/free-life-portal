@@ -907,3 +907,14 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .home-quote q { quotes: "\201C" "\201D"; font-family: var(--font-label); font-weight: 300; font-style: normal; font-size: clamp(18px, 2vw, 23px); line-height: 1.55; color: var(--ink); }
 .home-quote cite { font-family: var(--font-label); font-style: normal; font-size: 12px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
 .home-row.one { grid-template-columns: minmax(0, 1fr); }
+
+/* the pages behind the picture menu: one tidy column, centred */
+.account { max-width: 820px; margin-inline: auto; }
+.account .settings { grid-template-columns: minmax(0, 1fr); }
+
+/* on a computer the menu's soft background (and its edge line) continues up behind the logo and name */
+@media (min-width: 769px) {
+  .app-top { background: linear-gradient(to right, #F1EFE9 0, #F1EFE9 271px, var(--line) 271px, var(--line) 272px, var(--bg) 272px); }
+}
+.account .settings { margin-top: 10px; }
+.account .fl { max-width: none; padding: 0 0 56px; }

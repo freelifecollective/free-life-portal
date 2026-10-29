@@ -30,7 +30,7 @@ export default async function SettingsPage() {
     if (isQuoteStyle(data?.quote_style)) quoteStyle = data.quote_style;
   }
   return (
-    <>
+    <div className="account">
       <PageHeading>Profile</PageHeading>
       <div className="settings">
         <section className="card-s">
@@ -58,6 +58,6 @@ export default async function SettingsPage() {
           </section>
         ) : null}
       </div>
-    </>
+    </div>
   );
 }
