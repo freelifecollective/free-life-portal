@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { PageHeading } from "@/components/PageHeading";
-import { InstallApp } from "@/components/settings/InstallApp";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { requireMember } from "@/lib/auth/guards";
 
 export const instant = false;
-export const metadata = { title: "Settings" };
+export const metadata = { title: "Profile" };
 
 export default async function SettingsPage() {
   const { session, supabase } = await requireMember();
@@ -25,14 +24,16 @@ export default async function SettingsPage() {
   }
   return (
     <>
-      <PageHeading>Settings</PageHeading>
+      <PageHeading>Profile</PageHeading>
       <div className="settings">
         <section className="card-s">
           <div className="who set-head">
-            <Avatar url={p.avatar_url} initials={initials} size={72} preview={session.mode === "preview"} label="Your profile picture" />
+            <Link href="/settings/picture" className="avatar-edit" aria-label="Edit your picture">
+              <Avatar url={p.avatar_url} initials={initials} size={96} preview={session.mode === "preview"} label="Your profile picture" />
+              <span className="avatar-edit-btn" aria-hidden="true">Edit</span>
+            </Link>
             <span className="who-name"><strong style={{ fontSize: 20 }}>{[p.first_name, p.last_name].filter(Boolean).join(" ")}</strong>{p.role === "admin" ? <small className="admin-tag">Admin</small> : null}</span>
           </div>
-          <p style={{ margin: "14px 0 0" }}><Link className="btn" href="/settings/picture" style={{ textDecoration: "none" }}>Change my picture</Link></p>
         </section>
 
         <section className="card-s">
@@ -42,28 +43,6 @@ export default async function SettingsPage() {
             : <p style={{ margin: 0 }}>Editing needs the database, which preview mode does not have.</p>}
         </section>
 
-        {isMember ? (
-          <section className="card-s">
-            <h2 className="qh" style={{ marginTop: 0 }}>Subscription and payments</h2>
-            <dl className="set-list">
-              <div><dt>Current subscription</dt><dd>Not connected yet</dd></div>
-              <div><dt>Payment history</dt><dd>Not connected yet</dd></div>
-              <div><dt>Receipts</dt><dd>Not connected yet</dd></div>
-            </dl>
-            <p className="when" style={{ margin: "10px 0 0" }}>These will fill in once monthly payments are connected to the portal.</p>
-          </section>
-        ) : null}
-
-        <section className="card-s">
-          <h2 className="qh" style={{ marginTop: 0 }}>The app</h2>
-          <p className="when" style={{ margin: "0 0 12px" }}>Put the portal on your home screen so it opens like an app. It is free and needs no app store.</p>
-          <InstallApp />
-        </section>
-
-        <section className="card-s">
-          <h2 className="qh" style={{ marginTop: 0 }}>General</h2>
-          <form action="/logout" method="post"><button className="btn" type="submit">Sign out</button></form>
-        </section>
       </div>
     </>
   );

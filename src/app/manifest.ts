@@ -4,7 +4,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Free Life Collective",
-    short_name: "Free Life",
+    short_name: "FLC",
     description: "The Free Life Collective community portal.",
     start_url: "/",
     scope: "/",
