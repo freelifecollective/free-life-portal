@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { saveBuddyAnswers } from "@/app/(app)/buddy/actions";
+import { resetBuddyAnswers, saveBuddyAnswers } from "@/app/(app)/buddy/actions";
 import { CITIES, MINLEN, PNA, QUESTIONS, ZONES, type Question } from "@/lib/buddy/questions";
 import { firstIncomplete, isValid, type Answer, type Answers } from "@/lib/buddy/validate";
 
@@ -133,6 +133,7 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
   const [fromReview, setFromReview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [epoch, setEpoch] = useState(0);
   const head = useRef<HTMLHeadingElement>(null);
   const timer = useRef<number | undefined>(undefined);
   const q = QUESTIONS[idx];
@@ -160,6 +161,16 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
     onFinished();
   }
 
+  async function startOver() {
+    if (!window.confirm("Start over from the beginning? All of your answers will be cleared.")) return;
+    window.clearTimeout(timer.current);
+    setBusy(true); setError("");
+    const r = await resetBuddyAnswers();
+    setBusy(false);
+    if (!r.ok) return setError(r.error ?? "That did not work.");
+    setAns({}); setEpoch((n) => n + 1); setFromReview(false); setView("q"); setIdx(0);
+  }
+
   const goBack = () => {
     if (view === "review") { setIdx(N - 1); setView("q"); }
     else if (fromReview) { setFromReview(false); setView("review"); }
@@ -183,12 +194,18 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
         <section>
           <h1 ref={head} tabIndex={-1} className="bq-h">{q.q}</h1>
           {q.h ? <p className="bq-help">{q.h}</p> : null}
-          <Field key={q.k} q={q} value={ans[q.k]} onChange={(v) => change(q.k, v)} />
+          <Field key={`${q.k}-${epoch}`} q={q} value={ans[q.k]} onChange={(v) => change(q.k, v)} />
           <div className="bq-actions">
             {idx > 0 || fromReview ? <button type="button" className="backbtn" aria-label="Go back" onClick={goBack}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button> : null}
             <button type="button" className="btn primary" disabled={!isValid(q, ans[q.k])} onClick={next}>{fromReview ? "Save answer" : idx === N - 1 ? "Review my answers" : "Continue"}</button>
             {!fromReview && idx < N - 1 && allDone ? <button type="button" className="btn" onClick={() => setIdx(N - 1)}>Jump to last question</button> : null}
           </div>
+          {allDone && !fromReview ? (
+            <div className="bq-actions" style={{ marginTop: 12 }}>
+              {idx > 0 ? <button type="button" className="btn" onClick={() => setIdx(0)}>Jump to the First Question</button> : null}
+              <button type="button" className="linkbtn" disabled={busy} onClick={startOver}>Start Over From the Beginning</button>
+            </div>
+          ) : null}
         </section>
       ) : (
         <section>
@@ -206,6 +223,10 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
           <div className="bq-actions">
             <button type="button" className="backbtn" aria-label="Go back" onClick={goBack}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
             <button type="button" className="btn primary bq-find" disabled={!allDone || busy} onClick={finish}>{busy ? "Finding…" : "FIND MY TOP 5 MATCHES"}</button>
+          </div>
+          <div className="bq-actions" style={{ marginTop: 12 }}>
+            <button type="button" className="btn" onClick={() => { setFromReview(false); setIdx(0); setView("q"); }}>Jump to the First Question</button>
+            <button type="button" className="linkbtn" disabled={busy} onClick={startOver}>Start Over From the Beginning</button>
           </div>
         </section>
       )}
