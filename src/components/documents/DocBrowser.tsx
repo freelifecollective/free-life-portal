@@ -73,7 +73,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   /* The drag-a-box selection listens on the whole page area (not just the list), so you can start from any empty space. */
   useEffect(() => {
     if (!manage) return;
-    const main = document.getElementById("main");
+    const main = document.querySelector<HTMLElement>(".app-body") ?? document.getElementById("main");
     if (!main) return;
     const onDown = (e: PointerEvent) => {
       lastPointer.current = e.pointerType;
@@ -109,13 +109,12 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
     return () => main.removeEventListener("pointerdown", onDown);
   }, [manage]);
 
-  /** In Update Documents a mouse click selects and a double click opens. A tap opens, like on a phone. */
+  /** A click opens a folder or document. Hold Ctrl/Cmd/Shift, or tick a box, to select instead. While anything is selected, a click adds or removes it. */
   function itemClick(e: React.MouseEvent, key: string, openIt: () => void) {
     if (!manage) return openIt();
     if (dragged.current) { e.preventDefault(); dragged.current = false; return; }
-    if (lastPointer.current === "touch") return openIt();
-    e.preventDefault();
-    if (e.metaKey || e.ctrlKey || e.shiftKey) toggle(key); else setSel(new Set([key]));
+    if (e.metaKey || e.ctrlKey || e.shiftKey || sel.size > 0) { e.preventDefault(); toggle(key); return; }
+    openIt();
   }
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -272,7 +271,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           <button className="btn small danger-btn" type="button" onClick={() => { setBulk("delete"); bulkDlg.current?.showModal(); }}>Delete</button>
           <button className="linkbtn" type="button" onClick={() => setSel(new Set())}>Clear</button>
         </div>
-      ) : !itemsEmpty ? <p className="when" style={{ margin: 0, paddingTop: 14 }}>Tip: drag a box around items to select several, or tick the boxes. Double-click to open.</p> : null}
+      ) : !itemsEmpty ? <p className="when" style={{ margin: 0, paddingTop: 14 }}>Tip: drag a box around items, or tick the boxes, to select several.</p> : null}
       </div> : null}
       <div ref={area} className={"doc-area" + (manage ? " selectable" : "")} onDragStart={(e) => e.preventDefault()}>
       {itemsEmpty ? <section className="card-s"><p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p></section> : layout === "grid" ? (
@@ -280,7 +279,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           {folders.map((f) => (
             <li key={f.id} className={"doc-card" + (sel.has(k("folder", f.id)) ? " selected" : "")} data-sel={manage ? k("folder", f.id) : undefined}>
               {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("folder", f.id))} onChange={() => toggle(k("folder", f.id))} /> : null}
-              <Link href={`${basePath}?f=${f.id}`} className="doc-card-main" onClick={(e) => itemClick(e, k("folder", f.id), () => {})} onDoubleClick={() => manage && router.push(`${basePath}?f=${f.id}`)} draggable={false}>
+              <Link href={`${basePath}?f=${f.id}`} className="doc-card-main" onClick={(e) => itemClick(e, k("folder", f.id), () => {})} draggable={false}>
                 <span className="doc-cover folder" aria-hidden="true">📁</span>
                 <span className="doc-card-name">{f.name}</span>
                 {isAdmin && (f.for_leads || f.for_downline) ? <span className="doc-tags">{f.for_leads ? <Tag>Leads</Tag> : null}{f.for_downline ? <Tag>Downline</Tag> : null}</span> : null}
@@ -291,7 +290,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           {files.map((f) => (
             <li key={f.id} className={"doc-card" + (sel.has(k("file", f.id)) ? " selected" : "")} data-sel={manage ? k("file", f.id) : undefined}>
               {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("file", f.id))} onChange={() => toggle(k("file", f.id))} /> : null}
-              <button type="button" className="doc-card-main" onClick={(e) => itemClick(e, k("file", f.id), () => open(f))} onDoubleClick={() => manage && open(f)}>
+              <button type="button" className="doc-card-main" onClick={(e) => itemClick(e, k("file", f.id), () => open(f))}>
                 <Cover f={f} url={thumbUrls[f.id]} />
                 <span className="doc-card-name">{f.name}</span>
                 <span className="doc-tags">
@@ -308,7 +307,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           {folders.map((f) => (
             <li key={f.id} className={"" + (sel.has(k("folder", f.id)) ? " selected" : "")} data-sel={manage ? k("folder", f.id) : undefined}>
               {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("folder", f.id))} onChange={() => toggle(k("folder", f.id))} /> : null}
-              <Link href={`${basePath}?f=${f.id}`} className="doc-row" onClick={(e) => itemClick(e, k("folder", f.id), () => {})} onDoubleClick={() => manage && router.push(`${basePath}?f=${f.id}`)} draggable={false}>
+              <Link href={`${basePath}?f=${f.id}`} className="doc-row" onClick={(e) => itemClick(e, k("folder", f.id), () => {})} draggable={false}>
                 <span className="doc-ico" aria-hidden="true">📁</span>
                 <span className="doc-name">{f.name}</span>
                 {isAdmin ? <span className="doc-tags">{f.for_leads ? <Tag>Leads</Tag> : null}{f.for_downline ? <Tag>Lacey&apos;s downline</Tag> : null}</span> : null}
@@ -319,7 +318,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           {files.map((f) => (
             <li key={f.id} className={"" + (sel.has(k("file", f.id)) ? " selected" : "")} data-sel={manage ? k("file", f.id) : undefined}>
               {manage ? <input type="checkbox" className="doc-check" aria-label={`Select ${f.name}`} checked={sel.has(k("file", f.id))} onChange={() => toggle(k("file", f.id))} /> : null}
-              <button type="button" className="doc-row" onClick={(e) => itemClick(e, k("file", f.id), () => open(f))} onDoubleClick={() => manage && open(f)}>
+              <button type="button" className="doc-row" onClick={(e) => itemClick(e, k("file", f.id), () => open(f))}>
                 <span className="doc-ico" aria-hidden="true">{f.mime.startsWith("image/") ? "🖼️" : f.mime.startsWith("video/") ? "🎬" : f.mime.startsWith("audio/") ? "🎧" : f.mime === "application/pdf" ? "📕" : "📄"}</span>
                 <span className="doc-name">{f.name}</span>
                 <span className="doc-tags">
