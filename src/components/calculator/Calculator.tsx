@@ -47,8 +47,6 @@ export function Calculator() {
         <div className="field"><label htmlFor="calc-points">Points</label>
           <select id="calc-points" value={points} onChange={(e) => setPoints(Number(e.target.value))}>{POINTS.map((p) => <option key={p} value={p}>{p === 1 ? "1 point" : `${p} points`}</option>)}</select></div>
       </div>
-      <div className="calc-bubbles">{c.products.filter((p) => !COMBO.test(p.name)).map(bubble)}</div>
-      <div className="calc-bubbles">{c.products.filter((p) => COMBO.test(p.name)).map(bubble)}</div>
       <div className="calc-total" aria-live="polite">
         <div>
           <div className="lbl">Total commission</div>
@@ -59,6 +57,8 @@ export function Calculator() {
           <div className="sum">{fmt.format(sum)}</div>
         </div>
       </div>
+      <div className="calc-bubbles">{c.products.filter((p) => !COMBO.test(p.name)).map(bubble)}</div>
+      <div className="calc-bubbles">{c.products.filter((p) => COMBO.test(p.name)).map(bubble)}</div>
     </div>
   );
 }

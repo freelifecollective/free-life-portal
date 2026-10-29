@@ -24,9 +24,15 @@ export default async function CallsPage(props: PageProps<"/calls">) {
   const now = nowMs();
   const [upcoming, all] = await Promise.all([listUpcomingCalls(supabase, now), listRecordings(supabase)]);
   const published = all.filter((r) => r.published);
+  const yearOf = (iso: string) => Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric" }).format(new Date(iso)));
+  const yearParam = Number(Array.isArray(sp.year) ? sp.year[0] : sp.year);
   const present = TOPICS.filter((t) => published.some((r) => r.topics.includes(t)));
   const topic = present.find((t) => t === topicParam) ?? null;
-  const recordings = topic ? published.filter((r) => r.topics.includes(topic)) : published;
+  const inTopic = topic ? published.filter((r) => r.topics.includes(topic)) : published;
+  /* only years that have a recording in the chosen topic are offered, newest first */
+  const years = [...new Set(inTopic.map((r) => yearOf(r.recorded_at)))].sort((a, b) => b - a);
+  const year = years.includes(yearParam) ? yearParam : null;
+  const recordings = year ? inTopic.filter((r) => yearOf(r.recorded_at) === year) : inTopic;
   const next = upcoming[0];
   const live = next && now >= new Date(next.starts_at).getTime() && now < endsAt(new Date(next.starts_at), next.duration_minutes).getTime();
   const summary = next ? await rsvpSummary(supabase, next.id, 50) : null;
@@ -56,7 +62,7 @@ export default async function CallsPage(props: PageProps<"/calls">) {
           ) : <p style={{ margin: 0 }}>No calls are scheduled right now. Check the <Link href="/calendar">calendar</Link> for new ones.</p>}
         </section>
 
-        <div className="rec-head"><h2 className="qh" style={{ margin: 0 }}>Recordings</h2><TopicFilter topics={[...present]} current={topic} /></div>
+        <div className="rec-head"><h2 className="qh" style={{ margin: 0 }}>{topic ?? "All"} Recordings{year ? ` · ${year}` : ""}</h2><TopicFilter topics={[...present]} years={years} topic={topic} year={year} /></div>
         {recordings.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>{session.profile.role === "lead" ? "Recordings open to leads will appear here." : "No recordings yet. They are added after each call."}</p></section> : (
           <ul className="doc-grid rec-grid">
             {recordings.map((r) => (

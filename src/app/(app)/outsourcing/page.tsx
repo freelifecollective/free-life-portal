@@ -16,7 +16,7 @@ export default async function OutsourcingPage() {
   return (
     <>
       <PageHeading lede="Find help from people in the community, or offer your own skills.">Outsourcing</PageHeading>
-      <div className="settings" style={{ maxWidth: 820 }}>
+      <div className="stack">
         <ListingForm mine={mine} />
         <ProviderList providers={providers} hired={hired} reviews={reviews} me={session.user.id} isAdmin={session.profile.role === "admin"} />
       </div>

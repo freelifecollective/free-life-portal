@@ -185,6 +185,10 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
 
   return (
     <div className="bq">
+      <div className="bq-top">
+        <button type="button" className="backbtn" aria-label="Go back" onClick={goBack} disabled={view === "q" && idx === 0 && !fromReview} style={{ visibility: view === "q" && idx === 0 && !fromReview ? "hidden" : "visible" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
+        <button type="button" className="linkbtn" disabled={busy} onClick={startOver}>Start over from beginning</button>
+      </div>
       <div className="bq-prog">
         <div className="bq-prog-top"><span>{view === "q" ? q.sec : "Review"}</span><span>{view === "q" ? `Question ${idx + 1} of ${N}` : `${done} of ${N} answered`}</span></div>
         <div className="bq-bar" role="progressbar" aria-valuemin={0} aria-valuemax={N} aria-valuenow={view === "q" ? idx : N}><i style={{ width: `${pct}%` }} /></div>
@@ -196,14 +200,12 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
           {q.h ? <p className="bq-help">{q.h}</p> : null}
           <Field key={`${q.k}-${epoch}`} q={q} value={ans[q.k]} onChange={(v) => change(q.k, v)} />
           <div className="bq-actions">
-            {idx > 0 || fromReview ? <button type="button" className="backbtn" aria-label="Go back" onClick={goBack}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button> : null}
             <button type="button" className="btn primary" disabled={!isValid(q, ans[q.k])} onClick={next}>{fromReview ? "Save answer" : idx === N - 1 ? "Review my answers" : "Continue"}</button>
             {!fromReview && idx < N - 1 && allDone ? <button type="button" className="btn" onClick={() => setIdx(N - 1)}>Jump to last question</button> : null}
           </div>
           {allDone && !fromReview ? (
             <div className="bq-actions" style={{ marginTop: 12 }}>
               {idx > 0 ? <button type="button" className="btn" onClick={() => setIdx(0)}>Jump to the First Question</button> : null}
-              <button type="button" className="linkbtn" disabled={busy} onClick={startOver}>Start Over From the Beginning</button>
             </div>
           ) : null}
         </section>
@@ -221,12 +223,10 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
           </ul>
           <p className="err" role="alert">{error}</p>
           <div className="bq-actions">
-            <button type="button" className="backbtn" aria-label="Go back" onClick={goBack}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
             <button type="button" className="btn primary bq-find" disabled={!allDone || busy} onClick={finish}>{busy ? "Finding…" : "FIND MY TOP 5 MATCHES"}</button>
           </div>
           <div className="bq-actions" style={{ marginTop: 12 }}>
             <button type="button" className="btn" onClick={() => { setFromReview(false); setIdx(0); setView("q"); }}>Jump to the First Question</button>
-            <button type="button" className="linkbtn" disabled={busy} onClick={startOver}>Start Over From the Beginning</button>
           </div>
         </section>
       )}
