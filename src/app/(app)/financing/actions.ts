@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
+import { COUNTRIES, countryValue } from "@/lib/financing/countries";
 
 export type FinancingState = { error: string; sent?: number; approved?: boolean };
 
@@ -10,6 +11,8 @@ async function save(direct: boolean, form: FormData): Promise<FinancingState> {
   const title = String(form.get("title") ?? "").trim();
   const description = String(form.get("description") ?? "").trim();
   const link = String(form.get("link") ?? "").trim();
+  const country = String(form.get("country") ?? "");
+  if (!COUNTRIES.some((c) => countryValue(c) === country)) return { error: "Choose which country this is for." };
   if (!title || title.length > 100) return { error: "Add a name of up to 100 characters." };
   if (!description || description.length > 1500) return { error: "Add a description of up to 1500 characters." };
   if (link && (!/^https:\/\/\S+$/.test(link) || link.length > 500)) return { error: "The link must start with https://" };
@@ -19,7 +22,7 @@ async function save(direct: boolean, form: FormData): Promise<FinancingState> {
   const admin = direct && session.profile.role === "admin";
   if (direct && !admin) return { error: "Only admins can publish directly." };
   const { error } = await supabase.from("financing_options").insert({
-    title, description, link: link || null, submitted_by: session.user.id,
+    title, description, link: link || null, country, submitted_by: session.user.id,
     ...(admin ? { status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: session.user.id } : {}),
   });
   if (error) {

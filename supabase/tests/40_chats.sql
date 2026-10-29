@@ -43,11 +43,11 @@ create function tests.chat(s text) returns uuid language sql as $$ select id fro
 -- what each audience can see
 do $$ begin
   perform tests.login('00000000-0000-0000-0000-0000000000a3');
-  perform tests.eq('a lead sees every chat name (locked ones show a lock)', (select count(*) from public.chats), 10::bigint);
+  perform tests.eq('a lead sees every chat name (locked ones show a lock)', (select count(*) from public.chats), 11::bigint);
   perform tests.eq('a lead sees both sections', (select count(*) from public.chat_sections), 2::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  perform tests.eq('a member sees all ten chats', (select count(*) from public.chats), 10::bigint);
+  perform tests.eq('a member sees all eleven chats', (select count(*) from public.chats), 11::bigint);
   perform tests.eq('a member sees both sections', (select count(*) from public.chat_sections), 2::bigint);
   perform tests.logout();
   perform tests.login(null, 'anon');

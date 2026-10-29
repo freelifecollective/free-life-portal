@@ -18,7 +18,7 @@ export default async function ResponsesPage() {
   const authors = await authorsById(supabase, rows.map((r) => r.author_id));
   return (
     <>
-      <PageHeading lede="How to respond to leads: the answers the community has voted for. An answer appears here once it has more than 15 votes in the Verbiage/Objections chat.">Verbiage + Objections</PageHeading>
+      <PageHeading lede="The below are answers the community has voted for in the Verbiage/Objections chat as being quality responses. These are from other members in the community looking for help to respond to messages from their leads.">Verbiage + Objections</PageHeading>
       {rows.length === 0 ? (
         <section className="card-s" style={{ maxWidth: 560 }}>
           <p style={{ margin: 0 }}>Nothing has reached 15 votes yet. Add and vote on answers in <Link href="/chats/verbiage-objections">Verbiage/Objections chat</Link>.</p>

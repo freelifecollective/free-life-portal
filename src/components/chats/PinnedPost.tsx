@@ -7,13 +7,13 @@ import type { PostView } from "@/lib/chats/types";
 import { PostCard } from "./PostCard";
 
 /** A pinned post: collapsed it shows a flashing red dot and "IMPORTANT - CLICK TO READ". Click to open the full post. */
-export function PinnedPost({ post, slug, voting, isAdmin }: { post: PostView; slug: string; voting: boolean; isAdmin: boolean }) {
+export function PinnedPost({ post, slug, voting, isAdmin, canReply = true, showViews = false }: { post: PostView; slug: string; voting: boolean; isAdmin: boolean; canReply?: boolean; showViews?: boolean }) {
   const [open, setOpen] = useState(false);
   if (open) {
     return (
       <div className="pinned open">
         <button type="button" className="linkbtn pinned-close" onClick={() => setOpen(false)}>Close pinned message</button>
-        <PostCard post={post} slug={slug} voting={voting} isAdmin={isAdmin} />
+        <PostCard post={post} slug={slug} voting={voting} isAdmin={isAdmin} canReply={canReply} showViews={showViews} />
       </div>
     );
   }

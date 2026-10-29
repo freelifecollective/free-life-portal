@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { canSee, type Role } from "@/lib/roles";
 import type { ChatSection } from "@/lib/chats/types";
 
@@ -21,11 +22,14 @@ export function ChatList({ sections, current, role }: { sections: ChatSection[];
             <h2 className="chat-section">{s.name}{locked ? <Lock /> : null}</h2>
             <ul>
               {s.chats.map((c) => (
-                <li key={c.id}>
+                <Fragment key={c.id}>
+                <li>
                   {canSee(role, c.min_role)
                     ? <Link href={`/chats/${c.slug}`} aria-current={c.slug === current ? "page" : undefined}>{c.name}</Link>
                     : <Link href={`/chats/${c.slug}`} className="chat-locked" aria-current={c.slug === current ? "page" : undefined}>{c.name}<Lock /><span className="sr-only"> (locked)</span></Link>}
                 </li>
+                {c.divider_after ? <li className="chat-divider" aria-hidden="true"><span /><i>✦</i><span /></li> : null}
+                </Fragment>
               ))}
             </ul>
           </section>

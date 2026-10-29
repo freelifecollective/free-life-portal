@@ -46,12 +46,12 @@ do $$ begin
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
   perform tests.eq('the referrer gets a new-lead notification', (select count(*) from public.notifications where kind = 'new_lead'), 1::bigint);
   perform tests.eq('it names the lead', (select body like 'Pat Lead%' from public.notifications where kind = 'new_lead'), true);
-  perform tests.eq('marking it read works', tests.rows('update public.notifications set read_at = now()'), 1::bigint);
+  perform tests.eq('marking it read works', tests.rows('update public.notifications set read_at = now()'), 3::bigint);
   perform tests.fails('the message itself cannot be edited', 'update public.notifications set title = ''hacked''', '42501');
   perform tests.fails('people cannot create notifications', format('insert into public.notifications (user_id, kind, title) values (auth.uid(), %L, %L)', 'announcement', 'x'), '42501');
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a5');
-  perform tests.eq('others do not see it', (select count(*) from public.notifications), 0::bigint);
+  perform tests.eq('others do not see it', (select count(*) from public.notifications where kind = 'new_lead'), 0::bigint);
   perform tests.logout();
 end $$;
 
@@ -68,23 +68,32 @@ do $$ begin
   perform tests.logout();
 end $$;
 
--- call reminders: once per person per reminder
+-- call reminders go to everyone who can see the call, once each
 do $$ declare n integer; begin
-  perform tests.login('00000000-0000-0000-0000-0000000000a5');
-  insert into public.rsvps (call_id, user_id, mode) values ('22222222-2222-2222-2222-222222222222', auth.uid(), 'live');
-  perform tests.logout();
-  perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  insert into public.rsvps (call_id, user_id, mode) values ('22222222-2222-2222-2222-222222222222', auth.uid(), 'recording');
+  -- the open call (3 days away) was created above, so people already have a "new call" notice
+  perform tests.login('00000000-0000-0000-0000-0000000000a3');
+  perform tests.eq('a lead was told about the open call', (select count(*) from public.notifications where kind = 'call_new'), 1::bigint);
+  perform tests.eq('and not about the affiliates-only call', (select count(*) from public.notifications where kind = 'call_new' and title like '%Soon call%'), 0::bigint);
   perform tests.logout();
   n := public.queue_call_reminders();
-  perform tests.eq('one reminder goes to the person coming live', n, 1);
+  perform tests.eq('the 1-hour reminder goes to the 3 affiliates, no RSVP needed', n, 3);
   perform tests.eq('asking again does not send it twice', public.queue_call_reminders(), 0);
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  perform tests.eq('watching the recording means no reminder', (select count(*) from public.notifications where kind = 'call_reminder'), 0::bigint);
+  perform tests.eq('even someone who chose the recording gets it', (select count(*) from public.notifications where kind = 'call_reminder'), 1::bigint);
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a3');
+  perform tests.eq('a lead gets no reminder for an affiliates-only call', (select count(*) from public.notifications where kind = 'call_reminder'), 0::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a5');
   perform tests.fails('members cannot trigger reminders', 'select public.queue_call_reminders()', '42501');
   perform tests.logout();
+  -- other windows
+  update public.calls set starts_at = now() + interval '24 hours' - interval '2 minutes' where id = '11111111-1111-1111-1111-111111111111';
+  perform tests.eq('the 24-hour reminder reaches everyone (affiliates + lead)', public.queue_call_reminders(), 4);
+  update public.calls set starts_at = now() + interval '5 minutes' where id = '11111111-1111-1111-1111-111111111111';
+  perform tests.eq('the 10-minute reminder', public.queue_call_reminders(), 4);
+  update public.calls set starts_at = now() - interval '1 minute' where id = '11111111-1111-1111-1111-111111111111';
+  perform tests.eq('and the "live now" message', public.queue_call_reminders(), 4);
 end $$;
 
 -- a reviewed submission tells the person

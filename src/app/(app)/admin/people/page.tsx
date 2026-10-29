@@ -11,16 +11,20 @@ type Invite = { email: string; role: string; note: string | null; claimed_at: st
 
 export default async function PeoplePage() {
   const { session, supabase } = await requireAdmin();
-  const [people, invites] = await Promise.all([
+  const [people, invites, memberInvites] = await Promise.all([
     supabase.from("profiles").select("id, first_name, last_name, username, email, role, onboarded_at").order("created_at", { ascending: false }).limit(300),
     supabase.from("signup_allowlist").select("email, role, note, claimed_at, created_at").is("claimed_at", null).order("created_at", { ascending: false }).limit(300),
+    supabase.from("signup_allowlist").select("email, created_by, created_at, claimed_at, note").eq("role", "member").order("created_at", { ascending: false }).limit(300),
   ]);
   const ppl = (people.data ?? []) as Person[];
   const waiting = (invites.data ?? []) as Invite[];
+  const nameOf = new Map(ppl.map((p) => [p.id, [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unknown"]));
+  const byEmail = new Map(ppl.map((p) => [(p.email ?? "").toLowerCase(), p]));
+  const given = (memberInvites.data ?? []) as { email: string; created_by: string | null; created_at: string; claimed_at: string | null; note: string | null }[];
 
   return (
     <>
-      <PageHeading lede="Only people on this list can create an account. Leads who register for a call are added automatically. Invite members or coaches here.">People and invites</PageHeading>
+      <PageHeading lede={<>Only people on this list can create an account. Leads who register for a call are added automatically. Add leads and FLC Members here. <em>If you select to invite them as a member, this bypasses them having to pay a monthly subscription.</em></>}>People and invites</PageHeading>
       <section className="card-s" style={{ maxWidth: 680 }} aria-label="Invite someone">
         <h2 className="qh" style={{ marginTop: 0 }}>Invite someone</h2>
         <InviteForm />
@@ -36,6 +40,30 @@ export default async function PeoplePage() {
             </li>
           ))}
         </ul>
+      )}
+
+      <h2 className="qh" style={{ marginTop: 36 }}>Members added without paying ({given.length})</h2>
+      <p className="page-lede" style={{ marginTop: -6 }}>Everyone invited as a member by an admin, and who invited them, so you can check they are fine to be here.</p>
+      {given.length === 0 ? <p className="page-lede" style={{ marginBottom: 0 }}>No one yet.</p> : (
+        <div className="table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Member</th><th>Email</th><th>Invited by</th><th>Invited on</th><th>Status</th></tr></thead>
+            <tbody>
+              {given.map((g) => {
+                const person = byEmail.get(g.email.toLowerCase());
+                return (
+                  <tr key={g.email}>
+                    <td>{person ? [person.first_name, person.last_name].filter(Boolean).join(" ") || "Not finished" : <span className="muted-line">Not signed up yet</span>}</td>
+                    <td>{g.email}</td>
+                    <td>{g.created_by ? nameOf.get(g.created_by) ?? "An admin" : "Unknown"}</td>
+                    <td>{new Date(g.created_at).toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric" })}</td>
+                    <td>{g.claimed_at ? "Joined" : "Waiting"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <h2 className="qh" style={{ marginTop: 36 }}>People ({ppl.length})</h2>

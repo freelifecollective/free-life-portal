@@ -31,7 +31,7 @@ function CommentForm({ postId, slug }: { postId: string; slug: string }) {
   );
 }
 
-export function PostCard({ post, slug, voting, isAdmin }: { post: PostView; slug: string; voting: boolean; isAdmin: boolean }) {
+export function PostCard({ post, slug, voting, isAdmin, canReply = true, showViews = false }: { post: PostView; slug: string; voting: boolean; isAdmin: boolean; canReply?: boolean; showViews?: boolean }) {
   const [, start] = useTransition();
   const [error, setError] = useState("");
   const [vote, setVote] = useOptimistic({ votes: post.votes, voted: post.voted }, (cur, next: boolean) => (next === cur.voted ? cur : { votes: cur.votes + (next ? 1 : -1), voted: next }));
@@ -76,7 +76,8 @@ export function PostCard({ post, slug, voting, isAdmin }: { post: PostView; slug
           ))}
         </ul>
       ) : null}
-      <CommentForm postId={post.id} slug={slug} />
+      {canReply ? <CommentForm postId={post.id} slug={slug} /> : null}
+      {showViews ? <p className="views" aria-label={`${post.views} seen`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>{post.views}</p> : null}
     </article>
   );
 }

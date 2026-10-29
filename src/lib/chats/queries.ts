@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Author, ChatInfo, ChatSection, PostView } from "./types";
 import type { Role } from "@/lib/roles";
 
-const CHAT_COLUMNS = "id, section_id, slug, name, description, sort, votes_on, min_role, description_lead";
+const CHAT_COLUMNS = "id, section_id, slug, name, description, sort, votes_on, min_role, description_lead, posting, replies_allowed, show_views, divider_after";
 
 /** Sections and their chats. Row level security hides what this person may not see. */
 export async function listChatSections(supabase: SupabaseClient): Promise<ChatSection[]> {
@@ -39,13 +39,14 @@ export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: st
   const more = all.length > limit;
   const page = all.slice(0, limit);
   const ids = page.map((p) => p.id);
-  const [{ data: comments }, { data: reactions }, { data: votes }] = ids.length
+  const [{ data: comments }, { data: reactions }, { data: votes }, { data: viewRows }] = ids.length
     ? await Promise.all([
         supabase.from("chat_comments").select("id, post_id, author_id, body, created_at").in("post_id", ids).order("created_at"),
         supabase.from("chat_reactions").select("post_id, user_id, kind, created_at").in("post_id", ids),
         chat.votes_on ? supabase.from("chat_votes").select("post_id, user_id").in("post_id", ids) : Promise.resolve({ data: [] }),
+        chat.show_views ? supabase.rpc("post_view_counts", { p_posts: ids }) : Promise.resolve({ data: [] }),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }];
   const authors = await authorsById(supabase, [...page.map((p) => p.author_id), ...(comments ?? []).map((c) => c.author_id), ...(reactions ?? []).map((r) => r.user_id)]);
   const who = (id: string): Author => authors.get(id) ?? { id, name: "Member", username: null, avatar_url: null, is_admin: false };
 
@@ -57,6 +58,7 @@ export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: st
       comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({ id: c.id, author: who(c.author_id), body: c.body, created_at: c.created_at, mine: c.author_id === me })),
       reactions: summarize(rx, who), myReaction: rx.find((x) => x.user_id === me)?.kind ?? null,
       votes: vs.length, voted: vs.some((v) => v.user_id === me),
+      views: ((viewRows ?? []) as { post_id: string; views: number }[]).find((v) => v.post_id === p.id)?.views ?? 0,
     };
   });
   return { posts, more };
