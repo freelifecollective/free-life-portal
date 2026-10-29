@@ -30,6 +30,7 @@ function Card({ p, hire, reviews, me, isAdmin }: { p: Provider; hire?: MyHire; r
       </button>
       <p className="offer-label">Offering</p>
       <ul className="tags">{p.tasks.map((t) => <li key={t}>{t}</li>)}</ul>
+      {p.va_experience ? <p className="when" style={{ margin: "10px 0 0" }}>VA experience: <strong>{p.va_experience_length}</strong></p> : null}
       {p.about ? <p className="post-body" style={{ marginTop: 10 }}>{p.about}</p> : null}
       <p className="when" style={{ margin: "8px 0 0" }}>
         {p.hires} {p.hires === 1 ? "person has" : "people have"} hired {mine ? "you" : "them"}

@@ -5,15 +5,16 @@ import { authorsById } from "@/lib/chats/queries";
 export type Provider = {
   member_id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; is_admin: boolean;
   headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number; hires: number; reviews: number; avg_rating: number | null;
+  va_experience: boolean | null; va_experience_length: string | null;
 };
 export type Review = { id: string; provider_id: string; reviewer: string; rating: number; review: string | null; at: string };
 export type MyHire = { id: string; provider_id: string; rating: number | null; review: string | null };
-export type MyListing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number; listed: boolean };
+export type MyListing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number; listed: boolean; va_experience: boolean | null; va_experience_length: string | null };
 
 export async function loadOutsourcing(supabase: SupabaseClient, me: string) {
   const [{ data: dir }, { data: mine }, { data: hired }] = await Promise.all([
     supabase.rpc("outsourcing_directory"),
-    supabase.from("outsourcing_profiles").select("headline, about, tasks, hourly_rate_cents, listed").eq("member_id", me).maybeSingle(),
+    supabase.from("outsourcing_profiles").select("headline, about, tasks, hourly_rate_cents, listed, va_experience, va_experience_length").eq("member_id", me).maybeSingle(),
     supabase.from("outsourcing_hires").select("id, provider_id, rating, review").eq("hirer_id", me),
   ]);
   const providers = (dir ?? []) as Provider[];

@@ -3,12 +3,13 @@
 import { useActionState, useState, useTransition } from "react";
 import { removeListing, saveListing, type ListingState } from "@/app/(app)/outsourcing/actions";
 import type { MyListing } from "@/lib/outsourcing/queries";
-import { OFFERINGS } from "@/lib/outsourcing/tasks";
+import { OFFERINGS, VA_LENGTHS } from "@/lib/outsourcing/tasks";
 
 export function ListingForm({ mine }: { mine: MyListing | null }) {
   const [state, action, pending] = useActionState(saveListing, { error: "" } as ListingState);
   const [open, setOpen] = useState(false);
   const [removing, startRemove] = useTransition();
+  const [va, setVa] = useState<"yes" | "no" | "">(mine?.va_experience === true ? "yes" : mine?.va_experience === false ? "no" : "");
   const show = open || !mine;
   if (!show) {
     return (
@@ -30,6 +31,18 @@ export function ListingForm({ mine }: { mine: MyListing | null }) {
         <legend>What are you offering? (choose all that apply)</legend>
         {OFFERINGS.map((o) => <label key={o} className="check"><input type="checkbox" name="tasks" value={o} defaultChecked={mine?.tasks.includes(o)} /> {o}</label>)}
       </fieldset>
+      <fieldset className="va-q">
+        <legend>Do you have experience as a VA (virtual assistant)?</legend>
+        <label className="check"><input type="radio" name="va" value="yes" required checked={va === "yes"} onChange={() => setVa("yes")} /> Yes</label>
+        <label className="check"><input type="radio" name="va" value="no" checked={va === "no"} onChange={() => setVa("no")} /> No</label>
+      </fieldset>
+      {va === "yes" ? (
+        <div className="field" style={{ maxWidth: 320 }}><label htmlFor="o-vl">For how long?</label>
+          <select id="o-vl" name="va_length" required defaultValue={mine?.va_experience_length ?? ""}>
+            <option value="" disabled>Choose one</option>
+            {VA_LENGTHS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select></div>
+      ) : null}
       <div className="row">
         <div className="field"><label htmlFor="o-r">Hourly rate (USD)</label><input id="o-r" name="rate" type="text" inputMode="decimal" required defaultValue={mine ? (mine.hourly_rate_cents / 100).toFixed(2) : ""} placeholder="35.00" /></div>
       </div>
