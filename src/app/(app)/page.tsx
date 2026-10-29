@@ -9,8 +9,9 @@ import { CopyInvite } from "@/components/dashboard/CopyInvite";
 import { formatMoney } from "@/lib/payments/receipt";
 import { upcomingPayments } from "@/lib/dashboard/payments";
 import { parseRange, presets } from "@/lib/dashboard/range";
+import { isQuoteStyle, quoteFor, type QuoteStyle } from "@/lib/quotes";
 import { listUpcomingCalls, pickFeatured, rsvpSummary } from "@/lib/calls/queries";
-import { endsAt, formatDayInZone, formatInZone, nowMs, toZonedInput } from "@/lib/time";
+import { endsAt, formatInZone, nowMs, toZonedInput } from "@/lib/time";
 
 export const instant = false; // renders per signed-in member
 export const metadata = { title: "Home" };
@@ -24,7 +25,7 @@ export default async function HomePage(props: PageProps<"/">) {
   const sp = await props.searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
   const { session, supabase } = await requireMember();
-  const { profile, mode } = session;
+  const { profile } = session;
   const now = nowMs();
   const affiliate = profile.role !== "lead";
   const upcoming = supabase ? await listUpcomingCalls(supabase, now) : [];
@@ -32,6 +33,13 @@ export default async function HomePage(props: PageProps<"/">) {
   const next = (affiliate ? upcoming.find((c) => c.audience === "leads_open") : null) ?? pickFeatured(upcoming);
   const summary = supabase && next ? await rsvpSummary(supabase, next.id, 50) : null;
   const isLive = !!next && now >= new Date(next.starts_at).getTime() && now < endsAt(new Date(next.starts_at), next.duration_minutes).getTime();
+
+  let quoteStyle: QuoteStyle = "general";
+  if (supabase) {
+    const { data: pref } = await supabase.from("member_prefs").select("quote_style").maybeSingle();
+    if (isQuoteStyle(pref?.quote_style)) quoteStyle = pref.quote_style;
+  }
+  const quote = quoteFor(quoteStyle, toZonedInput(new Date(now)).slice(0, 10));
 
   const range = parseRange(one(sp.from), one(sp.to), now);
   const today = toZonedInput(new Date(now)).slice(0, 10);
@@ -53,9 +61,12 @@ export default async function HomePage(props: PageProps<"/">) {
   return (
     <div className="home">
       <header className="home-head">
-        <p className="home-date"><span>{formatDayInZone(new Date(now)).toUpperCase()}</span></p>
         <p className="home-eyebrow">Free Life Collective</p>
         <h1 className="home-title">Welcome, {profile.first_name}</h1>
+        <blockquote className="home-quote" style={{ margin: "14px auto 0" }}>
+          <q>{quote.text}</q>
+          {quote.by ? <cite>{quote.by}</cite> : null}
+        </blockquote>
       </header>
 
       {supabase ? (
@@ -127,7 +138,7 @@ export default async function HomePage(props: PageProps<"/">) {
             </div>
           </section>
 
-          <div className="home-row two">
+          <div className="home-row one">
             <section className="home-card" aria-label="Upcoming payments">
               <h2 className="hst-title">Upcoming subscription payments</h2>
               {payments.length ? (
@@ -139,28 +150,9 @@ export default async function HomePage(props: PageProps<"/">) {
                 </>
               ) : <p style={{ margin: 0 }}>No payments to show yet. <Link href="/settings/subscription">See your subscription</Link></p>}
             </section>
-            <section className="home-card" aria-label="Your profile">
-              <h2 className="hst-title">Your profile</h2>
-              <ul className="kv">
-                <li><span>Username</span><span>@{profile.username}</span></li>
-                <li><span>Instagram</span><span>{profile.instagram ? "@" + profile.instagram : "Not added yet"}</span></li>
-                <li><span>Facebook</span><span>{profile.facebook ? "@" + profile.facebook : "Not added yet"}</span></li>
-              </ul>
-              {mode === "preview" ? <p className="status" style={{ marginBottom: 0 }}>Preview mode: nothing here is saved to a real account.</p> : null}
-            </section>
           </div>
         </>
-      ) : (
-        <section className="home-card" style={{ marginTop: 20 }} aria-label="Your profile">
-          <h2 className="hst-title">Your profile</h2>
-          <ul className="kv">
-            <li><span>Username</span><span>@{profile.username}</span></li>
-            <li><span>Instagram</span><span>{profile.instagram ? "@" + profile.instagram : "Not added yet"}</span></li>
-            <li><span>Facebook</span><span>{profile.facebook ? "@" + profile.facebook : "Not added yet"}</span></li>
-          </ul>
-          {mode === "preview" ? <p className="status" style={{ marginBottom: 0 }}>Preview mode: nothing here is saved to a real account.</p> : null}
-        </section>
-      )}
+      ) : null}
     </div>
   );
 }
