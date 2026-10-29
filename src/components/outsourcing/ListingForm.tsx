@@ -1,0 +1,43 @@
+"use client";
+
+import { useActionState, useState, useTransition } from "react";
+import { removeListing, saveListing, type ListingState } from "@/app/(app)/outsourcing/actions";
+import type { MyListing } from "@/lib/outsourcing/queries";
+
+export function ListingForm({ mine }: { mine: MyListing | null }) {
+  const [state, action, pending] = useActionState(saveListing, { error: "" } as ListingState);
+  const [open, setOpen] = useState(false);
+  const [removing, startRemove] = useTransition();
+  const show = open || !mine;
+  if (!show) {
+    return (
+      <section className="card-s">
+        <h2 className="qh" style={{ marginTop: 0 }}>Your listing</h2>
+        <p style={{ margin: "0 0 4px" }}><strong>{mine!.headline}</strong> · ${(mine!.hourly_rate_cents / 100).toFixed(2)}/hour</p>
+        <p className="when" style={{ margin: "0 0 12px" }}>{mine!.listed ? "People can find you in the list below." : "You are hidden from the list right now."}</p>
+        <div className="set-actions">
+          <button className="btn" type="button" onClick={() => setOpen(true)}>Edit my listing</button>
+          <button className="linkbtn danger" type="button" disabled={removing} onClick={() => { if (window.confirm("Remove your listing?")) startRemove(async () => { await removeListing(); }); }}>Remove</button>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <form action={action} className="set-form card-s">
+      <h2 className="qh" style={{ margin: 0 }}>{mine ? "Edit your listing" : "Offer your help"}</h2>
+      <div className="field"><label htmlFor="o-h">Headline</label><input id="o-h" name="headline" type="text" required maxLength={100} defaultValue={mine?.headline} placeholder="Facebook ads and graphics" /></div>
+      <div className="field"><label htmlFor="o-t">Tasks you will do (separate with commas)</label><input id="o-t" name="tasks" type="text" required defaultValue={mine?.tasks.join(", ")} placeholder="Ad graphics, Reels editing, Lead follow-up" /></div>
+      <div className="row">
+        <div className="field"><label htmlFor="o-r">Hourly rate (USD)</label><input id="o-r" name="rate" type="text" inputMode="decimal" required defaultValue={mine ? (mine.hourly_rate_cents / 100).toFixed(2) : ""} placeholder="35.00" /></div>
+      </div>
+      <div className="field"><label htmlFor="o-a">About you (optional)</label><textarea id="o-a" name="about" rows={4} maxLength={1500} defaultValue={mine?.about ?? ""} /></div>
+      <label className="check"><input type="checkbox" name="listed" defaultChecked={mine?.listed ?? true} /> Show me in the list</label>
+      <div className="set-actions">
+        <button className="btn primary" type="submit" disabled={pending}>{pending ? "Saving…" : "Save listing"}</button>
+        {mine ? <button className="linkbtn" type="button" onClick={() => setOpen(false)}>Cancel</button> : null}
+        <span role="status" className="when">{state.saved ? "Saved." : ""}</span>
+      </div>
+      <p className="err" role="alert">{state.error}</p>
+    </form>
+  );
+}
