@@ -26,23 +26,25 @@ export function ListingForm({ mine }: { mine: MyListing | null }) {
   }
   return (
     <form action={action} className="set-form card-s">
-      <h2 className="qh" style={{ margin: 0 }}>{mine ? "Edit your listing" : "Offer your help"}</h2>
+      <h2 className="qh" style={{ margin: 0 }}>{mine ? "Edit your listing" : "Offer your services"}</h2>
       <fieldset className="offer-pick">
         <legend>What are you offering? (choose all that apply)</legend>
         {OFFERINGS.map((o) => <label key={o} className="check"><input type="checkbox" name="tasks" value={o} defaultChecked={mine?.tasks.includes(o)} /> {o}</label>)}
       </fieldset>
-      <fieldset className="va-q">
-        <legend>Do you have experience as a VA (virtual assistant)?</legend>
-        <label className="check"><input type="radio" name="va" value="yes" required checked={va === "yes"} onChange={() => setVa("yes")} /> Yes</label>
-        <label className="check"><input type="radio" name="va" value="no" checked={va === "no"} onChange={() => setVa("no")} /> No</label>
-      </fieldset>
-      {va === "yes" ? (
-        <div className="field" style={{ maxWidth: 320 }}><label htmlFor="o-vl">For how long?</label>
-          <select id="o-vl" name="va_length" required defaultValue={mine?.va_experience_length ?? ""}>
-            <option value="" disabled>Choose one</option>
-            {VA_LENGTHS.map((l) => <option key={l} value={l}>{l}</option>)}
-          </select></div>
-      ) : null}
+      <div className="va-row">
+        <span id="va-label" className="va-label">Do you have experience as a VA (virtual assistant)?</span>
+        <div className="va-choices" role="radiogroup" aria-labelledby="va-label">
+          <label className="check"><input type="radio" name="va" value="yes" required checked={va === "yes"} onChange={() => setVa("yes")} /> Yes</label>
+          <label className="check"><input type="radio" name="va" value="no" checked={va === "no"} onChange={() => setVa("no")} /> No</label>
+        </div>
+        {va === "yes" ? (
+          <div className="va-length"><label htmlFor="o-vl">For how long?</label>
+            <select id="o-vl" name="va_length" required defaultValue={mine?.va_experience_length ?? ""}>
+              <option value="" disabled>Choose one</option>
+              {VA_LENGTHS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select></div>
+        ) : null}
+      </div>
       <div className="row">
         <div className="field"><label htmlFor="o-r">Hourly rate (USD)</label><input id="o-r" name="rate" type="text" inputMode="decimal" required defaultValue={mine ? (mine.hourly_rate_cents / 100).toFixed(2) : ""} placeholder="35.00" /></div>
       </div>

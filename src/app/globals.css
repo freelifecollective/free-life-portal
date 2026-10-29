@@ -120,9 +120,9 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
   background: var(--surface); font-size: 15px;
 }
 .search input:disabled { color: var(--muted); cursor: not-allowed; }
-.app-body { display: grid; grid-template-columns: 220px minmax(0, 1fr); }
+.app-body { display: grid; grid-template-columns: 272px minmax(0, 1fr); }
 @media (max-width: 768px) { .app-body { grid-template-columns: minmax(0, 1fr); } .search { display: none; } .top-right { margin-left: auto; } }
-.nav { padding: 20px 12px 20px max(12px, env(safe-area-inset-left)); border-right: 1px solid var(--line); }
+.nav { padding: 24px 18px 24px max(18px, env(safe-area-inset-left)); border-right: 1px solid var(--line); background: #F1EFE9; }
 .menu-btn { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 10px; color: var(--ink); cursor: pointer; }
 @media (max-width: 768px) {
   .menu-btn { display: inline-flex; }
@@ -135,8 +135,8 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
   display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 10px;
   font-family: var(--font-label); font-weight: 600; font-size: 14px; letter-spacing: 0.04em; text-decoration: none; color: var(--ink); white-space: nowrap;
 }
-.nav li > a[aria-current="page"] { background: var(--tint); }
-.nav li > a:hover { background: var(--surface); }
+.nav li > a[aria-current="page"] { background: var(--surface); box-shadow: 0 1px 3px rgba(43, 37, 34, 0.08); }
+.nav li > a:hover { background: rgba(255, 255, 255, 0.65); }
 .nav li > span { color: var(--muted); }
 .nav .soon { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; }
 .main { padding: 36px max(16px, env(safe-area-inset-right)) 64px 40px; width: 100%; max-width: 1480px; margin-inline: auto; min-width: 0; }
@@ -870,14 +870,23 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .fin-card .btn { margin-top: auto; align-self: flex-start; }
 .fin-bottom { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 18px; align-items: start; margin-top: 32px; }
 .offer-pick { grid-template-columns: repeat(auto-fit, minmax(max(150px, calc((100% - 50px) / 6)), 1fr)); gap: 10px; padding: 14px; background: #fff; align-content: start; }
+.offer-pick .check, .va-choices .check { margin: 0; }
 .offer-pick .check { display: flex; align-items: center; gap: 8px; padding: 9px 4px; font-size: 14.5px; background: #fff; cursor: pointer; line-height: 1.25; }
 
 .nav .nav-static { cursor: default; border-top: 1px solid var(--line); }
 .nav .nav-static:hover { color: var(--muted); }
-.va-q { border: 0; padding: 0; margin: 0; display: flex; gap: 22px; flex-wrap: wrap; align-items: center; }
-.va-q legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; float: left; width: 100%; }
 .login-splash .splash-name { margin-top: 0; }
 .login-form { display: grid; gap: 10px; width: min(380px, 100%); margin-top: 18px; text-align: left; }
 .login-form input[type="email"] { height: 52px; border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; font: inherit; font-size: 16px; background: #fff; color: var(--ink); text-align: center; }
 .login-form .btn { height: 52px; width: 100%; }
 .login-note { max-width: 420px; margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.nav li.nav-rule { height: 0; margin: 10px 0 8px; border-top: 1px solid var(--line); }
+/* the Offer your services form */
+.offer-pick { padding-left: 0; padding-right: 0; }
+.offer-pick legend { padding: 0; }
+.va-row { display: flex; align-items: center; gap: 12px 22px; flex-wrap: wrap; }
+.va-label { font-weight: 600; font-size: 14px; }
+.va-choices { display: flex; align-items: center; gap: 18px; }
+.va-length { display: flex; align-items: center; gap: 10px; }
+.va-length label { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.va-length select { height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font: inherit; background: #fff; color: var(--ink); }
