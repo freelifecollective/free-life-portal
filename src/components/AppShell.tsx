@@ -33,6 +33,7 @@ const NAV: NavItem[] = [
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true },
   { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true },
   { label: "People and invites", href: "/admin/people", min: "admin", admin: true },
+  { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true },
 ];
 
 /** Home first, then everything else A to Z. The admin section stays at the bottom, also A to Z. */

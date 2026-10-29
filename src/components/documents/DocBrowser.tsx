@@ -26,9 +26,15 @@ function Cover({ f, url }: { f: DocFile; url?: string }) {
   return <span className="doc-cover fallback"><span aria-hidden="true">{icon}</span><b>{ext}</b></span>;
 }
 
-export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFolders, isAdmin, role }: {
-  folderId: string | null; trail: DocFolder[]; folders: DocFolder[]; files: DocFile[]; thumbUrls: Record<string, string>; allFolders: DocFolder[]; isAdmin: boolean; role: Role;
+export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFolders, manage, basePath, role }: {
+  folderId: string | null; trail: DocFolder[]; folders: DocFolder[]; files: DocFile[]; thumbUrls: Record<string, string>; allFolders: DocFolder[];
+  /** true on the Update Documents page: shows the add / rename / move / visibility / delete controls */
+  manage: boolean;
+  /** where folder links go, so each page stays on itself */
+  basePath: string;
+  role: Role;
 }) {
+  const isAdmin = manage;
   const layout = useSyncExternalStore(subscribeView, readView, () => "grid" as const);
   const setLayout = (v: "grid" | "list") => { try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ } window.dispatchEvent(new Event("flc:docsview")); };
   const router = useRouter();
@@ -142,9 +148,17 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   const itemsEmpty = folders.length === 0 && files.length === 0;
   return (
     <div className="docs">
+      {folderId ? (
+        <p style={{ margin: "0 0 10px" }}>
+          <Link className="doc-back" href={trail.length > 1 ? `${basePath}?f=${trail[trail.length - 2].id}` : basePath}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            Back
+          </Link>
+        </p>
+      ) : null}
       <nav className="crumbs" aria-label="Folder path">
-        <Link href="/documents">Documents</Link>
-        {trail.map((t) => <span key={t.id}> / <Link href={`/documents?f=${t.id}`}>{t.name}</Link></span>)}
+        <Link href={basePath}>{manage ? "Update Documents" : "Documents"}</Link>
+        {trail.map((t) => <span key={t.id}> / <Link href={`${basePath}?f=${t.id}`}>{t.name}</Link></span>)}
       </nav>
 
       <div className="doc-view-toggle" role="group" aria-label="Layout">
@@ -169,7 +183,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         <ul className="doc-grid">
           {folders.map((f) => (
             <li key={f.id} className="doc-card">
-              <Link href={`/documents?f=${f.id}`} className="doc-card-main">
+              <Link href={`${basePath}?f=${f.id}`} className="doc-card-main">
                 <span className="doc-cover folder" aria-hidden="true">📁</span>
                 <span className="doc-card-name">{f.name}</span>
                 {isAdmin && (f.for_leads || f.for_downline) ? <span className="doc-tags">{f.for_leads ? <Tag>Leads</Tag> : null}{f.for_downline ? <Tag>Downline</Tag> : null}</span> : null}
@@ -195,7 +209,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         <ul className="doc-list">
           {folders.map((f) => (
             <li key={f.id}>
-              <Link href={`/documents?f=${f.id}`} className="doc-row">
+              <Link href={`${basePath}?f=${f.id}`} className="doc-row">
                 <span className="doc-ico" aria-hidden="true">📁</span>
                 <span className="doc-name">{f.name}</span>
                 {isAdmin ? <span className="doc-tags">{f.for_leads ? <Tag>Leads</Tag> : null}{f.for_downline ? <Tag>Lacey&apos;s downline</Tag> : null}</span> : null}
