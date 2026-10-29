@@ -7,16 +7,23 @@ import { KIND_LABEL } from "@/lib/calls/types";
 import { formatInZone, endsAt, nowMs } from "@/lib/time";
 import { formatTime } from "@/lib/recordings/vimeo";
 import { listRecordings } from "@/lib/recordings/queries";
+import { TOPICS } from "@/lib/recordings/topics";
+import { TopicFilter } from "@/components/calls/TopicFilter";
 
 export const instant = false;
 export const metadata = { title: "Calls" };
 
-export default async function CallsPage() {
+export default async function CallsPage(props: PageProps<"/calls">) {
+  const sp = await props.searchParams;
+  const topicParam = Array.isArray(sp.topic) ? sp.topic[0] : sp.topic;
   const { session, supabase } = await requireMember();
   if (!supabase) return <><PageHeading>Calls</PageHeading><p className="page-lede">This needs the database.</p></>;
   const now = nowMs();
   const [upcoming, all] = await Promise.all([listUpcomingCalls(supabase, now), listRecordings(supabase)]);
-  const recordings = all.filter((r) => r.published);
+  const published = all.filter((r) => r.published);
+  const present = TOPICS.filter((t) => published.some((r) => r.topics.includes(t)));
+  const topic = present.find((t) => t === topicParam) ?? null;
+  const recordings = topic ? published.filter((r) => r.topics.includes(topic)) : published;
   const next = upcoming[0];
   const live = next && now >= new Date(next.starts_at).getTime() && now < endsAt(new Date(next.starts_at), next.duration_minutes).getTime();
   const joinable = next && now >= new Date(next.starts_at).getTime() - 30 * 60_000 && next.join_url;
@@ -39,7 +46,7 @@ export default async function CallsPage() {
           ) : <p style={{ margin: 0 }}>No calls are scheduled right now. Check the <Link href="/calendar">calendar</Link> for new ones.</p>}
         </section>
 
-        <h2 className="qh" style={{ margin: "10px 0 0" }}>Recordings</h2>
+        <div className="rec-head"><h2 className="qh" style={{ margin: 0 }}>Recordings</h2><TopicFilter topics={[...present]} current={topic} /></div>
         {recordings.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>{session.profile.role === "lead" ? "Recordings open to leads will appear here." : "No recordings yet. They are added after each call."}</p></section> : (
           <ul className="doc-grid rec-grid">
             {recordings.map((r) => (
