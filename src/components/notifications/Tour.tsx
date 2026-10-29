@@ -8,7 +8,7 @@ const isPhone = () => window.matchMedia("(max-width: 768px)").matches;
 const STEPS: Step[] = [
   { title: "Welcome to the Free Life Collective!", body: "Take a quick tour (about 30 seconds) to see where everything is. You can skip it any time." },
   { title: "Everything lives in the menu", body: "Calendar, chats, financing and more. On a phone, tap the three lines to open it.", target: () => document.querySelector<HTMLElement>(isPhone() ? ".menu-btn" : "#main-nav") },
-  { title: "Your notifications", body: "New leads, call reminders, approvals and announcements show up here with a number, like on Telegram.", target: () => document.querySelector<HTMLElement>('[data-tour="bell"]') },
+  { title: "Your notifications", body: "New leads, call reminders, approvals and announcements get a number, like on Telegram. On a phone, tap your picture and choose Notifications.", target: () => document.querySelector<HTMLElement>(isPhone() ? '[data-tour="account"]' : '[data-tour="bell"]') },
   { title: "Your picture is your account", body: "Tap it for your profile, your subscription and receipts, and to get the app on your phone.", target: () => document.querySelector<HTMLElement>('[data-tour="account"]') },
   { title: "Never miss a call", body: "Add the app to your home screen and turn on notifications. You will find both under Get the App in your picture menu." },
 ];

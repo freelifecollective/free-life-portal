@@ -553,3 +553,19 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .bq-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
 .bq-pill { padding: 9px 16px; border: 1px solid var(--accent); border-radius: 999px; background: #fff; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
 .bq-pill:hover { background: var(--tint); }
+
+/* phone header: menu, name, search, messages, picture */
+.phone-only { display: none !important; }
+.hdr-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; color: var(--ink); cursor: pointer; text-decoration: none; padding: 0; }
+.hdr-btn .bell-badge { top: -6px; right: -6px; }
+.search-icon { position: relative; }
+.search-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; white-space: nowrap; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; box-shadow: 0 8px 28px rgba(0,0,0,.14); }
+.um-notif { display: flex !important; justify-content: space-between; align-items: center; }
+.um-notif .badge { margin: 0; }
+@media (max-width: 768px) {
+  .phone-only { display: inline-flex !important; }
+  .desk-only { display: none !important; }
+  .top-right { gap: 8px; }
+  .user-pop a.phone-only { display: flex !important; }
+  .avatar-link .avatar { width: 44px !important; height: 44px !important; font-size: 17px !important; }
+}
