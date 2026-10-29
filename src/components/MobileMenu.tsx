@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 /** Phones: the tabs live behind a three-line button at the top right. `openAt` remembers which page it was opened on, so going to another page closes it. */
-const Ctx = createContext<{ open: boolean; toggle: () => void; close: () => void }>({ open: false, toggle: () => {}, close: () => {} });
+const Ctx = createContext<{ open: boolean; toggle: () => void; close: () => void; show: () => void }>({ open: false, toggle: () => {}, close: () => {}, show: () => {} });
+export const useMenu = () => useContext(Ctx);
 
 export function MenuProvider({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -15,7 +16,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  return <Ctx.Provider value={{ open, toggle: () => setOpenAt(open ? null : path), close: () => setOpenAt(null) }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ open, toggle: () => setOpenAt(open ? null : path), close: () => setOpenAt(null), show: () => setOpenAt(path) }}>{children}</Ctx.Provider>;
 }
 
 export function MenuButton() {
