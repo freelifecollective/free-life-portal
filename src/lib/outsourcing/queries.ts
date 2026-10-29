@@ -4,11 +4,11 @@ import { authorsById } from "@/lib/chats/queries";
 
 export type Provider = {
   member_id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; is_admin: boolean;
-  headline: string; about: string | null; tasks: string[]; hourly_rate_cents: number; hires: number; reviews: number; avg_rating: number | null;
+  headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number; hires: number; reviews: number; avg_rating: number | null;
 };
 export type Review = { id: string; provider_id: string; reviewer: string; rating: number; review: string | null; at: string };
 export type MyHire = { id: string; provider_id: string; rating: number | null; review: string | null };
-export type MyListing = { headline: string; about: string | null; tasks: string[]; hourly_rate_cents: number; listed: boolean };
+export type MyListing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number; listed: boolean };
 
 export async function loadOutsourcing(supabase: SupabaseClient, me: string) {
   const [{ data: dir }, { data: mine }, { data: hired }] = await Promise.all([
