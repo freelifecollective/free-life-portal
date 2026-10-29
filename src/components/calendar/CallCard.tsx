@@ -9,7 +9,7 @@ import { RsvpControls } from "./RsvpControls";
 export function CallCard({ call, summary, featured = false, now }: { call: Call; summary: RsvpSummary; featured?: boolean; now: number }) {
   const start = new Date(call.starts_at);
   const live = now >= start.getTime() && now < endsAt(start, call.duration_minutes).getTime();
-  const soon = now >= start.getTime() - 30 * 60_000 && now < endsAt(start, call.duration_minutes).getTime();
+  const notOver = now < endsAt(start, call.duration_minutes).getTime();
   return (
     <article className={"call-card" + (featured ? " featured" : "")} aria-labelledby={`call-${call.id}`}>
       <div className="call-tags">
@@ -24,7 +24,7 @@ export function CallCard({ call, summary, featured = false, now }: { call: Call;
         <LocalTime iso={call.starts_at} />
       </p>
       {call.description ? <p className="call-desc">{call.description}</p> : null}
-      {soon && call.join_url ? <p><JoinButton callId={call.id} /></p> : null}
+      {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} /></p> : null}
       <RsvpControls callId={call.id} mine={summary.mine} />
       <Attendees summary={summary} />
     </article>

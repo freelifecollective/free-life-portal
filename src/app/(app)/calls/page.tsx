@@ -2,7 +2,8 @@ import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
 import { JoinButton } from "@/components/calls/JoinButton";
 import { requireMember } from "@/lib/auth/guards";
-import { listUpcomingCalls } from "@/lib/calls/queries";
+import { RsvpControls } from "@/components/calendar/RsvpControls";
+import { listUpcomingCalls, rsvpSummary } from "@/lib/calls/queries";
 import { KIND_LABEL } from "@/lib/calls/types";
 import { formatInZone, endsAt, nowMs } from "@/lib/time";
 import { formatTime } from "@/lib/recordings/vimeo";
@@ -26,7 +27,7 @@ export default async function CallsPage(props: PageProps<"/calls">) {
   const recordings = topic ? published.filter((r) => r.topics.includes(topic)) : published;
   const next = upcoming[0];
   const live = next && now >= new Date(next.starts_at).getTime() && now < endsAt(new Date(next.starts_at), next.duration_minutes).getTime();
-  const joinable = next && now >= new Date(next.starts_at).getTime() - 30 * 60_000 && next.join_url;
+  const mine = next ? (await rsvpSummary(supabase, next.id, 0)).mine : null;
 
   return (
     <>
@@ -34,15 +35,20 @@ export default async function CallsPage(props: PageProps<"/calls">) {
       <div className="settings" style={{ maxWidth: 900 }}>
         <section className={"card-s live-card" + (live ? " on" : "")}>
           {next ? (
-            <>
-              <p className="offer-label" style={{ margin: "0 0 6px" }}>{live ? "Happening now" : "Next call"}</p>
-              <h2 className="qh" style={{ margin: "0 0 4px" }}>{next.title}</h2>
-              <p className="when" style={{ margin: "0 0 12px" }}>{KIND_LABEL[next.kind]} · {formatInZone(new Date(next.starts_at))} · {next.duration_minutes} min</p>
-              <div className="rs-actions" style={{ marginTop: 0 }}>
-                {joinable ? <JoinButton callId={next.id} label={live ? "Join live now" : "Join the call"} /> : <span className="when">The join button appears 30 minutes before the call.</span>}
-                <Link className="btn small" href="/calendar" style={{ textDecoration: "none" }}>Calendar and RSVP</Link>
+            <div className="live-grid">
+              <div className="live-left">
+                <p className="offer-label" style={{ margin: "0 0 6px" }}>{live ? "Happening now" : "Next call"}</p>
+                <h2 className="qh" style={{ margin: "0 0 4px" }}>{next.title}</h2>
+                <p className="when" style={{ margin: "0 0 14px" }}>{KIND_LABEL[next.kind]} · {formatInZone(new Date(next.starts_at))} · {next.duration_minutes} min</p>
+                <RsvpControls callId={next.id} mine={mine} liveLabel="I'll be there LIVE" liveOn="You're coming LIVE" replayLabel="I'll catch the replay" replayOn="You'll catch the replay" />
               </div>
-            </>
+              {next.join_url ? (
+                <div className="live-right">
+                  <JoinButton callId={next.id} startsAt={next.starts_at} />
+                  <p className="when join-note">The waiting room opens 10 minutes before the call starts.</p>
+                </div>
+              ) : null}
+            </div>
           ) : <p style={{ margin: 0 }}>No calls are scheduled right now. Check the <Link href="/calendar">calendar</Link> for new ones.</p>}
         </section>
 

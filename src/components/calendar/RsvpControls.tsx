@@ -5,7 +5,7 @@ import { setRsvp } from "@/app/(app)/calendar/actions";
 import type { RsvpMode } from "@/lib/calls/types";
 
 /** "I'll be there live" or "I'll watch the recording". Press the same button again to take it back. */
-export function RsvpControls({ callId, mine }: { callId: string; mine: RsvpMode | null }) {
+export function RsvpControls({ callId, mine, liveLabel = "I'll be there live", liveOn = "You're coming live", replayLabel = "I'll watch the recording", replayOn = "You'll watch the recording" }: { callId: string; mine: RsvpMode | null; liveLabel?: string; liveOn?: string; replayLabel?: string; replayOn?: string }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState("");
   const [shown, setShown] = useOptimistic<RsvpMode | null, RsvpMode | null>(mine, (_old, next) => next);
@@ -24,10 +24,10 @@ export function RsvpControls({ callId, mine }: { callId: string; mine: RsvpMode 
     <div>
       <div className="rsvp" role="group" aria-label="Your RSVP">
         <button type="button" className={"btn" + (shown === "live" ? " primary" : "")} aria-pressed={shown === "live"} disabled={pending} onClick={() => choose("live")}>
-          {shown === "live" ? "You're coming live" : "I'll be there live"}
+          {shown === "live" ? liveOn : liveLabel}
         </button>
         <button type="button" className={"btn" + (shown === "recording" ? " primary" : "")} aria-pressed={shown === "recording"} disabled={pending} onClick={() => choose("recording")}>
-          {shown === "recording" ? "You'll watch the recording" : "I'll watch the recording"}
+          {shown === "recording" ? replayOn : replayLabel}
         </button>
       </div>
       <p className="err" role="alert" style={{ minHeight: 0 }}>{error}</p>
