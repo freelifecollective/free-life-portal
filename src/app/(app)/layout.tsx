@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { TOUR_VERSION } from "@/lib/tour";
 import { pendingFinancingCount } from "@/lib/financing/queries";
 import { pendingSubmissionCount } from "@/lib/resources/queries";
 
@@ -15,6 +16,17 @@ async function SessionGate({ children }: { children: ReactNode }) {
   if (!session) redirect("/login");
   if (!session.profile.onboarded_at) redirect("/welcome");
   const badges: Record<string, number> = {};
+  let unread = 0;
+  let showTour = false;
+  if (session.mode === "supabase") {
+    const db = await createClient();
+    const [{ count }, { data: tour }] = await Promise.all([
+      db.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
+      db.from("member_tour").select("seen_version").maybeSingle(),
+    ]);
+    unread = count ?? 0;
+    showTour = ((tour as { seen_version: number } | null)?.seen_version ?? 0) < TOUR_VERSION;
+  }
   if (session.mode === "supabase" && session.profile.role === "admin") {
     const supabase = await createClient();
     const [resources, financing] = await Promise.all([pendingSubmissionCount(supabase), pendingFinancingCount(supabase)]);
@@ -22,7 +34,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
     badges["/admin/financing"] = financing;
   }
   return (
-    <AppShell session={session} badges={badges}>
+    <AppShell session={session} badges={badges} unread={unread} showTour={showTour}>
       <Suspense fallback={<div aria-busy="true" style={{ minHeight: 240 }} />}>{children}</Suspense>
     </AppShell>
   );

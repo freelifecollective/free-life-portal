@@ -24,7 +24,7 @@ export function UserMenu({ url, initials, preview, label, showSubscription }: { 
 
   return (
     <div className="user-menu" ref={box}>
-      <button type="button" className="avatar-link" aria-haspopup="menu" aria-expanded={open} aria-label="Your account menu" onClick={() => setOpenAt(open ? null : path)}>
+      <button type="button" className="avatar-link" data-tour="account" aria-haspopup="menu" aria-expanded={open} aria-label="Your account menu" onClick={() => setOpenAt(open ? null : path)}>
         <Avatar url={url} initials={initials} preview={preview} label={label} />
       </button>
       {open ? (
@@ -32,6 +32,7 @@ export function UserMenu({ url, initials, preview, label, showSubscription }: { 
           <Link href="/settings" role="menuitem">Profile</Link>
           {showSubscription ? <Link href="/settings/subscription" role="menuitem">Subscription Settings</Link> : null}
           <Link href="/settings/app" role="menuitem">Get the App</Link>
+          <button type="button" role="menuitem" onClick={() => { setOpenAt(null); window.dispatchEvent(new Event("flc:tour")); }}>Take the tour</button>
           <form action="/logout" method="post"><button type="submit" role="menuitem">Sign out</button></form>
         </div>
       ) : null}
