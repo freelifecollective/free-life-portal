@@ -17,7 +17,7 @@ export default async function UpdateDocumentsPage(props: PageProps<"/admin/docum
   return (
     <>
       <PageHeading lede="Add, organize and choose who can see documents. Changes show on the Documents tab straight away.">Update Documents</PageHeading>
-      <DocBrowser folderId={folderId} trail={view.trail} folders={view.folders} files={view.files} thumbUrls={view.thumbUrls} allFolders={folders} manage basePath="/admin/documents" role={session.profile.role} />
+      <DocBrowser key={folderId ?? "top"} folderId={folderId} trail={view.trail} folders={view.folders} files={view.files} thumbUrls={view.thumbUrls} allFolders={folders} manage basePath="/admin/documents" role={session.profile.role} />
     </>
   );
 }
