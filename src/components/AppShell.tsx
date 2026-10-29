@@ -29,7 +29,6 @@ const NAV: NavItem[] = [
   { label: "Graphic maker", min: "member" },
   { label: "Water Share Map", min: "member" },
   { label: "Facebook Follows", min: "member" },
-  { label: "Birthdays", min: "member" },
   { label: "Admin only", min: "admin", admin: true, heading: true },
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true },
   { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true },
