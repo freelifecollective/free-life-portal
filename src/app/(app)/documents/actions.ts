@@ -136,3 +136,61 @@ export async function getSourceLink(id: string): Promise<{ ok: boolean; url?: st
   const { data } = await supabase.storage.from("documents").createSignedUrl(f.storage_path, 120);
   return { ok: !!data?.signedUrl, url: data?.signedUrl };
 }
+
+type Pick = { kind: "folder" | "file"; id: string };
+
+/** Everything inside the chosen folders, so a copy can be done one small step at a time. */
+export async function treeOf(items: Pick[]): Promise<{ ok: boolean; error?: string; folders: { id: string; parent_id: string | null; name: string; for_leads: boolean; for_downline: boolean }[]; files: { id: string; folder_id: string | null; name: string }[] }> {
+  const { supabase } = await requireAdmin();
+  const folderIds = items.filter((i) => i.kind === "folder" && UUID.test(i.id)).map((i) => i.id);
+  const fileIds = items.filter((i) => i.kind === "file" && UUID.test(i.id)).map((i) => i.id);
+  const folders: { id: string; parent_id: string | null; name: string; for_leads: boolean; for_downline: boolean }[] = [];
+  let frontier = folderIds;
+  for (let depth = 0; frontier.length && depth < 15; depth++) {
+    const q = depth === 0 ? supabase.from("doc_folders").select("id, parent_id, name, for_leads, for_downline").in("id", frontier) : supabase.from("doc_folders").select("id, parent_id, name, for_leads, for_downline").in("parent_id", frontier);
+    const { data } = await q;
+    folders.push(...(data ?? []));
+    frontier = (data ?? []).map((d) => d.id);
+  }
+  const { data: inFolders } = folders.length ? await supabase.from("doc_files").select("id, folder_id, name").in("folder_id", folders.map((f) => f.id)).limit(2000) : { data: [] };
+  const { data: direct } = fileIds.length ? await supabase.from("doc_files").select("id, folder_id, name").in("id", fileIds) : { data: [] };
+  const files = [...(direct ?? []), ...(inFolders ?? [])];
+  if (files.length > 1500) return { ok: false, error: "That is too much to copy at once. Copy a smaller selection.", folders: [], files: [] };
+  return { ok: true, folders, files };
+}
+
+/** Makes a folder for a copy. If the name is taken in that place, adds "copy" (then "copy 2", ...). */
+export async function makeCopyFolder(parentId: string | null, name: string, leads: boolean, downline: boolean, sameSpot: boolean): Promise<IdResult> {
+  if (!parentOk(parentId)) return { ok: false, error: "Something went wrong." };
+  const { session, supabase } = await requireAdmin();
+  const base = cleanName(name, 100);
+  for (let i = 0; i < 20; i++) {
+    const candidate = i === 0 && !sameSpot ? base : `${base} copy${i > 1 ? ` ${i}` : ""}`.slice(0, 120);
+    if (i === 0 && sameSpot) continue;
+    const { data, error } = await supabase.from("doc_folders").insert({ name: candidate, parent_id: parentId, for_leads: leads, for_downline: downline, created_by: session.user.id }).select("id").single();
+    if (!error) { refresh(); return { ok: true, id: data.id }; }
+    if (error.code !== "23505") return { ok: false, error: "We could not create a folder for the copy." };
+  }
+  return { ok: false, error: "Too many copies of that folder already exist." };
+}
+
+/** Copies one document (and its preview picture) into a folder. The copy is a separate file, so deleting one never affects the other. */
+export async function copyFile(fileId: string, destFolderId: string | null, sameSpot: boolean): Promise<Result> {
+  if (!UUID.test(fileId) || !parentOk(destFolderId)) return { ok: false, error: "Something went wrong." };
+  const { session, supabase } = await requireAdmin();
+  const { data: f } = await supabase.from("doc_files").select("name, mime, size_bytes, storage_path, thumb_path, downloadable, for_leads, for_downline").eq("id", fileId).maybeSingle();
+  if (!f) return { ok: false, error: "That document was not found." };
+  const bucket = supabase.storage.from("documents");
+  const leaf = f.storage_path.split("/").pop() ?? "file";
+  const newPath = `${crypto.randomUUID()}/${leaf}`;
+  const c = await bucket.copy(f.storage_path, newPath);
+  if (c.error) return { ok: false, error: `Could not copy ${f.name}.` };
+  let newThumb: string | null = null;
+  if (f.thumb_path) { const tp = `thumbs/${crypto.randomUUID()}.jpg`; const t = await bucket.copy(f.thumb_path, tp); if (!t.error) newThumb = tp; }
+  const dot = f.name.lastIndexOf(".");
+  const name = sameSpot ? (dot > 0 ? `${f.name.slice(0, dot)} copy${f.name.slice(dot)}` : `${f.name} copy`) : f.name;
+  const { error } = await supabase.from("doc_files").insert({ folder_id: destFolderId, name: name.slice(0, 200), storage_path: newPath, thumb_path: newThumb, mime: f.mime, size_bytes: f.size_bytes, downloadable: f.downloadable, for_leads: f.for_leads, for_downline: f.for_downline, created_by: session.user.id });
+  if (error) return { ok: false, error: `Could not save the copy of ${f.name}.` };
+  refresh();
+  return { ok: true };
+}
