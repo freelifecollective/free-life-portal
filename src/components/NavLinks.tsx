@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { LiveDot } from "./LiveBadge";
 
-export type NavEntry = { label: string; href?: string; heading?: boolean; badge?: number };
+export type NavEntry = { label: string; href?: string; heading?: boolean; badge?: number; live?: boolean };
 
 function Item({ n, path }: { n: NavEntry; path: string }) {
   if (!n.href) return <li data-nav={n.label}><span>{n.label}<span className="soon">Soon</span></span></li>;
   const active = n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/");
   return (
     <li data-nav={n.label}>
-      <Link href={n.href} aria-current={active ? "page" : undefined}>{n.label}{n.badge ? <span className="badge" aria-label={`${n.badge} waiting`}>{n.badge}</span> : null}</Link>
+      <Link href={n.href} aria-current={active ? "page" : undefined}>{n.label}{n.live ? <LiveDot /> : null}{n.badge ? <span className="badge" aria-label={`${n.badge} waiting`}>{n.badge}</span> : null}</Link>
     </li>
   );
 }

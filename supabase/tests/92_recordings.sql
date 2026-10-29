@@ -45,7 +45,15 @@ do $$ declare link text; begin
   link := public.join_call('11111111-1111-1111-1111-111111111111');
   perform tests.eq('joining a live call returns the link', link, 'https://zoom.example/live');
   perform tests.eq('and records that you came', (select count(*) from public.call_attendance), 1::bigint);
-  perform public.join_call('22222222-2222-2222-2222-222222222222');
+  perform tests.eq('the link is not handed out before the waiting room opens', public.join_call('22222222-2222-2222-2222-222222222222'), null::text);
+  perform tests.logout();
+  update public.calls set starts_at = now() + interval '9 minutes' where id = '22222222-2222-2222-2222-222222222222';
+  perform tests.login('00000000-0000-0000-0000-0000000000a1');
+  perform tests.eq('it is handed out 9 minutes before', public.join_call('22222222-2222-2222-2222-222222222222'), 'https://zoom.example/later');
+  perform tests.logout();
+  update public.calls set starts_at = now() + interval '3 days' where id = '22222222-2222-2222-2222-222222222222';
+  delete from public.call_attendance where call_id = '22222222-2222-2222-2222-222222222222';
+  perform tests.login('00000000-0000-0000-0000-0000000000a1');
   perform tests.eq('joining three days early records nothing', (select count(*) from public.call_attendance where call_id = '22222222-2222-2222-2222-222222222222'), 0::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a3');

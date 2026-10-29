@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
+import { LiveBadge } from "@/components/LiveBadge";
 import { LocalTime } from "@/components/calendar/LocalTime";
 import { requireMember } from "@/lib/auth/guards";
 import { listUpcomingCalls, pickFeatured } from "@/lib/calls/queries";
 import { AUDIENCE_LABEL, KIND_LABEL } from "@/lib/calls/types";
-import { formatInZone, nowMs } from "@/lib/time";
+import { endsAt, formatInZone, nowMs } from "@/lib/time";
 
 export const instant = false; // renders per signed-in member
 export const metadata = { title: "Home" };
@@ -20,7 +21,7 @@ export default async function HomePage() {
       </PageHeading>
       {supabase ? (
         <section className="card-s" style={{ maxWidth: 460, marginBottom: 20 }} aria-label="Next call">
-          <div className="label" style={{ marginBottom: 8 }}>Next call</div>
+          <div className="label" style={{ marginBottom: 8 }}>{next && nowMs() >= new Date(next.starts_at).getTime() && nowMs() < endsAt(new Date(next.starts_at), next.duration_minutes).getTime() ? <LiveBadge>LIVE · Happening now</LiveBadge> : "Next call"}</div>
           {next ? (
             <>
               <p style={{ margin: "0 0 4px", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20 }}>{next.title}</p>
