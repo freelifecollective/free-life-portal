@@ -481,11 +481,11 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .rate-line { margin: 0; font-size: 17px; }
 
 /* commission calculator */
-.calc { max-width: none; }
+.calc { max-width: 960px; }
 .calc-fine { color: var(--accent); opacity: .85; font-size: 14px; font-style: italic; margin: -14px 0 26px; }
 .calc-selects { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 24px; align-items: flex-end; }
 .calc-selects select { height: 44px; padding: 0 12px; font: inherit; font-size: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); }
-.calc-bubbles { display: grid; grid-template-columns: repeat(auto-fill, minmax(94px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.calc-bubbles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 12px; }
 .calc-bubbles:empty { display: none; }
 .calc-bubble { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
 .calc-bubble:hover { border-color: var(--accent); }
@@ -504,7 +504,7 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .calc-bubble.combo.on .name { color: var(--muted); }
 .calc-bubble.combo.on .amt { color: var(--ink); }
 .calc-bubble.combo.on .q { color: var(--accent); }
-.calc-total { margin: 0 0 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.calc-total { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .calc-total .lbl { font-family: var(--font-label); font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .calc-total .sub { color: var(--muted); font-size: 13px; }
 .calc-total .right { display: flex; align-items: center; gap: 12px; }
