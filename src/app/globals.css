@@ -760,7 +760,6 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .ws-choice legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
 .ws-choice label { display: inline-flex; align-items: center; gap: 6px; }
 .ws-policy { margin: 0; }
-.nav li.nav-sub { margin-left: 8px; border-left: 2px solid var(--line); }
 .ws-combo { position: relative; }
 .ws-options { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); list-style: none; margin: 0; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 30px rgba(43, 37, 34, 0.18); max-height: 280px; overflow: auto; }
 .ws-options li { display: grid; gap: 1px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
