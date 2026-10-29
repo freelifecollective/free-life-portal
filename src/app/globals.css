@@ -123,7 +123,7 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .app-body { display: grid; grid-template-columns: 220px minmax(0, 1fr); }
 @media (max-width: 768px) { .app-body { grid-template-columns: minmax(0, 1fr); } .search { display: none; } .top-right { margin-left: auto; } }
 .nav { padding: 20px 12px 20px max(12px, env(safe-area-inset-left)); border-right: 1px solid var(--line); }
-.menu-btn { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; color: var(--ink); cursor: pointer; }
+.menu-btn { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 10px; color: var(--ink); cursor: pointer; }
 @media (max-width: 768px) {
   .menu-btn { display: inline-flex; }
   .nav { display: none; position: fixed; z-index: 15; inset: 0; top: calc(env(safe-area-inset-top, 0px) + 69px); background: var(--bg); border-right: 0; padding: 12px 16px 40px; overflow-y: auto; }
@@ -556,7 +556,7 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 
 /* phone header: menu, name, search, messages, picture */
 .phone-only { display: none !important; }
-.hdr-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; color: var(--ink); cursor: pointer; text-decoration: none; padding: 0; }
+.hdr-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; background: transparent; border-radius: 10px; color: var(--ink); cursor: pointer; text-decoration: none; padding: 0; }
 .hdr-btn .bell-badge { top: -6px; right: -6px; }
 .search-icon { position: relative; }
 .search-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; white-space: nowrap; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; box-shadow: 0 8px 28px rgba(0,0,0,.14); }
@@ -569,3 +569,5 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
   .user-pop a.phone-only { display: flex !important; }
   .avatar-link .avatar { width: 44px !important; height: 44px !important; font-size: 17px !important; }
 }
+.menu-btn:hover, .hdr-btn:hover { background: rgba(43, 37, 34, 0.06); }
+.menu-btn:focus-visible, .hdr-btn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
