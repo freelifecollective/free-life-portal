@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { LiveDot } from "./LiveBadge";
 
 export type NavEntry = { label: string; href?: string; heading?: boolean; group?: string; badge?: number; live?: boolean };
@@ -30,7 +30,7 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
 
   return (
     <ul>
-      {items.map((n) => {
+      {items.map((n, idx) => {
         if (n.heading && n.label === "Onboarding") {
           return <li key={n.label} className="nav-group" data-nav={n.label}><span className="nav-toggle nav-static">{n.label}</span></li>;
         }
@@ -50,7 +50,9 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
           );
         }
         if (n.group && !isOpen(n.group)) return null;
-        return <Item key={n.label} n={n} path={path} />;
+        /* a line closes the Onboarding section, matching the one under Home */
+        const closesOnboarding = !n.group && !n.heading && items[idx - 1]?.group === "Onboarding";
+        return closesOnboarding ? <Fragment key={n.label}><li className="nav-rule" aria-hidden="true" /><Item n={n} path={path} /></Fragment> : <Item key={n.label} n={n} path={path} />;
       })}
     </ul>
   );
