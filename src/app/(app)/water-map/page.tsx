@@ -20,7 +20,7 @@ export default async function WaterMapPage() {
       <div className="ws-page">
         <MyWaterEntry mine={(mine as WaterMine) ?? null} />
         <WaterMap pins={(pins ?? []) as WaterPin[]} myId={session.user.id} />
-        <p className="when ws-policy">Reminder: we have a strict policy on lead poaching. Anyone found taking leads from other people while offering a water share will be removed from the community. The member making the sale is encouraged to offer compensation for sharing water, though it is not required.</p>
+        <p className="when ws-policy">Reminder: we have a strict policy on lead poaching. Anyone found taking leads from other people while offering a water share will be removed from the community immediately and permanently. The member making the sale is encouraged to offer compensation for sharing water, though it is not required.</p>
       </div>
     </>
   );

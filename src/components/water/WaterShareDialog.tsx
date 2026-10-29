@@ -77,7 +77,7 @@ export function WaterShareDialog({ open, onClose, start, mine }: { open: boolean
           <h2 id="ws-title" className="qh" style={{ marginTop: 0 }}>Would you like to add yourself to the Water Share Map?</h2>
           <p>Only add yourself if you are willing to share water with other community members&apos; leads.</p>
           <p className="ws-rank-note">Your rank will be shared on the map, so other members can see it when they tap your dot.</p>
-          <p>Reminder that we have a strict policy on lead poaching. If anyone is found to be taking leads from other people while offering a water share, they will be removed from our community. We encourage the member making the sale to offer you compensation for sharing water, although <u>this is not a requirement</u>.</p>
+          <p>Reminder that we have a strict policy on lead poaching. If anyone is found to be taking leads from other people while offering a water share, they will be removed from our community immediately and permanently. We encourage the member making the sale to offer you compensation for sharing water, although <u>this is not a requirement</u>.</p>
           <div className="ws-actions">
             <button type="button" className="btn primary" onClick={() => setStep("form")}>Add Me to the Map</button>
             <button type="button" className="btn" disabled={pending} onClick={no}>No I do not want to be added</button>
