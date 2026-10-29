@@ -4,11 +4,20 @@ import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { SUPABASE_URL } from "@/lib/env";
 import { cleanHandle, handleState } from "@/lib/handles";
+import { createClient } from "@/lib/supabase/server";
 import { submitRegistration, type RegisterState } from "@/lib/registration";
 
 /** A lead registers on a member's page. The member who invited them is remembered. */
 export async function registerFromLanding(username: string, callId: string, _prev: RegisterState, form: FormData): Promise<RegisterState> {
   return submitRegistration({ callId, form, referrer: username });
+}
+
+/** A page was opened or its button tapped. Quiet on purpose: a failure here must never get in a visitor's way. */
+export async function trackLanding(username: string, kind: "visit" | "click", visitor: string): Promise<void> {
+  try {
+    if ((kind !== "visit" && kind !== "click") || !/^[A-Za-z0-9_-]{8,64}$/.test(visitor) || username.length > 40) return;
+    await (await createClient()).rpc("track_landing", { p_username: username, p_kind: kind, p_visitor: visitor });
+  } catch { /* tracking is optional */ }
 }
 
 export type SaveResult = { ok: boolean; error?: string };

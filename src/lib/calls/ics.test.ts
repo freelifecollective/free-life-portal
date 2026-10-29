@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildIcs } from "./ics";
 import type { Call } from "./types";
 
-const call: Call = { id: "abc", title: "Weekly, Call; live", description: "Line one\nLine two", kind: "community", audience: "leads_open", starts_at: "2026-11-04T00:00:00.000Z", duration_minutes: 60, pinned: false, join_url: null };
+const call: Call = { id: "abc", title: "Weekly, Call; live", description: "Line one\nLine two", kind: "community", audience: "leads_open", starts_at: "2026-11-04T00:00:00.000Z", duration_minutes: 60, pinned: false, join_url: null, host: null };
 
 describe("buildIcs", () => {
   const ics = buildIcs([call], "https://x.test/calls", new Date("2026-10-29T12:00:00Z"));

@@ -33,3 +33,11 @@ export async function loadFeedback(callId: string): Promise<{ ok: boolean; rows:
   const { data } = await supabase.rpc("call_feedback_all", { p_call: callId });
   return { ok: true, rows: (data ?? []) as FeedbackRow[] };
 }
+
+/** Notes that someone pressed play on a recording, so the person who invited them can see who watched the replay. */
+export async function markWatched(recordingId: string): Promise<void> {
+  if (!/^[0-9a-f-]{36}$/i.test(recordingId)) return;
+  const { session, supabase } = await requireMember();
+  if (!supabase) return;
+  await supabase.from("recording_views").upsert({ user_id: session.user.id, recording_id: recordingId }, { onConflict: "user_id,recording_id", ignoreDuplicates: true });
+}
