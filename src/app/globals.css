@@ -761,3 +761,4 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .ws-options li { display: grid; gap: 1px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
 .ws-options li span { color: var(--muted); font-size: 13px; }
 .ws-options li:hover, .ws-options li.on { background: var(--tint); }
+.ws-dlg .ws-rank-note { color: #c0261c; font-weight: 700; background: #fdeceb; border-left: 4px solid #c0261c; border-radius: 8px; padding: 10px 14px; }
