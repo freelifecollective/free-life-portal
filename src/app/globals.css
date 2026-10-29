@@ -362,3 +362,11 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 .set-list > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
 .set-list dt { font-weight: 600; } .set-list dd { margin: 0; color: var(--muted); }
 .qh { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 28px 0 12px; }
+
+/* account menu */
+.avatar-link { border: 0; background: none; padding: 0; cursor: pointer; }
+.user-menu { position: relative; }
+.user-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; min-width: 210px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 8px 28px rgba(0,0,0,.14); display: flex; flex-direction: column; }
+.user-pop a, .user-pop button { display: block; width: 100%; text-align: left; padding: 11px 12px; border: 0; background: none; border-radius: 8px; font: inherit; font-size: 15px; color: var(--ink); text-decoration: none; cursor: pointer; }
+.user-pop a:hover, .user-pop button:hover { background: var(--surface); }
+@media (max-width: 768px) { .app-top { gap: 12px; } .brand { font-size: 16px; } .top-right { margin-left: auto; } }

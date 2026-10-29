@@ -4,7 +4,7 @@ import { MenuButton, MenuProvider, NavPanel } from "./MobileMenu";
 import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
 import type { AppSession } from "@/lib/profile/types";
-import { Avatar } from "./Avatar";
+import { UserMenu } from "./UserMenu";
 
 type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean };
 
@@ -35,14 +35,13 @@ export function AppShell({ session, badges = {}, children }: { session: AppSessi
     <MenuProvider>
     <div className="app">
       <header className="app-top">
+        <MenuButton />
         <Link href="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>Free Life Collective</Link>
         <div className="search" role="search">
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
         <div className="top-right">
-          <Link href="/settings" className="avatar-link" aria-label="Your profile and settings"><Avatar url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} /></Link>
-          <form action="/logout" method="post"><button className="linkbtn" type="submit" style={{ padding: "8px 4px" }}>Sign out</button></form>
-          <MenuButton />
+          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} />
         </div>
       </header>
       <div className="app-body">
