@@ -76,6 +76,7 @@ export function WaterShareDialog({ open, onClose, start, mine }: { open: boolean
         <>
           <h2 id="ws-title" className="qh" style={{ marginTop: 0 }}>Would you like to add yourself to the Water Share Map?</h2>
           <p><strong>Only add yourself if you are willing to share water with other community members&apos; leads.</strong></p>
+          <p className="ws-rank-note">Your rank will be shared on the map, so other members can see it when they tap your dot.</p>
           <p>Reminder that we have a strict policy on lead poaching. If anyone is found to be taking leads from other people while offering a water share, they will be removed from our community.</p>
           <p>We encourage the member making the sale to offer you compensation for sharing water, although this is not a requirement.</p>
           <div className="ws-actions">
