@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { PageHeading } from "@/components/PageHeading";
+import { QuoteStyle } from "@/components/settings/QuoteStyle";
 import { SettingsForm } from "@/components/settings/SettingsForm";
+import { isQuoteStyle, type QuoteStyle as Style } from "@/lib/quotes";
 import { requireMember } from "@/lib/auth/guards";
 
 export const instant = false;
@@ -21,6 +23,11 @@ export default async function SettingsPage() {
     ]);
     rank = (mine as { rank_id: number | null } | null)?.rank_id ?? null;
     ranks = (all ?? []) as { id: number; name: string }[];
+  }
+  let quoteStyle: Style = "general";
+  if (supabase) {
+    const { data } = await supabase.from("member_prefs").select("quote_style").maybeSingle();
+    if (isQuoteStyle(data?.quote_style)) quoteStyle = data.quote_style;
   }
   return (
     <>
@@ -43,6 +50,13 @@ export default async function SettingsPage() {
             : <p style={{ margin: 0 }}>Editing needs the database, which preview mode does not have.</p>}
         </section>
 
+        {supabase ? (
+          <section className="card-s">
+            <h2 className="qh" style={{ marginTop: 0 }}>Daily quote</h2>
+            <p className="when" style={{ margin: "0 0 12px" }}>A new quote appears under your welcome on Home every day. Choose the kind you would like.</p>
+            <QuoteStyle current={quoteStyle} />
+          </section>
+        ) : null}
       </div>
     </>
   );

@@ -5,6 +5,7 @@ import { requireMember } from "@/lib/auth/guards";
 import { SUPABASE_URL } from "@/lib/env";
 import { cleanHandle, handleState } from "@/lib/handles";
 import { AVATAR_KINDS, type AvatarKind } from "@/lib/profile/types";
+import { isQuoteStyle } from "@/lib/quotes";
 import { checkUsernameFormat } from "@/lib/username";
 
 export type SettingsState = { error: string; saved?: boolean };
@@ -54,5 +55,16 @@ export async function saveAvatar(kind: AvatarKind, url: string): Promise<{ ok: b
   const { error } = await supabase.from("profiles").update({ avatar_url: url, avatar_kind: kind }).eq("id", session.user.id);
   if (error) return { ok: false, error: "We could not save your picture. Please try again." };
   revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** Which kind of daily quote the person sees on Home. */
+export async function saveQuoteStyle(style: string): Promise<{ ok: boolean; error?: string }> {
+  if (!isQuoteStyle(style)) return { ok: false, error: "Choose one of the options." };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Needs the database." };
+  const { error } = await supabase.from("member_prefs").upsert({ member_id: session.user.id, quote_style: style }, { onConflict: "member_id" });
+  if (error) return { ok: false, error: "We could not save that. Please try again." };
+  revalidatePath("/");
   return { ok: true };
 }

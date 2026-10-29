@@ -10,6 +10,7 @@ import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
 import type { AppSession } from "@/lib/profile/types";
 import { SearchIcon } from "./SearchIcon";
+import { TopDate } from "./TopDate";
 import { UserMenu } from "./UserMenu";
 
 type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string };
@@ -68,6 +69,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
           <img className="brand-logo" src="/icons/icon-192.png" alt="" width={34} height={34} />
           Free Life Collective
         </Link>
+        <TopDate />
         <div className="search" role="search">
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
