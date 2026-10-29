@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 import { isReserved } from "@/lib/username";
 
-const PUBLIC_PREFIXES = ["/login", "/auth", "/register"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/register", "/api/push"];
 
 /**
  * Refreshes the session cookie on every request and sends signed-out visitors to /login.

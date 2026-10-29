@@ -395,3 +395,27 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
 
 /* popups open in the middle of the screen (the base reset removes the browser's own centring) */
 dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
+
+/* notifications and tour */
+.bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: var(--ink); }
+.bell:hover { background: var(--surface); }
+.bell-badge { position: absolute; top: 0; right: -2px; margin: 0; min-width: 18px; height: 18px; font-size: 11px; padding: 0 5px; }
+.top-right { gap: 8px; }
+.notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.notif-list li > button { width: 100%; text-align: left; display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font: inherit; color: inherit; cursor: pointer; }
+.notif-list li.unread > button { border-color: var(--accent); background: #fff; }
+.notif-list li > button:hover { background: #fff; }
+.notif-icon { font-size: 22px; line-height: 1.2; }
+.notif-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.notif-main span { color: var(--muted); font-size: 14px; }
+.notif-dot { width: 10px; height: 10px; border-radius: 50%; background: #d92d20; flex: none; margin-top: 6px; }
+.tour { position: fixed; inset: 0; z-index: 100; }
+.tour-dim { position: absolute; inset: 0; background: rgba(43,37,34,.55); }
+.tour-ring { position: absolute; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(43,37,34,.55); outline: 3px solid var(--accent); pointer-events: none; transition: all .2s; }
+.tour-bubble { position: absolute; width: min(320px, calc(100vw - 24px)); background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 16px 50px rgba(0,0,0,.3); }
+.tour-bubble h2 { font-family: var(--font-display); font-size: 19px; margin: 0 0 6px; }
+.tour-bubble p { margin: 0 0 14px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.tour-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tour-actions .when { margin-right: auto; }
+.tour-bubble.arrow-up::before { content: ""; position: absolute; top: -9px; left: var(--ax); width: 18px; height: 18px; background: #fff; transform: translateX(-50%) rotate(45deg); border-radius: 3px; }
+.tour-bubble.arrow-left::before { content: ""; position: absolute; left: -9px; top: 22px; width: 18px; height: 18px; background: #fff; transform: rotate(45deg); border-radius: 3px; }

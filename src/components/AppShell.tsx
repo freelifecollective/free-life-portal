@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { NotificationBell } from "./notifications/NotificationBell";
+import { Tour } from "./notifications/Tour";
 import { MenuButton, MenuProvider, NavPanel } from "./MobileMenu";
 import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
@@ -22,6 +24,7 @@ const NAV: NavItem[] = [
   { label: "Commission calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
   { label: "Admin only", min: "admin", admin: true, heading: true },
+  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true },
   { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true },
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true },
   { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true },
@@ -37,7 +40,7 @@ function ordered(items: NavItem[]): NavItem[] {
   return [...home, ...rest, ...admin.filter((n) => n.heading), ...admin.filter((n) => !n.heading).sort(az)];
 }
 
-export function AppShell({ session, badges = {}, children }: { session: AppSession; badges?: Record<string, number>; children: ReactNode }) {
+export function AppShell({ session, badges = {}, unread = 0, showTour = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; children: ReactNode }) {
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   return (
@@ -54,6 +57,7 @@ export function AppShell({ session, badges = {}, children }: { session: AppSessi
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
         <div className="top-right">
+          {session.mode === "supabase" ? <NotificationBell count={unread} userId={session.user.id} /> : null}
           <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
         </div>
       </header>
@@ -64,6 +68,7 @@ export function AppShell({ session, badges = {}, children }: { session: AppSessi
         <main className="main" id="main">{children}</main>
       </div>
     </div>
+    <Tour show={showTour} />
     </MenuProvider>
   );
 }
