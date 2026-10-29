@@ -510,3 +510,46 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .calc-total .clear { background: none; border: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font: inherit; font-size: 14px; padding: 8px 4px; }
 .calc-total .clear:hover { color: var(--ink); }
 .calc-total .clear:disabled { visibility: hidden; }
+
+/* accountability buddy */
+.bq { max-width: 720px; }
+.bq-prog { margin-bottom: 28px; }
+.bq-prog-top { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-label); font-weight: 600; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.bq-bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bq-bar i { display: block; height: 100%; background: var(--accent); transition: width .25s; }
+.bq-h { font-family: var(--font-display); font-size: clamp(1.5rem, 4.5vw, 2rem); line-height: 1.25; margin: 0 0 10px; font-weight: 600; outline: none; }
+.bq-help { color: var(--muted); margin: 0 0 22px; max-width: 60ch; }
+.bq-opts { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.bq-opts.tags { flex-direction: row; flex-wrap: wrap; }
+.bq-opt { display: inline-flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; font: inherit; color: inherit; text-align: left; cursor: pointer; max-width: 100%; }
+.bq-opt:hover { border-color: var(--accent); }
+.bq-opt[aria-checked="true"] { background: #EFE9E3; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.bq-opt[aria-disabled="true"] { opacity: .4; cursor: not-allowed; }
+.bq-opt .mk { width: 18px; height: 18px; border: 2px solid var(--accent); border-radius: 50%; flex: none; }
+.bq-opt.multi .mk { border-radius: 5px; }
+.bq-opt[aria-checked="true"] .mk { background: var(--accent); box-shadow: inset 0 0 0 3px #EFE9E3; }
+.bq-opts.tags .bq-opt { border-radius: 999px; min-height: 42px; }
+.bq-count { color: var(--muted); font-size: 14px; margin: 8px 0; min-height: 20px; }
+.bq-combo { position: relative; max-width: 460px; }
+.bq-combo input { width: 100%; height: 48px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: #fff; }
+.bq-lb { position: absolute; z-index: 10; left: 0; right: 0; margin: 4px 0 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.12); }
+.bq-lb li { padding: 9px 12px; border-radius: 8px; cursor: pointer; }
+.bq-lb li[aria-selected="true"], .bq-lb li:hover { background: var(--tint); }
+.bq-actions { display: flex; align-items: center; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+.bq-find { color: #fff; transition: transform .15s, box-shadow .15s; }
+.bq-find:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+.bq-review { list-style: none; margin: 0; padding: 0; }
+.bq-review li { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); align-items: flex-start; }
+.bq-review li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.bq-review span { color: var(--muted); }
+.bq-match { display: flex; flex-direction: column; gap: 8px; }
+.bq-why { margin: 0; padding-left: 18px; color: var(--muted); }
+.bq-dlg { position: relative; text-align: center; }
+.bq-x { position: absolute; top: 8px; right: 12px; border: 0; background: none; font-size: 28px; line-height: 1; cursor: pointer; color: var(--muted); }
+.bq-no { margin: 18px 0 8px; color: var(--muted); }
+.bq-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.bq-chip { padding: 6px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font: inherit; font-size: 14px; cursor: pointer; }
+.bq-chip:hover { background: var(--tint); }
+.bq-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.bq-pill { padding: 9px 16px; border: 1px solid var(--accent); border-radius: 999px; background: #fff; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
+.bq-pill:hover { background: var(--tint); }
