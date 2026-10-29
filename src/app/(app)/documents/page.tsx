@@ -19,7 +19,7 @@ export default async function DocumentsPage(props: PageProps<"/documents">) {
   return (
     <>
       <PageHeading lede="Guides, scripts and resources for the community.">Documents</PageHeading>
-      <DocBrowser folderId={folderId} trail={view.trail} folders={view.folders} files={view.files} allFolders={folders} isAdmin={isAdmin} role={session.profile.role} />
+      <DocBrowser folderId={folderId} trail={view.trail} folders={view.folders} files={view.files} thumbUrls={view.thumbUrls} allFolders={folders} isAdmin={isAdmin} role={session.profile.role} />
     </>
   );
 }

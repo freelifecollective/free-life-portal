@@ -1,5 +1,5 @@
 export type DocFolder = { id: string; parent_id: string | null; name: string; for_leads: boolean; for_downline: boolean };
-export type DocFile = { id: string; folder_id: string | null; name: string; mime: string; size_bytes: number; downloadable: boolean; for_leads: boolean; for_downline: boolean; created_at: string };
+export type DocFile = { id: string; folder_id: string | null; name: string; mime: string; size_bytes: number; downloadable: boolean; for_leads: boolean; for_downline: boolean; created_at: string; thumb_path: string | null };
 
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 

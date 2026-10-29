@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteItem, ensureFolder, getFileLinks, moveItem, registerFile, renameItem, setFileAccess, setFolderAccess } from "@/app/(app)/documents/actions";
+import { deleteItem, ensureFolder, getFileLinks, getSourceLink, moveItem, registerFile, renameItem, setFileAccess, setFolderAccess, setThumb } from "@/app/(app)/documents/actions";
 import { createClient } from "@/lib/supabase/client";
+import { makeThumb } from "@/lib/documents/thumbs";
 import { MAX_FILE_BYTES, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
 import type { Role } from "@/lib/roles";
 
@@ -13,9 +14,23 @@ type Item = { kind: "folder"; f: DocFolder } | { kind: "file"; f: DocFile };
 function Tag({ children }: { children: React.ReactNode }) { return <span className="doc-tag">{children}</span>; }
 
 /** The drive: folders and files, a viewer, and (for admins) upload, import, rename, move, visibility and delete. */
-export function DocBrowser({ folderId, trail, folders, files, allFolders, isAdmin, role }: {
-  folderId: string | null; trail: DocFolder[]; folders: DocFolder[]; files: DocFile[]; allFolders: DocFolder[]; isAdmin: boolean; role: Role;
+const VIEW_KEY = "flc_docs_view";
+const subscribeView = (cb: () => void) => { window.addEventListener("flc:docsview", cb); return () => window.removeEventListener("flc:docsview", cb); };
+const readView = (): "grid" | "list" => { try { return localStorage.getItem(VIEW_KEY) === "list" ? "list" : "grid"; } catch { return "grid"; } };
+
+function Cover({ f, url }: { f: DocFile; url?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  if (url) return <img className="doc-cover" src={url} alt="" loading="lazy" />;
+  const ext = f.name.includes(".") ? f.name.split(".").pop()!.slice(0, 4).toUpperCase() : "FILE";
+  const icon = f.mime.startsWith("audio/") ? "🎧" : f.mime.startsWith("video/") ? "🎬" : f.mime.includes("sheet") || f.mime.includes("excel") ? "📊" : f.mime.includes("presentation") || f.mime.includes("powerpoint") ? "📽️" : f.mime === "application/pdf" ? "📕" : "📄";
+  return <span className="doc-cover fallback"><span aria-hidden="true">{icon}</span><b>{ext}</b></span>;
+}
+
+export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFolders, isAdmin, role }: {
+  folderId: string | null; trail: DocFolder[]; folders: DocFolder[]; files: DocFile[]; thumbUrls: Record<string, string>; allFolders: DocFolder[]; isAdmin: boolean; role: Role;
 }) {
+  const layout = useSyncExternalStore(subscribeView, readView, () => "grid" as const);
+  const setLayout = (v: "grid" | "list") => { try { localStorage.setItem(VIEW_KEY, v); } catch { /* ignore */ } window.dispatchEvent(new Event("flc:docsview")); };
   const router = useRouter();
   const [pending, start] = useTransition();
   const viewer = useRef<HTMLDialogElement>(null);
@@ -64,7 +79,10 @@ export function DocBrowser({ folderId, trail, folders, files, allFolders, isAdmi
         const path = `${crypto.randomUUID()}/${safeName(f.name)}`;
         const { error } = await supabase.storage.from("documents").upload(path, f, { contentType: mime });
         if (error) throw new Error(error.message);
-        const r = await registerFile({ folderId: where, path, name: f.name, mime, size: f.size });
+        let thumbPath: string | null = null;
+        const tb = await makeThumb(f, mime);
+        if (tb) { const tp = `thumbs/${crypto.randomUUID()}.jpg`; const up = await supabase.storage.from("documents").upload(tp, tb, { contentType: "image/jpeg" }); if (!up.error) thumbPath = tp; }
+        const r = await registerFile({ folderId: where, path, name: f.name, mime, size: f.size, thumbPath });
         if (!r.ok) throw new Error(r.error ?? "not saved");
         done++; log(`Added ${f.name} (${done}/${list.length})`);
       } catch (e) { failed++; log(`Could not add ${f.name}: ${e instanceof Error ? e.message : "error"}`); }
@@ -101,6 +119,26 @@ export function DocBrowser({ folderId, trail, folders, files, allFolders, isAdmi
     setBusy(false); router.refresh();
   }
 
+  const missing = files.filter((f) => !f.thumb_path && (f.mime.startsWith("image/") || f.mime === "application/pdf" || f.mime.startsWith("video/")) && f.size_bytes < 30 * 1048576);
+  async function makePreviews() {
+    setBusy(true); setProgress([]); setMsg("");
+    const supabase = createClient();
+    let made = 0;
+    for (const f of missing) {
+      try {
+        const src = await getSourceLink(f.id);
+        if (!src.ok || !src.url) continue;
+        const blob = await (await fetch(src.url)).blob();
+        const tb = await makeThumb(blob, f.mime);
+        if (!tb) continue;
+        const tp = `thumbs/${crypto.randomUUID()}.jpg`;
+        const up = await supabase.storage.from("documents").upload(tp, tb, { contentType: "image/jpeg" });
+        if (!up.error && (await setThumb(f.id, tp)).ok) { made++; log(`Made a preview for ${f.name}`); }
+      } catch { log(`No preview for ${f.name}`); }
+    }
+    setBusy(false); setMsg(`${made} preview${made === 1 ? "" : "s"} made.`); router.refresh();
+  }
+
   const itemsEmpty = folders.length === 0 && files.length === 0;
   return (
     <div className="docs">
@@ -109,6 +147,10 @@ export function DocBrowser({ folderId, trail, folders, files, allFolders, isAdmi
         {trail.map((t) => <span key={t.id}> / <Link href={`/documents?f=${t.id}`}>{t.name}</Link></span>)}
       </nav>
 
+      <div className="doc-view-toggle" role="group" aria-label="Layout">
+        <button type="button" className={layout === "grid" ? "on" : ""} aria-pressed={layout === "grid"} onClick={() => setLayout("grid")}>Icons</button>
+        <button type="button" className={layout === "list" ? "on" : ""} aria-pressed={layout === "list"} onClick={() => setLayout("list")}>List</button>
+      </div>
       {isAdmin ? (
         <div className="doc-tools">
           <button className="btn small" type="button" disabled={pending || busy} onClick={newFolder}>New folder</button>
@@ -116,13 +158,40 @@ export function DocBrowser({ folderId, trail, folders, files, allFolders, isAdmi
           <button className="btn small" type="button" disabled={busy} onClick={() => zipInput.current?.click()}>Import a zip (Google Drive)</button>
           <input ref={fileInput} type="file" multiple hidden onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
           <input ref={zipInput} type="file" accept=".zip,application/zip" hidden onChange={(e) => { void onZip(e.target.files); e.target.value = ""; }} />
+          {missing.length ? <button className="btn small" type="button" disabled={busy} onClick={makePreviews}>Make previews ({missing.length})</button> : null}
           <span className="admin-only-note">Admins Only</span>
         </div>
       ) : null}
       {progress.length ? <ul className="doc-progress" aria-live="polite">{progress.map((p, i) => <li key={i}>{p}</li>)}</ul> : null}
       <p role="status" className="when">{msg}</p>
 
-      {itemsEmpty ? <section className="card-s"><p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p></section> : (
+      {itemsEmpty ? <section className="card-s"><p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p></section> : layout === "grid" ? (
+        <ul className="doc-grid">
+          {folders.map((f) => (
+            <li key={f.id} className="doc-card">
+              <Link href={`/documents?f=${f.id}`} className="doc-card-main">
+                <span className="doc-cover folder" aria-hidden="true">📁</span>
+                <span className="doc-card-name">{f.name}</span>
+                {isAdmin && (f.for_leads || f.for_downline) ? <span className="doc-tags">{f.for_leads ? <Tag>Leads</Tag> : null}{f.for_downline ? <Tag>Downline</Tag> : null}</span> : null}
+              </Link>
+              {isAdmin ? <button className="doc-more over" type="button" aria-label={`Options for ${f.name}`} onClick={() => { setEdit({ kind: "folder", f }); editor.current?.showModal(); }}>⋯</button> : null}
+            </li>
+          ))}
+          {files.map((f) => (
+            <li key={f.id} className="doc-card">
+              <button type="button" className="doc-card-main" onClick={() => open(f)}>
+                <Cover f={f} url={thumbUrls[f.id]} />
+                <span className="doc-card-name">{f.name}</span>
+                <span className="doc-tags">
+                  {!f.downloadable ? <Tag>View only</Tag> : null}
+                  {isAdmin && f.for_leads ? <Tag>Leads</Tag> : null}{isAdmin && f.for_downline ? <Tag>Downline</Tag> : null}
+                </span>
+              </button>
+              {isAdmin ? <button className="doc-more over" type="button" aria-label={`Options for ${f.name}`} onClick={() => { setEdit({ kind: "file", f }); editor.current?.showModal(); }}>⋯</button> : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
         <ul className="doc-list">
           {folders.map((f) => (
             <li key={f.id}>
