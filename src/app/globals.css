@@ -643,13 +643,13 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 /* documents: selecting several */
 .doc-area { position: relative; }
 .doc-area.selectable { user-select: none; -webkit-user-select: none; min-height: 120px; }
-.doc-marquee { position: absolute; z-index: 5; border: 1px solid var(--accent-deep); background: rgba(171,144,128,.18); border-radius: 4px; pointer-events: none; }
+.doc-marquee { position: fixed; z-index: 60; border: 1px solid var(--accent-deep); background: rgba(171,144,128,.18); border-radius: 4px; pointer-events: none; }
 .doc-card.selected, .doc-list li.selected .doc-row { border-color: var(--accent-deep); box-shadow: 0 0 0 2px var(--accent); background: #EFE9E3; }
 .doc-list li.selected .doc-more { border-color: var(--accent-deep); }
 .doc-check { position: absolute; top: 8px; left: 8px; z-index: 3; width: 20px; height: 20px; accent-color: var(--accent-deep); cursor: pointer; }
 .doc-list li { position: relative; }
 .doc-list li .doc-check { top: 50%; left: 12px; transform: translateY(-50%); }
-.doc-area.selectable .doc-list .doc-row { padding-left: 42px; }
+
 .doc-selbar { position: sticky; top: 72px; z-index: 12; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; margin: 0 0 12px; background: #fff; border: 1px solid var(--accent-deep); border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.1); }
 .doc-selbar strong { margin-right: auto; }
 .danger-btn { color: #9b2c2c; border-color: #9b2c2c; }
@@ -657,3 +657,9 @@ dialog:modal { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; }
 .doc-selslot .doc-selbar { margin: 0; }
 .doc-area.selectable { min-height: 60vh; }
 .doc-area.selectable img, .doc-area.selectable a { -webkit-user-drag: none; user-drag: none; }
+
+/* the tick boxes only show once something is selected */
+.doc-area:not(.has-sel) .doc-check { display: none; }
+.doc-area.selectable:not(.has-sel) .doc-list .doc-row { padding-left: 14px; }
+.doc-area.selectable.has-sel .doc-list .doc-row { padding-left: 42px; }
+body.doc-dragging { user-select: none; -webkit-user-select: none; }

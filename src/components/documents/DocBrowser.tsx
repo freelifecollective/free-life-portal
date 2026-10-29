@@ -73,34 +73,34 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   /* The drag-a-box selection listens on the whole page area (not just the list), so you can start from any empty space. */
   useEffect(() => {
     if (!manage) return;
-    const main = document.querySelector<HTMLElement>(".app-body") ?? document.getElementById("main");
-    if (!main) return;
+    const main: HTMLElement = document.body;
     const onDown = (e: PointerEvent) => {
       lastPointer.current = e.pointerType;
       dragged.current = false;
       const t = e.target as HTMLElement;
       if (e.button !== 0 || e.pointerType === "touch" || t.closest(".doc-more, .doc-check, dialog")) return;
       const onItem = !!t.closest("[data-sel]");
-      if (!onItem && t.closest("button, a, input, select, textarea, label, nav, [role=toolbar], .doc-tools, .doc-view-toggle, .doc-progress, .doc-skipped")) return;
+      if (!onItem && t.closest("button, a, input, select, textarea, label, [role=toolbar], [role=menu], .doc-tools, .doc-view-toggle, .doc-progress, .doc-skipped, .tour")) return;
       const host = area.current; if (!host) return;
+      if (!onItem) e.preventDefault(); // no text selection while dragging a box over empty space
       const sx = e.clientX + window.scrollX, sy = e.clientY + window.scrollY;
       const additive = e.metaKey || e.ctrlKey || e.shiftKey;
       const base = additive ? new Set(selRef.current) : new Set<string>();
       let moved = false;
       const move = (ev: PointerEvent) => {
         const cx = ev.clientX + window.scrollX, cy = ev.clientY + window.scrollY;
-        if (!moved && Math.hypot(cx - sx, cy - sy) < 6) return;
+        if (!moved && Math.hypot(cx - sx, cy - sy) < (onItem ? 12 : 6)) return;
+        if (!moved) document.body.classList.add("doc-dragging");
         moved = true; dragged.current = true;
         const x1 = Math.min(sx, cx), x2 = Math.max(sx, cx), y1 = Math.min(sy, cy), y2 = Math.max(sy, cy);
-        const hr = host.getBoundingClientRect();
-        setBox({ x: x1 - (hr.left + window.scrollX), y: y1 - (hr.top + window.scrollY), w: x2 - x1, h: y2 - y1 });
+        setBox({ x: x1 - window.scrollX, y: y1 - window.scrollY, w: x2 - x1, h: y2 - y1 });
         const hit = new Set(base);
         host.querySelectorAll<HTMLElement>("[data-sel]").forEach((el) => { const r = el.getBoundingClientRect(); const l = r.left + window.scrollX, tp = r.top + window.scrollY; if (l < x2 && l + r.width > x1 && tp < y2 && tp + r.height > y1) hit.add(el.dataset.sel!); });
         setSel(hit);
       };
       const up = () => {
         window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
-        setBox(null);
+        setBox(null); document.body.classList.remove("doc-dragging");
         if (!moved && !onItem && !additive) setSel(new Set());
       };
       window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
@@ -109,11 +109,11 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
     return () => main.removeEventListener("pointerdown", onDown);
   }, [manage]);
 
-  /** A click opens a folder or document. Hold Ctrl/Cmd/Shift, or tick a box, to select instead. While anything is selected, a click adds or removes it. */
+  /** A click opens a folder or document. Hold Ctrl/Cmd/Shift to add it to the selection instead. */
   function itemClick(e: React.MouseEvent, key: string, openIt: () => void) {
     if (!manage) return openIt();
     if (dragged.current) { e.preventDefault(); dragged.current = false; return; }
-    if (e.metaKey || e.ctrlKey || e.shiftKey || sel.size > 0) { e.preventDefault(); toggle(key); return; }
+    if (e.metaKey || e.ctrlKey || e.shiftKey) { e.preventDefault(); toggle(key); return; }
     openIt();
   }
 
@@ -271,10 +271,17 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           <button className="btn small danger-btn" type="button" onClick={() => { setBulk("delete"); bulkDlg.current?.showModal(); }}>Delete</button>
           <button className="linkbtn" type="button" onClick={() => setSel(new Set())}>Clear</button>
         </div>
-      ) : !itemsEmpty ? <p className="when" style={{ margin: 0, paddingTop: 14 }}>Tip: drag a box around items, or tick the boxes, to select several.</p> : null}
+      ) : !itemsEmpty ? <p className="when" style={{ margin: 0, paddingTop: 14 }}>Tip: click and drag anywhere on the page to select several items at once.</p> : null}
       </div> : null}
-      <div ref={area} className={"doc-area" + (manage ? " selectable" : "")} onDragStart={(e) => e.preventDefault()}>
-      {itemsEmpty ? <section className="card-s"><p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p></section> : layout === "grid" ? (
+      <div ref={area} className={"doc-area" + (manage ? " selectable" : "") + (sel.size ? " has-sel" : "")} onDragStart={(e) => e.preventDefault()}>
+      {itemsEmpty ? <section className="card-s">
+          <p style={{ margin: 0 }}>{isAdmin ? "This folder is empty. Add a folder or upload files." : "Nothing here yet."}</p>
+          {isAdmin && folderId ? (
+            <p style={{ margin: "14px 0 0" }}>
+              <button type="button" className="btn small danger-btn" disabled={pending} onClick={() => { if (window.confirm("Delete this empty folder?")) start(async () => { const r = await deleteItem("folder", folderId); if (!r.ok) setMsg(r.error ?? "That did not work."); else router.push(trail.length > 1 ? `${basePath}?f=${trail[trail.length - 2].id}` : basePath); }); }}>Delete this folder</button>
+            </p>
+          ) : null}
+        </section> : layout === "grid" ? (
         <ul className="doc-grid">
           {folders.map((f) => (
             <li key={f.id} className={"doc-card" + (sel.has(k("folder", f.id)) ? " selected" : "")} data-sel={manage ? k("folder", f.id) : undefined}>
@@ -332,8 +339,8 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           ))}
         </ul>
       )}
-      {box ? <div className="doc-marquee" style={{ left: box.x, top: box.y, width: box.w, height: box.h }} aria-hidden="true" /> : null}
       </div>
+      {box ? <div className="doc-marquee" style={{ left: box.x, top: box.y, width: box.w, height: box.h }} aria-hidden="true" /> : null}
       {role === "lead" ? <p className="when" style={{ marginTop: 18 }}>More documents unlock when you join the Free Life Collective as an affiliate.</p> : null}
 
       <dialog ref={viewer} className="rs-dialog doc-viewer" aria-labelledby="dv-title" onClose={() => setView(null)}>
