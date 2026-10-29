@@ -20,7 +20,7 @@ export default async function SubscriptionPage() {
   const total = payments.filter((p) => p.status === "paid").reduce((n, p) => n + p.amount_cents, 0);
 
   return (
-    <>
+    <div className="account">
       <PageHeading>My Subscription</PageHeading>
       <div className="settings">
         <section className="card-s">
@@ -86,6 +86,6 @@ export default async function SubscriptionPage() {
           <CancelSubscription />
         </section>
       </div>
-    </>
+    </div>
   );
 }

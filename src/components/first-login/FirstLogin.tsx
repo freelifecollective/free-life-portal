@@ -154,12 +154,13 @@ export function FirstLogin({ env, alreadyOnboarded, pictureOnly }: {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
             </button>
           ) : null}
-          <div className="brand">Free Life Collective</div>
+          {pictureOnly ? <Link className="doc-back" href="/settings">← Back to profile</Link> : <div className="brand">Free Life Collective</div>}
         </div>
-        {pictureOnly ? <Link className="linkbtn" href="/settings" style={{ marginLeft: "auto" }}>Cancel</Link> : null}
-        <div className="dots" role="img" aria-label={`Step ${Math.min(dots + 1, 4)} of 4`}>
-          {[0, 1, 2, 3].map((i) => <i key={i} className={i <= dots ? "on" : ""} />)}
-        </div>
+        {pictureOnly ? null : (
+          <div className="dots" role="img" aria-label={`Step ${Math.min(dots + 1, 4)} of 4`}>
+            {[0, 1, 2, 3].map((i) => <i key={i} className={i <= dots ? "on" : ""} />)}
+          </div>
+        )}
       </header>
       <main>
         {step === "name" && <NameStep {...p} fade={fade} />}

@@ -10,7 +10,7 @@ export const metadata = { title: "Get the App" };
 export default async function AppPage() {
   const { session } = await requireMember();
   return (
-    <>
+    <div className="account">
       <PageHeading lede="Put the portal on your home screen so it opens like an app. It's free and no downloading is required.">Add the FLC App on Your Devices</PageHeading>
       <div className="settings" style={{ maxWidth: 760 }}>
         <section className="card-s">
@@ -26,6 +26,6 @@ export default async function AppPage() {
         ) : null}
         <AppSteps />
       </div>
-    </>
+    </div>
   );
 }
