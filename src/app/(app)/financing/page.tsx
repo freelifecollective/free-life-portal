@@ -22,22 +22,28 @@ export default async function FinancingPage(props: PageProps<"/financing">) {
       <nav className="country-tabs" aria-label="Country">
         {COUNTRIES.map((c) => <Link key={c.slug} href={`/financing?country=${c.slug}`} aria-current={c.slug === chosen.slug ? "page" : undefined}>{c.name}</Link>)}
       </nav>
-      <div className="settings" style={{ maxWidth: 760 }}>
-        {options.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>No options have been added for {chosen.name} yet. Check back soon.</p></section> : options.map((o) => (
-          <article key={o.id} className="card-s">
-            <h2 className="qh" style={{ margin: "0 0 8px" }}>{o.title}</h2>
-            <p className="post-body" style={{ margin: "0 0 10px" }}>{o.description}</p>
-            {o.link ? <a className="btn small" href={o.link} target="_blank" rel="noopener noreferrer nofollow" style={{ textDecoration: "none" }}>Learn more</a> : null}
-          </article>
-        ))}
-        {role !== "lead" ? <SuggestForm isAdmin={false} country={country} /> : null}
-        {mine.length ? (
-          <section className="card-s">
-            <h2 className="qh" style={{ marginTop: 0 }}>Your suggestions</h2>
-            <ul className="rs-mine">{mine.map((m) => <li key={m.id}><span>{m.title}</span><span className={"rs-status " + m.status}>{m.status === "pending" ? "Waiting for review" : "Declined"}{m.review_note ? `: ${m.review_note}` : ""}</span></li>)}</ul>
-          </section>
-        ) : null}
-      </div>
+      {options.length === 0 ? <section className="card-s" style={{ maxWidth: 560 }}><p style={{ margin: 0 }}>No options have been added for {chosen.name} yet. Check back soon.</p></section> : (
+        <div className="fin-grid">
+          {options.map((o) => (
+            <article key={o.id} className="card-s fin-card">
+              <h2 className="qh" style={{ margin: "0 0 8px" }}>{o.title}</h2>
+              <p className="post-body" style={{ margin: "0 0 14px" }}>{o.description}</p>
+              {o.link ? <a className="btn small" href={o.link} target="_blank" rel="noopener noreferrer nofollow" style={{ textDecoration: "none" }}>Learn more</a> : null}
+            </article>
+          ))}
+        </div>
+      )}
+      {role !== "lead" ? (
+        <div className="fin-bottom">
+          <SuggestForm isAdmin={false} country={country} />
+          {mine.length ? (
+            <section className="card-s">
+              <h2 className="qh" style={{ marginTop: 0 }}>Your suggestions</h2>
+              <ul className="rs-mine">{mine.map((m) => <li key={m.id}><span>{m.title}</span><span className={"rs-status " + m.status}>{m.status === "pending" ? "Waiting for review" : "Declined"}{m.review_note ? `: ${m.review_note}` : ""}</span></li>)}</ul>
+            </section>
+          ) : null}
+        </div>
+      ) : null}
     </>
   );
 }
