@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
+import { SplashMark } from "@/components/SplashMark";
 import { getSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { RANKS } from "@/lib/buddy/questions";
@@ -65,14 +66,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
 function Loading() {
   return (
     <div className="splash" role="status" aria-label="Loading the portal">
-      <div className="splash-mark">
-        <span className="splash-ring" />
-        <span className="splash-ring r2" />
-        <span className="splash-ring r3" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/icon-192.png" alt="" width={96} height={96} />
-      </div>
-      <p className="splash-name">Free Life Collective</p>
+      <SplashMark />
       <p className="splash-tag">Opening your portal</p>
       <span className="splash-bar" aria-hidden="true" />
     </div>
