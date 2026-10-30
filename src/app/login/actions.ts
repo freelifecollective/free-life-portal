@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { redirect as goTo } from "next/navigation";
 import { supabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,4 +37,21 @@ export async function sendMagicLink(_prev: LoginState, form: FormData): Promise<
   }
   if (error && !notInvited) return { status: "error", message: "We could not send that link. Please try again in a minute." };
   return { status: "sent", message: "If that email is on our list, a sign-in email is on its way.", email, next };
+}
+
+export type CodeState = { error: string };
+
+/** Signs in with the 6-digit code from the email. This is how the installed app gets in, because a link in an email opens the browser instead. */
+export async function verifyCode(email: string, next: string, _prev: CodeState, form: FormData): Promise<CodeState> {
+  const token = String(form.get("code") ?? "").replace(/\D/g, "");
+  if (!EMAIL.test(email)) return { error: "Please start again and request a new email." };
+  if (token.length !== 6) return { error: "Enter the 6-digit code from the email." };
+  if (!supabaseConfigured) return { error: "Sign-in is not configured yet." };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+  if (error) {
+    if (error.status === 429) return { error: "Too many tries. Please wait a few minutes and try again." };
+    return { error: "That code did not work. Check it, or request a new email." };
+  }
+  goTo(next.startsWith("/") && !next.startsWith("//") ? next : "/");
 }
