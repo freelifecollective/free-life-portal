@@ -3,6 +3,8 @@ import { LiveBadge } from "@/components/LiveBadge";
 import { LocalTime } from "@/components/calendar/LocalTime";
 import { requireMember } from "@/lib/auth/guards";
 import { Attendees } from "@/components/calendar/Attendees";
+import { SpeakerBubbles } from "@/components/calendar/SpeakerBubbles";
+import { speakersOf } from "@/lib/calls/types";
 import { AddToCalendar } from "@/components/dashboard/AddToCalendar";
 import { Countdown } from "@/components/dashboard/Countdown";
 import { CopyInvite } from "@/components/dashboard/CopyInvite";
@@ -72,7 +74,8 @@ export default async function HomePage(props: PageProps<"/">) {
             {next ? (
               <>
                 <h2 className="hc-title">{next.title}</h2>
-                <p className="hc-meta">{next.host ? <>Hosted by <strong>{next.host}</strong> · </> : null}{formatInZone(new Date(next.starts_at))}</p>
+                <p className="hc-meta">{next.host && speakersOf(next).length === 0 ? <>Hosted by <strong>{next.host}</strong> · </> : null}{formatInZone(new Date(next.starts_at))}</p>
+                <SpeakerBubbles speakers={speakersOf(next)} />
                 <LocalTime iso={next.starts_at} />
                 <Countdown startsAt={next.starts_at} endsAt={endIso} />
                 <div className="hc-actions">

@@ -1,5 +1,6 @@
 import { Avatar } from "@/components/Avatar";
 import { LocalTime } from "@/components/calendar/LocalTime";
+import { SpeakerBubbles } from "@/components/calendar/SpeakerBubbles";
 import { formatInZone } from "@/lib/time";
 import { REGISTRATION_GOAL, type PublicCall, type PublicLanding } from "@/lib/landing/types";
 import { GoalBar } from "./GoalBar";
@@ -65,6 +66,7 @@ export function LandingPage({ page, call, owner }: { page: PublicLanding; call: 
               <>
                 <p className="lp-call-title">{call.title}</p>
                 <p className="lp-call-time">{formatInZone(new Date(call.starts_at))} · {call.duration_minutes} min <LocalTime iso={call.starts_at} /></p>
+                {call.speakers?.length ? <div style={{ margin: "4px 0 12px" }}><SpeakerBubbles speakers={call.speakers} /></div> : null}
                 {call.description ? <p className="lp-desc">{call.description}</p> : null}
                 <p className="lp-sub" style={{ margin: "14px 0 18px" }}>{T.join.sub}</p>
                 <LandingRegister username={page.username} callId={call.id} />

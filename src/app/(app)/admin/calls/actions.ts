@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/guards";
 import { AUDIENCES, CALL_KINDS, type Audience, type CallKind } from "@/lib/calls/types";
+import { SUPABASE_URL } from "@/lib/env";
 import { zonedToUtc } from "@/lib/time";
 
 export type CallFormState = { error: string };
@@ -33,12 +34,34 @@ function parse(form: FormData): Parsed {
   };
 }
 
+const SPEAKER_PHOTOS = `${SUPABASE_URL}/storage/v1/object/public/speakers/`;
+
+/** The speakers typed into the form, in order (blank names dropped, pictures only from our own storage). */
+function speakersFrom(form: FormData): { name: string; photo_url: string | null; position: number }[] {
+  const names = form.getAll("speaker_name").map(String);
+  const photos = form.getAll("speaker_photo").map(String);
+  const out: { name: string; photo_url: string | null; position: number }[] = [];
+  names.forEach((n, i) => {
+    const name = n.trim().slice(0, 80);
+    const photo = (photos[i] ?? "").trim();
+    if (name && out.length < 6) out.push({ name, photo_url: photo.startsWith(SPEAKER_PHOTOS) && photo.length < 400 ? photo : null, position: out.length });
+  });
+  return out;
+}
+
+async function saveSpeakers(supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"], callId: string, form: FormData) {
+  await supabase.from("call_speakers").delete().eq("call_id", callId);
+  const rows = speakersFrom(form).map((s) => ({ ...s, call_id: callId }));
+  if (rows.length) await supabase.from("call_speakers").insert(rows);
+}
+
 export async function createCall(_prev: CallFormState, form: FormData): Promise<CallFormState> {
   const { session, supabase } = await requireAdmin();
   const p = parse(form);
   if (!p.ok) return { error: p.error };
-  const { error } = await supabase.from("calls").insert({ ...p.value, created_by: session.user.id });
-  if (error) return { error: "We could not save the call. Please try again." };
+  const { data: made, error } = await supabase.from("calls").insert({ ...p.value, created_by: session.user.id }).select("id").single();
+  if (error || !made) return { error: "We could not save the call. Please try again." };
+  await saveSpeakers(supabase, made.id, form);
   revalidatePath("/calendar"); revalidatePath("/admin/calls"); revalidatePath("/");
   redirect("/admin/calls");
 }
@@ -49,6 +72,7 @@ export async function updateCall(id: string, _prev: CallFormState, form: FormDat
   if (!p.ok) return { error: p.error };
   const { error } = await supabase.from("calls").update(p.value).eq("id", id);
   if (error) return { error: "We could not save the changes. Please try again." };
+  await saveSpeakers(supabase, id, form);
   revalidatePath("/calendar"); revalidatePath("/admin/calls"); revalidatePath("/");
   redirect("/admin/calls");
 }

@@ -15,7 +15,16 @@ export type Call = {
   pinned: boolean;
   join_url: string | null;
   host: string | null;
+  /** who is speaking (as the database returns it; use speakersOf() for the sorted list) */
+  call_speakers?: { name: string; photo_url: string | null; position: number }[];
 };
+
+export type Speaker = { name: string; photo_url: string | null };
+
+/** The speakers of a call, in the order the admin set. */
+export function speakersOf(call: Pick<Call, "call_speakers">): Speaker[] {
+  return [...(call.call_speakers ?? [])].sort((a, b) => a.position - b.position).map(({ name, photo_url }) => ({ name, photo_url }));
+}
 
 export type Person = { name: string; username: string | null; avatar_url: string | null; mode: RsvpMode };
 export type RsvpSummary = { live: number; recording: number; mine: RsvpMode | null; people: Person[] };
@@ -28,4 +37,4 @@ export function defaultAudience(kind: CallKind): Audience {
   return kind === "masterclass" ? "affiliates_only" : "leads_open";
 }
 
-export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host";
+export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host, call_speakers(name, photo_url, position)";
