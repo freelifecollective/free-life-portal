@@ -5,9 +5,9 @@ import { REPEATS, REPEAT_LABEL, type Area, type Repeat, type Task } from "@/lib/
 import type { TaskInput } from "@/app/(app)/tasks/actions";
 
 /** Add a task, or edit one. Business or personal, a title, an optional description, and how often it repeats. */
-export function TaskForm({ open, task, today, busy, error, onSave, onDelete, onClose }: {
+export function TaskForm({ open, task, today, busy, error, onSave, onClose }: {
   open: boolean; task: Task | null; today: string; busy: boolean; error: string;
-  onSave: (v: TaskInput) => void; onDelete?: () => void; onClose: () => void;
+  onSave: (v: TaskInput) => void; onClose: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [area, setArea] = useState<Area>(task?.area ?? "business");
@@ -50,7 +50,6 @@ export function TaskForm({ open, task, today, busy, error, onSave, onDelete, onC
         </div>
         <p className="err" role="alert">{error}</p>
         <div className="dlg-actions">
-          {task && onDelete ? <button type="button" className="linkbtn danger" style={{ marginRight: "auto" }} onClick={() => { if (window.confirm("Delete this task?")) onDelete(); }}>Delete</button> : null}
           <button type="button" className="btn" onClick={onClose}>Cancel</button>
           <button type="submit" className="btn primary" disabled={busy || !title.trim()}>{busy ? "Saving…" : "Save task"}</button>
         </div>
