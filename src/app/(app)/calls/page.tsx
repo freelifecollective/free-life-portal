@@ -6,6 +6,7 @@ import { LiveBadge } from "@/components/LiveBadge";
 import { Attendees } from "@/components/calendar/Attendees";
 import { RsvpControls } from "@/components/calendar/RsvpControls";
 import { listUpcomingCalls, rsvpSummary } from "@/lib/calls/queries";
+import { callLength } from "@/lib/calls/length";
 import { KIND_LABEL, speakersOf } from "@/lib/calls/types";
 import { SpeakerBubbles } from "@/components/calendar/SpeakerBubbles";
 import { formatInZone, endsAt, nowMs } from "@/lib/time";
@@ -49,7 +50,7 @@ export default async function CallsPage(props: PageProps<"/calls">) {
               <div className="live-left">
                 <p className="offer-label" style={{ margin: "0 0 6px" }}>{live ? <LiveBadge>LIVE · Happening now</LiveBadge> : "Next call"}</p>
                 <h2 className="qh" style={{ margin: "0 0 4px" }}>{next.title}</h2>
-                <p className="when" style={{ margin: "0 0 14px" }}>{KIND_LABEL[next.kind]} · {formatInZone(new Date(next.starts_at))} · {next.duration_minutes} min</p>
+                <p className="when" style={{ margin: "0 0 14px" }}>{KIND_LABEL[next.kind]} · {formatInZone(new Date(next.starts_at))} · {callLength(next)}</p>
                 <div style={{ margin: "0 0 14px" }}><SpeakerBubbles speakers={speakersOf(next)} /></div>
                 <RsvpControls callId={next.id} mine={mine} liveLabel="I'll be there LIVE" liveOn="You're coming LIVE" replayLabel="I'll catch the replay" replayOn="You'll catch the replay" />
                 {summary ? <div style={{ marginTop: 14 }}><Attendees summary={summary} /></div> : null}

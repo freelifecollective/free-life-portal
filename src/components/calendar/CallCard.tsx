@@ -4,6 +4,7 @@ import { endsAt, formatInZone } from "@/lib/time";
 import { LiveBadge } from "@/components/LiveBadge";
 import { FeedbackLink } from "@/components/calls/FeedbackLink";
 import { JoinButton } from "@/components/calls/JoinButton";
+import { callLength } from "@/lib/calls/length";
 import { Attendees } from "./Attendees";
 import { SpeakerBubbles } from "./SpeakerBubbles";
 import { LocalTime } from "./LocalTime";
@@ -45,7 +46,7 @@ export function CallCard({ call, summary, featured = false, now, review, attenda
       </div>
       <h2 id={`call-${call.id}`} className="call-title">{call.title}</h2>
       <p className="call-time">
-        {formatInZone(start)} · {call.duration_minutes} min
+        {formatInZone(start)} · {callLength(call)}
         <LocalTime iso={call.starts_at} />
       </p>
       <SpeakerBubbles speakers={speakersOf(call)} />

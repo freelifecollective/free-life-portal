@@ -3,6 +3,8 @@ import { PageHeading } from "@/components/PageHeading";
 import { CallForm } from "@/components/admin/CallForm";
 import { requireAdmin } from "@/lib/auth/guards";
 import { CALL_COLUMNS, speakersOf, type Call } from "@/lib/calls/types";
+import { lengthIdOf } from "@/lib/calls/length";
+import { listAffiliates } from "@/lib/calls/affiliates";
 import { toZonedInput } from "@/lib/time";
 import { deleteCall, updateCall } from "../actions";
 
@@ -23,8 +25,9 @@ export default async function EditCallPage({ params }: PageProps<"/admin/calls/[
       <section className="card-s" style={{ maxWidth: 680 }}>
         <CallForm
           submitLabel="Save changes"
+          affiliates={await listAffiliates(supabase)}
           action={updateCall.bind(null, id)}
-          initial={{ title: data.title, kind: data.kind, audience: data.audience, starts: toZonedInput(new Date(data.starts_at)), duration: data.duration_minutes, description: data.description ?? "", join_url: data.join_url ?? "", pinned: data.pinned, speakers: speakersOf(data).map((s) => ({ name: s.name, photo_url: s.photo_url ?? "" })) }}
+          initial={{ title: data.title, kind: data.kind, audience: data.audience, starts: toZonedInput(new Date(data.starts_at)), length: lengthIdOf(data) ?? "keep", description: data.description ?? "", join_url: data.join_url ?? "", pinned: data.pinned, speakers: speakersOf(data).map((s) => ({ name: s.name, photo_url: s.photo_url ?? "" })) }}
         />
       </section>
       <form action={deleteCall.bind(null, id)} style={{ marginTop: 24 }}>

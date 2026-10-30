@@ -5,7 +5,7 @@ import { deleteRecording, saveRecording, setPublished, type RecordingState } fro
 import { LEAD_TOPIC, TOPICS } from "@/lib/recordings/topics";
 import { formatTime } from "@/lib/recordings/vimeo";
 import type { Recording } from "@/lib/recordings/queries";
-import { formatInZone, toZonedInput } from "@/lib/time";
+import { formatDateInZone, formatInZone, toZonedInput } from "@/lib/time";
 
 type CallOpt = { id: string; title: string; starts_at: string };
 
@@ -28,7 +28,7 @@ function RecordingForm({ rec, calls, onDone }: { rec: Recording | null; calls: C
         <div className="field"><label htmlFor="r-start">Start at (optional)</label><input id="r-start" name="start" type="text" placeholder="5:30" defaultValue={formatTime(rec?.start_secs || null)} /></div>
         <div className="field"><label htmlFor="r-end">Stop at (optional)</label><input id="r-end" name="end" type="text" placeholder="1:02:15" defaultValue={formatTime(rec?.end_secs)} /></div>
       </div>
-      <div className="field"><label htmlFor="r-when">Recorded on</label><input id="r-when" name="recorded_at" type="datetime-local" defaultValue={rec ? toZonedInput(new Date(rec.recorded_at)) : ""} /></div>
+      <div className="field"><label htmlFor="r-when">Recorded on</label><input id="r-when" name="recorded_at" type="date" defaultValue={rec ? toZonedInput(new Date(rec.recorded_at)).slice(0, 10) : ""} /></div>
       <div className="field"><label htmlFor="r-desc">Description (optional)</label><textarea id="r-desc" name="description" rows={3} maxLength={2000} defaultValue={rec?.description ?? ""} /></div>
       <fieldset className="offer-pick" style={{ gridTemplateColumns: "1fr" }}>
         <legend>Who can watch (paying affiliates always can)</legend>
@@ -56,7 +56,7 @@ export function RecordingsAdmin({ recordings, calls }: { recordings: Recording[]
         <article key={r.id} className="card-s rec-row">
           <div>
             <strong>{r.title}</strong> {!r.published ? <span className="doc-tag">Draft</span> : null} {r.for_leads ? <span className="doc-tag">Leads</span> : null} {r.for_downline ? <span className="doc-tag">Downline</span> : null} {r.topics.map((t) => <span key={t} className="doc-tag">{t}</span>)}
-            <div className="when">{formatInZone(new Date(r.recorded_at))}{r.start_secs || r.end_secs ? ` · plays ${formatTime(r.start_secs)}–${r.end_secs ? formatTime(r.end_secs) : "end"}` : ""}</div>
+            <div className="when">{formatDateInZone(new Date(r.recorded_at))}{r.start_secs || r.end_secs ? ` · plays ${formatTime(r.start_secs)}–${r.end_secs ? formatTime(r.end_secs) : "end"}` : ""}</div>
           </div>
           <div className="rs-actions" style={{ marginTop: 0 }}>
             <a className="btn small" href={`/calls/${r.id}`} style={{ textDecoration: "none" }}>Open</a>

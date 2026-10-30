@@ -51,6 +51,11 @@ export function formatInZone(date: Date, zone: string = CALL_ZONE, locale = "en-
   }).format(date);
 }
 
+/** "Thursday, October 29, 2026": a date with no time of day. */
+export function formatDateInZone(date: Date, zone: string = CALL_ZONE, locale = "en-US"): string {
+  return new Intl.DateTimeFormat(locale, { timeZone: zone, weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(date);
+}
+
 /** "Tuesday, November 4" for grouping. */
 export function formatDayInZone(date: Date, zone: string = CALL_ZONE, locale = "en-US"): string {
   return new Intl.DateTimeFormat(locale, { timeZone: zone, weekday: "long", month: "long", day: "numeric" }).format(date);

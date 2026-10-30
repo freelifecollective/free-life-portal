@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guards";
 import { isTopic, LEAD_TOPIC } from "@/lib/recordings/topics";
 import { parseTime, parseVimeo } from "@/lib/recordings/vimeo";
+import { zonedToUtc } from "@/lib/time";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 export type RecordingState = { error: string; saved?: boolean };
@@ -40,7 +41,7 @@ export async function saveRecording(id: string | null, _prev: RecordingState, fo
   const row = {
     title, description: description || null, vimeo_id: v.id, vimeo_hash: v.hash,
     call_id: UUID.test(callId) ? callId : null,
-    recorded_at: when ? new Date(when).toISOString() : new Date().toISOString(),
+    recorded_at: (/^\d{4}-\d{2}-\d{2}$/.test(when) ? zonedToUtc(`${when}T12:00`) : null)?.toISOString() ?? new Date().toISOString(),
     start_secs: start ?? 0, end_secs: end,
     topics, for_leads: form.get("for_leads") === "on" || topics.includes(LEAD_TOPIC), for_downline: form.get("for_downline") === "on", published: form.get("published") === "on",
     ...(meta.thumb ? { thumb_url: meta.thumb } : {}), ...(meta.duration ? { duration_secs: meta.duration } : {}),

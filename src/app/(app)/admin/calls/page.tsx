@@ -4,6 +4,7 @@ import { CallForm } from "@/components/admin/CallForm";
 import { requireAdmin } from "@/lib/auth/guards";
 import { AUDIENCE_LABEL, CALL_COLUMNS, KIND_LABEL, type Call } from "@/lib/calls/types";
 import { formatInZone, nowMs } from "@/lib/time";
+import { listAffiliates } from "@/lib/calls/affiliates";
 import { createCall } from "./actions";
 
 export const instant = false;
@@ -41,7 +42,7 @@ export default async function AdminCallsPage() {
       <PageHeading>Manage calls</PageHeading>
       <section className="card-s" style={{ maxWidth: 680 }} aria-label="Add a call">
         <h2 className="qh" style={{ marginTop: 0 }}>Add a call</h2>
-        <CallForm action={createCall} submitLabel="Add call" />
+        <CallForm action={createCall} submitLabel="Add call" affiliates={await listAffiliates(supabase)} />
       </section>
       <h2 className="qh" style={{ marginTop: 36 }}>Upcoming</h2>
       {upcoming.length ? <CallList items={upcoming} /> : <p className="page-lede" style={{ marginBottom: 0 }}>Nothing scheduled.</p>}
