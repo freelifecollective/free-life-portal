@@ -39,10 +39,10 @@ update public.profiles set first_name='Liz', last_name='Z', username='lizlead', 
 do $$ begin
   perform tests.login('00000000-0000-0000-0000-0000000000a4');
   update public.profiles set call_closer = true where id = '00000000-0000-0000-0000-0000000000a5';
-  insert into public.call_closer_details (member_id, calls_taken, closer_since, close_rate, price_per_call_cents, price_per_sale) values ('00000000-0000-0000-0000-0000000000a5', 120, '2024-01-15', 38.5, 5000, '20% of the sale');
+  insert into public.call_closer_details (member_id, calls_taken, closer_since, close_rate, price_per_call_cents, price_per_sale) values ('00000000-0000-0000-0000-0000000000a5', '120+', '2024-01-15', 38.5, 5000, E'1A-3A = $50\n4A+ = 8% of total sales commission');
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  perform tests.eq('an affiliate can read a closer''s details', (select calls_taken from public.call_closer_details where member_id = '00000000-0000-0000-0000-0000000000a5'), 120);
+  perform tests.eq('an affiliate can read a closer''s details', (select calls_taken from public.call_closer_details where member_id = '00000000-0000-0000-0000-0000000000a5'), '120+');
   perform tests.eq('an update by an affiliate changes nothing', tests.rows($q$update public.call_closer_details set calls_taken = 999 where member_id = '00000000-0000-0000-0000-0000000000a5'$q$), 0::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a3');

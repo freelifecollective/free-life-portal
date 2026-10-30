@@ -1310,3 +1310,6 @@ a.pc-row:hover { background: var(--tint); }
 .hc-row .hc-rsvp .rsvp .btn { width: 100%; padding: 0 22px; white-space: nowrap; }
 @media (max-width: 900px) { .home-row { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .hc-row { grid-template-columns: minmax(0, 1fr); } .hc-row .cd { grid-template-columns: repeat(4, minmax(0, 1fr)); } .hc-row .hc-rsvp .rsvp { width: 100%; } }
+
+.pc-multiline { white-space: pre-line; }
+.pc-form textarea { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; color: var(--ink); background: #fff; resize: vertical; width: 100%; }
