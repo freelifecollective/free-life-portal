@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { celebrateRankUp } from "@/lib/celebrate";
 import { saveSettings, type SettingsState } from "@/app/(app)/settings/actions";
 
 export function SettingsForm({ first, last, username, email, instagram, facebook, isMember, rank, ranks }: {
@@ -8,6 +9,7 @@ export function SettingsForm({ first, last, username, email, instagram, facebook
   isMember: boolean; rank: number | null; ranks: { id: number; name: string }[];
 }) {
   const [state, action, pending] = useActionState(saveSettings, { error: "" } as SettingsState);
+  useEffect(() => { if (state.rankUp) celebrateRankUp(state.rankUp); }, [state]);
   return (
     <form action={action} className="set-form">
       <div className="row">

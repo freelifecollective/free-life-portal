@@ -68,3 +68,32 @@ export async function setStanding(form: FormData): Promise<void> {
   await supabase.from("profiles").update({ unpaid_since: since || null, removed_at: removed ? new Date().toISOString() : null }).eq("id", id);
   revalidatePath("/admin/people");
 }
+
+export type MilestoneState = { error: string; done: string };
+
+/** Records a coaching call or a sale for a member, so their badges can be handed out. */
+export async function logMilestone(_prev: MilestoneState, form: FormData): Promise<MilestoneState> {
+  const { session, supabase } = await requireAdmin();
+  const member = String(form.get("member") ?? "");
+  const kind = String(form.get("kind") ?? "");
+  const day = String(form.get("day") ?? "");
+  const count = Math.floor(Number(form.get("count") ?? 1));
+  const note = String(form.get("note") ?? "").trim().slice(0, 200);
+  if (!UUID.test(member)) return { error: "Choose a member.", done: "" };
+  if (kind !== "coaching" && kind !== "sale") return { error: "Choose coaching call or sale.", done: "" };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return { error: "Choose the date.", done: "" };
+  if (!Number.isInteger(count) || count < 1 || count > 20) return { error: "The number must be between 1 and 20.", done: "" };
+  const rows = Array.from({ length: count }, () => ({ member_id: member, kind, happened_on: day, note: note || null, logged_by: session.user.id }));
+  const { error } = await supabase.from("milestone_events").insert(rows);
+  if (error) return { error: "We could not save that. Please try again.", done: "" };
+  revalidatePath("/admin/people");
+  return { error: "", done: `Logged ${count} ${kind === "sale" ? (count === 1 ? "sale" : "sales") : count === 1 ? "coaching call" : "coaching calls"}. Any new badge appears the next time they open Tasks or their profile.` };
+}
+
+export async function removeMilestone(form: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const id = String(form.get("id") ?? "");
+  if (!UUID.test(id)) return;
+  await supabase.from("milestone_events").delete().eq("id", id);
+  revalidatePath("/admin/people");
+}

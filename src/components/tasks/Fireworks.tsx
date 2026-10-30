@@ -6,7 +6,7 @@ const COLOURS = ["#AB9080", "#C9A24B", "#F1E9DF", "#8C6F5E", "#FFFFFF", "#E3C9B6
 type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; c: string; r: number };
 
 /** A quick full-screen burst of fireworks in the portal's colours, with the "Crushed it!" message. It closes by itself after a moment (or on a tap). */
-export function Fireworks({ onClose }: { onClose: () => void }) {
+export function Fireworks({ onClose, title = "Crushed it!", sub = "You cleared your to-do list 🙌" }: { onClose: () => void; title?: string; sub?: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const close = useRef(onClose);
   useEffect(() => { close.current = onClose; });
@@ -53,11 +53,11 @@ export function Fireworks({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <div className="party" role="dialog" aria-modal="true" aria-label="You cleared your to-do list" onClick={onClose}>
+    <div className="party" role="dialog" aria-modal="true" aria-label={`${title} ${sub}`} onClick={onClose}>
       <canvas ref={canvas} aria-hidden="true" />
       <div className="party-card">
-        <p className="party-title">Crushed it!</p>
-        <p className="party-sub">You cleared your to-do list 🙌</p>
+        <p className="party-title">{title}</p>
+        <p className="party-sub">{sub}</p>
       </div>
     </div>
   );

@@ -2,22 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
+import { currentRank, rankUp } from "@/lib/buddy/rank";
 import { cleanAnswers, isComplete, rankId } from "@/lib/buddy/validate";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-type Result = { ok: boolean; error?: string };
+type Result = { ok: boolean; error?: string; rankUp?: string };
 
 /** Saves answers as the member goes. Returns whether the questionnaire is now complete. */
-export async function saveBuddyAnswers(raw: unknown): Promise<{ ok: boolean; complete: boolean; error?: string }> {
+export async function saveBuddyAnswers(raw: unknown): Promise<{ ok: boolean; complete: boolean; error?: string; rankUp?: string }> {
   const { session, supabase } = await requireMember();
   if (!supabase || session.profile.role === "lead") return { ok: false, complete: false, error: "Only affiliates can use this." };
   const answers = cleanAnswers(raw);
   const rank = rankId(answers.rank);
+  const before = await currentRank(supabase);
   const { data, error } = await supabase.rpc("ab_save", { p_answers: answers, p_rank: rank });
   if (error) return { ok: false, complete: false, error: "We could not save that. Please try again." };
   const complete = Boolean((data as { complete?: boolean } | null)?.complete) && isComplete(answers);
   if (complete) revalidatePath("/buddy");
-  return { ok: true, complete };
+  return { ok: true, complete, rankUp: rankUp(before, rank) ?? undefined };
 }
 
 export async function setBuddyStatus(status: "in_pool" | "paused" | "has_ab"): Promise<Result> {
@@ -34,10 +36,11 @@ export async function confirmBuddyRank(rank: number): Promise<Result> {
   if (!Number.isInteger(rank) || rank < 1 || rank > 7) return { ok: false, error: "Something went wrong." };
   const { supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Needs the database." };
+  const before = await currentRank(supabase);
   const { error } = await supabase.rpc("ab_confirm_rank", { p_rank: rank });
   if (error) return { ok: false, error: "We could not save that." };
   revalidatePath("/", "layout");
-  return { ok: true };
+  return { ok: true, rankUp: rankUp(before, rank) ?? undefined };
 }
 
 export async function chooseBuddy(otherId: string): Promise<Result> {
