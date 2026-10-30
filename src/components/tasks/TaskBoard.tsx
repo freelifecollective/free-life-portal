@@ -7,6 +7,7 @@ import { addTask, completeTask, deleteTask, reorderTasks, saveTimezone, undoTask
 import { complete, dueLabel, REPEAT_LABEL, split, stateOf, suggestOrder, taskHelp, undo, type Suggestion, type Task } from "@/lib/tasks/schedule";
 import { Fireworks } from "./Fireworks";
 import { TaskForm } from "./TaskForm";
+import { TrashButton } from "./TrashButton";
 
 const CELEBRATED = "flc_tasks_celebrated";
 
@@ -65,10 +66,10 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
       if (r.ok) { setTasks(r.tasks); setEditing(null); setSuggestion(null); } else setFormError(r.error);
     });
   }
-  function remove() {
-    if (!editing || editing === "new") return;
-    const id = editing.id;
-    run(async () => { const r = await deleteTask(id); if (r.ok) { setTasks(r.tasks); setEditing(null); } else setFormError(r.error); });
+  function removeTask(id: string) {
+    const before = tasks;
+    setTasks(tasks.filter((t) => t.id !== id)); setSuggestion(null);
+    apply(() => deleteTask(id), before);
   }
 
   function setOrder(ids: string[]) {
@@ -155,6 +156,7 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
                       <button type="button" className="icon-btn" aria-label="Move down" disabled={i === todayList.length - 1} onClick={() => nudge(t.id, 1)}>▼</button>
                       <button type="button" className="linkbtn" onClick={() => setHelpOpen(helpOpen === t.id ? null : t.id)} aria-expanded={helpOpen === t.id}>Need a hand?</button>
                       <button type="button" className="linkbtn" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing(t); }}>Edit</button>
+                      <TrashButton label={t.title} busy={pending} onConfirm={() => removeTask(t.id)} />
                     </div>
                   </div>
                   {help ? (
@@ -180,7 +182,7 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
                   <strong>{t.title}</strong>
                   <span className="task-meta"><span className={"pill " + t.area}>{t.area === "business" ? "Business" : "Personal"}</span><span className="pill">{REPEAT_LABEL[t.repeat]}</span><span className="task-due">{dueLabel(t, today)}</span></span>
                 </div>
-                <div className="task-tools"><button type="button" className="linkbtn" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing(t); }}>Edit</button></div>
+                <div className="task-tools"><button type="button" className="linkbtn" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing(t); }}>Edit</button><TrashButton label={t.title} busy={pending} onConfirm={() => removeTask(t.id)} /></div>
               </div></li>
             ))}
           </ul>
@@ -195,6 +197,7 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
               <li key={t.id} className="task done"><div className="task-row">
                 <button type="button" className="task-check on" aria-label={`Undo: ${t.title}`} onClick={() => untick(t)}>✓</button>
                 <div className="task-main"><strong>{t.title}</strong><span className="task-meta"><span className={"pill " + t.area}>{t.area === "business" ? "Business" : "Personal"}</span><span className="pill">{REPEAT_LABEL[t.repeat]}</span></span></div>
+                <div className="task-tools"><TrashButton label={t.title} busy={pending} onConfirm={() => removeTask(t.id)} /></div>
               </div></li>
             ))}
           </ul>
@@ -204,7 +207,7 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
       <p className="when" style={{ margin: 0 }}>Reminders: we send a banner to your phone the day before and the day a task is due, and again if it becomes overdue. Daily tasks are not sent as banners, so they stay quiet. Your time zone: {tz.replace(/_/g, " ")}.</p>
 
       <TaskForm key={formKey} open={editing !== null} task={editing && editing !== "new" ? editing : null} today={today} busy={pending} error={formError}
-        onSave={save} onDelete={remove} onClose={() => setEditing(null)} />
+        onSave={save} onClose={() => setEditing(null)} />
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
     </div>
   );
