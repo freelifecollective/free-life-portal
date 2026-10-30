@@ -88,8 +88,8 @@ export function OwnerTools({ userId, instagram, facebook, hasPagePhoto }: { user
           <div className="field"><label htmlFor="own-ig">Instagram handle</label>
             <div className="handle"><span className="at">@</span><input id="own-ig" type="text" autoComplete="off" autoCapitalize="off" spellCheck={false} value={ig} onChange={(e) => setIg(e.target.value)} onBlur={() => igState === "ok" && setIg(cleanHandle(ig, "instagram"))} /></div></div>
           {igState === "bad" ? <p className="status bad">{HANDLE_MESSAGES.instagram}</p> : null}
-          <div className="field"><label htmlFor="own-fb">Facebook handle</label>
-            <div className="handle"><span className="at">@</span><input id="own-fb" type="text" autoComplete="off" autoCapitalize="off" spellCheck={false} value={fb} onChange={(e) => setFb(e.target.value)} onBlur={() => fbState === "ok" && setFb(cleanHandle(fb, "facebook"))} /></div></div>
+          <div className="field"><label htmlFor="own-fb">Facebook handle or link</label>
+            <div><input id="own-fb" type="text" autoComplete="off" autoCapitalize="off" spellCheck={false} value={fb} onChange={(e) => setFb(e.target.value)} onBlur={() => fbState === "ok" && setFb(cleanHandle(fb, "facebook"))} /></div></div>
           {fbState === "bad" ? <p className="status bad">{HANDLE_MESSAGES.facebook}</p> : null}
           <p className="owner-hint">Leave a box empty to hide that button.</p>
           <button type="submit" className="btn primary small" disabled={pending || !linksValid}>Update</button>

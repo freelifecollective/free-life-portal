@@ -11,6 +11,17 @@ describe("cleanHandle", () => {
     expect(cleanHandle("facebook.com/maya", "instagram")).toBe("facebook.com"));
 });
 
+describe("facebook links", () => {
+  it("keeps a business page link with a number tail", () =>
+    expect(cleanHandle("https://www.facebook.com/MyBusiness-100012345678/?ref=share", "facebook")).toBe("https://www.facebook.com/MyBusiness-100012345678"));
+  it("keeps a profile.php link", () =>
+    expect(cleanHandle("facebook.com/profile.php?id=61555555555&sk=about", "facebook")).toBe("https://www.facebook.com/profile.php?id=61555555555"));
+  it("keeps a pages link", () =>
+    expect(cleanHandle("https://m.facebook.com/pages/My-Page/123456789", "facebook")).toBe("https://www.facebook.com/pages/My-Page/123456789"));
+  it("links are accepted", () => expect(handleState("https://www.facebook.com/MyBusiness-100012345678", "facebook")).toBe("ok"));
+  it("other sites are rejected", () => expect(handleState("https://evil.example.com/MyBusiness", "facebook")).toBe("bad"));
+});
+
 describe("handleState", () => {
   it("empty", () => expect(handleState("  ", "instagram")).toBe("empty"));
   it("instagram ok", () => expect(handleState("@maya_p", "instagram")).toBe("ok"));

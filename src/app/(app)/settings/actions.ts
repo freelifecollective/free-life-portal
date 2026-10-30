@@ -17,6 +17,9 @@ export async function saveSettings(_prev: SettingsState, form: FormData): Promis
   const username = String(form.get("username") ?? "").trim().toLowerCase();
   const igRaw = String(form.get("instagram") ?? ""), fbRaw = String(form.get("facebook") ?? "");
   const rankRaw = String(form.get("rank") ?? "");
+  const bm = Number(form.get("birth_month") ?? 0), bd = Number(form.get("birth_day") ?? 0);
+  if ((bm === 0) !== (bd === 0)) return { error: "Choose both the month and the day of your birthday, or leave both empty." };
+  if (bm && (!Number.isInteger(bm) || !Number.isInteger(bd) || bm < 1 || bm > 12 || bd < 1 || bd > new Date(2000, bm, 0).getDate())) return { error: "Check your birthday." };
   if (!first || !last || first.length > 40 || last.length > 40) return { error: "Enter your first and last name." };
   const fmt = checkUsernameFormat(username);
   if (!fmt.ok) return { error: "That username is not allowed. Use 3 to 30 letters, numbers, dashes or underscores." };
@@ -31,6 +34,9 @@ export async function saveSettings(_prev: SettingsState, form: FormData): Promis
   if (isMember) {
     patch.instagram = igRaw.trim() ? cleanHandle(igRaw, "instagram") : null;
     patch.facebook = fbRaw.trim() ? cleanHandle(fbRaw, "facebook") : null;
+    patch.birth_month = bm || null;
+    patch.birth_day = bd || null;
+    patch.call_closer = form.get("call_closer") === "on";
   }
   const { error } = await supabase.from("profiles").update(patch).eq("id", session.user.id);
   if (error) {

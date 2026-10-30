@@ -1,12 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { facebookUrl, instagramUrl } from "@/lib/landing/types";
 import { Avatar } from "@/components/Avatar";
 import { openDockChat } from "@/components/messages/MessageDock";
 import { createClient } from "@/lib/supabase/client";
 
-type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; instagram: string | null; facebook: string | null; is_admin: boolean };
+type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; instagram: string | null; facebook: string | null; is_admin: boolean; birth_month: number | null; birth_day: number | null; call_closer: boolean; offers_services: boolean };
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const name = (p: Person) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "Member";
 const initials = (p: Person) => ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
 
@@ -17,6 +19,7 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
   const [picked, setPicked] = useState<Person | null>(null);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [zoom, setZoom] = useState(false);
 
   useEffect(() => {
     if (!open || people) return;
@@ -25,7 +28,7 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
     return () => { live = false; };
   }, [open, people, kind]);
 
-  function show() { setPicked(null); setQ(""); setOpen(true); dlg.current?.showModal(); }
+  function show() { setZoom(false); setPicked(null); setQ(""); setOpen(true); dlg.current?.showModal(); }
   const shown = (people ?? []).filter((p) => name(p).toLowerCase().includes(q.trim().toLowerCase()));
 
   return (
@@ -33,12 +36,28 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
       <h2 className="chat-section"><button type="button" className="chat-section-btn" onClick={show} aria-haspopup="dialog">{children}</button></h2>
       <dialog ref={dlg} className="rs-dialog members-dialog" aria-label={title} onClose={() => setOpen(false)}
         onClick={(e) => { if (e.target === dlg.current) dlg.current?.close(); }}>
-        {picked ? (
+        {picked && zoom && picked.avatar_url ? (
+          <button type="button" className="member-zoom" onClick={() => setZoom(false)} aria-label="Close the large picture">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={picked.avatar_url} alt={name(picked)} />
+          </button>
+        ) : picked ? (
           <div className="member-profile">
             <button type="button" className="linkbtn" onClick={() => setPicked(null)}>← Back to the list</button>
-            <Avatar url={picked.avatar_url} initials={initials(picked)} size={96} />
+            {picked.avatar_url ? (
+              <button type="button" className="member-photo" onClick={() => setZoom(true)} aria-label={`Enlarge ${name(picked)}'s picture`} title="Click to enlarge">
+                <Avatar url={picked.avatar_url} initials={initials(picked)} size={96} />
+              </button>
+            ) : <Avatar url={null} initials={initials(picked)} size={96} />}
             <h2 className="qh" style={{ margin: "8px 0 0" }}>{name(picked)}</h2>
             {picked.username ? <p className="when" style={{ margin: 0 }}>@{picked.username}{picked.is_admin ? " · Admin" : ""}</p> : null}
+            {picked.birth_month && picked.birth_day ? <p className="member-birthday">🎂 {MONTHS[picked.birth_month - 1]} {picked.birth_day}</p> : null}
+            {picked.offers_services || picked.call_closer ? (
+              <ul className="member-tags" aria-label="What they offer">
+                {picked.offers_services ? <li><Link href="/outsourcing" onClick={() => dlg.current?.close()}>Offers services in Outsourcing</Link></li> : null}
+                {picked.call_closer ? <li><span>Call closer</span></li> : null}
+              </ul>
+            ) : null}
             <ul className="member-social" aria-label="Social profiles">
               {picked.instagram ? (
                 <li><a href={instagramUrl(picked.instagram)} target="_blank" rel="noopener noreferrer" aria-label={`Instagram: @${picked.instagram}`}>
@@ -52,7 +71,7 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
                 </a></li>
               ) : null}
               {picked.facebook ? (
-                <li><a href={facebookUrl(picked.facebook)} target="_blank" rel="noopener noreferrer" aria-label={`Facebook: ${picked.facebook}`}>
+                <li><a href={facebookUrl(picked.facebook)} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                   <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="11" fill="#1877F2" />
                     <path fill="#fff" d="M13.4 22v-7.6h2.5l.4-3h-2.9V9.5c0-.9.3-1.5 1.5-1.5h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.4H8v3h2.5V22z" />
