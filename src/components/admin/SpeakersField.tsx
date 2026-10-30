@@ -61,8 +61,8 @@ export function SpeakersField({ initial, affiliates = [] }: { initial: SpeakerVa
             <Avatar url={r.photo_url || null} initials={initials(r.name)} size={64} label={r.name || "Speaker"} />
             <div className="speaker-edit">
               {affiliates.length ? (
-                <select aria-label="Choose an affiliate" value="" onChange={(e) => { const a = affiliates.find((x) => x.id === e.target.value); if (a) patch(r.key, { name: a.name, photo_url: a.photo_url ?? "" }); }}>
-                  <option value="">Choose a paying affiliate (their picture fills in)…</option>
+                <select aria-label="Choose an FLC Member" value="" onChange={(e) => { const a = affiliates.find((x) => x.id === e.target.value); if (a) patch(r.key, { name: a.name, photo_url: a.photo_url ?? "" }); }}>
+                  <option value="">Choose an FLC Member</option>
                   {affiliates.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               ) : null}
