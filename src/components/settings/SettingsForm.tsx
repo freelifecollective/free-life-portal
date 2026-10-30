@@ -27,23 +27,20 @@ export function SettingsForm({ first, last, username, email, instagram, facebook
             <div className="field"><label htmlFor="s-ig">Instagram</label><input id="s-ig" name="instagram" type="text" defaultValue={instagram} placeholder="yourhandle" autoCapitalize="none" /></div>
             <div className="field"><label htmlFor="s-fb">Facebook (handle or full link)</label><input id="s-fb" name="facebook" type="text" defaultValue={facebook} placeholder="yourpage, or paste your page link" autoCapitalize="none" /></div>
           </div>
-          <div className="row">
+          <div className="set-row4">
+            <div className="field"><label htmlFor="s-rank">Your rank</label>
+              <select id="s-rank" name="rank" defaultValue={rank ?? ""}>
+                <option value="">Not set</option>
+                {ranks.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select></div>
             <div className="field"><label htmlFor="s-bm">Birthday month</label>
               <select id="s-bm" name="birth_month" defaultValue={birthMonth ?? ""}><option value="">Not set</option>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></div>
             <div className="field"><label htmlFor="s-bd">Day</label>
               <select id="s-bd" name="birth_day" defaultValue={birthDay ?? ""}><option value="">Not set</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}</select></div>
+            <div className="field"><label htmlFor="s-by">Year (optional)</label>
+              <select id="s-by" name="birth_year" defaultValue={birthYear ?? ""}><option value="">Not set</option>{Array.from({ length: 83 }, (_, i) => 2012 - i).map((y) => <option key={y} value={y}>{y}</option>)}</select></div>
           </div>
-          <div className="field"><label htmlFor="s-by">Birth year (optional)</label>
-            <select id="s-by" name="birth_year" defaultValue={birthYear ?? ""}><option value="">I would rather not say</option>{Array.from({ length: 83 }, (_, i) => 2012 - i).map((y) => <option key={y} value={y}>{y}</option>)}</select></div>
-          <p className="when" style={{ margin: "-4px 0 0" }}>Your birthday shows on your profile. The year is optional and only shows if you choose one.</p>
-          <div className="field">
-            <label htmlFor="s-rank">Your rank</label>
-            <select id="s-rank" name="rank" defaultValue={rank ?? ""}>
-              <option value="">Not set</option>
-              {ranks.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-          </div>
-          <p className="when" style={{ margin: "-4px 0 0" }}>Your rank is private. It is only used to match you with others, and on the Water Share Map once that is added.</p>
+          <p className="when" style={{ margin: "-4px 0 0" }}>Your birthday shows on your profile. The year is optional and only shows if you choose one. Your rank is private. It is only used to match you with others, and on the Water Share Map.</p>
         </>
       ) : null}
       <div className="set-actions">
