@@ -24,4 +24,4 @@ export type PublicCall = {
 };
 
 export const instagramUrl = (h: string) => `https://www.instagram.com/${encodeURIComponent(h)}/`;
-export const facebookUrl = (h: string) => `https://www.facebook.com/${encodeURIComponent(h)}`;
+export const facebookUrl = (h: string) => (h.startsWith("https://") ? h : `https://www.facebook.com/${encodeURIComponent(h)}`);

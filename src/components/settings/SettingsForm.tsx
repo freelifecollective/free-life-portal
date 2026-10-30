@@ -4,9 +4,11 @@ import { useActionState, useEffect } from "react";
 import { celebrateRankUp } from "@/lib/celebrate";
 import { saveSettings, type SettingsState } from "@/app/(app)/settings/actions";
 
-export function SettingsForm({ first, last, username, email, instagram, facebook, isMember, rank, ranks }: {
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+export function SettingsForm({ first, last, username, email, instagram, facebook, isMember, rank, ranks, birthMonth, birthDay, callCloser }: {
   first: string; last: string; username: string; email: string; instagram: string; facebook: string;
-  isMember: boolean; rank: number | null; ranks: { id: number; name: string }[];
+  isMember: boolean; rank: number | null; ranks: { id: number; name: string }[]; birthMonth: number | null; birthDay: number | null; callCloser: boolean;
 }) {
   const [state, action, pending] = useActionState(saveSettings, { error: "" } as SettingsState);
   useEffect(() => { if (state.rankUp) celebrateRankUp(state.rankUp); }, [state]);
@@ -23,8 +25,16 @@ export function SettingsForm({ first, last, username, email, instagram, facebook
         <>
           <div className="row">
             <div className="field"><label htmlFor="s-ig">Instagram</label><input id="s-ig" name="instagram" type="text" defaultValue={instagram} placeholder="yourhandle" autoCapitalize="none" /></div>
-            <div className="field"><label htmlFor="s-fb">Facebook</label><input id="s-fb" name="facebook" type="text" defaultValue={facebook} placeholder="yourpage" autoCapitalize="none" /></div>
+            <div className="field"><label htmlFor="s-fb">Facebook (handle or full link)</label><input id="s-fb" name="facebook" type="text" defaultValue={facebook} placeholder="yourpage, or paste your page link" autoCapitalize="none" /></div>
           </div>
+          <div className="row">
+            <div className="field"><label htmlFor="s-bm">Birthday month</label>
+              <select id="s-bm" name="birth_month" defaultValue={birthMonth ?? ""}><option value="">Not set</option>{MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></div>
+            <div className="field"><label htmlFor="s-bd">Day</label>
+              <select id="s-bd" name="birth_day" defaultValue={birthDay ?? ""}><option value="">Not set</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}</select></div>
+          </div>
+          <p className="when" style={{ margin: "-4px 0 0" }}>Only the month and day show on your profile, never the year.</p>
+          <label className="check"><input type="checkbox" name="call_closer" defaultChecked={callCloser} /><span>I am a call closer (I take calls for other affiliates)</span></label>
           <div className="field">
             <label htmlFor="s-rank">Your rank</label>
             <select id="s-rank" name="rank" defaultValue={rank ?? ""}>

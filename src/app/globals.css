@@ -1196,3 +1196,13 @@ li.unread .dock-who strong { font-weight: 800; }
 .member-profile .member-social li { display: block; }
 .member-profile .member-social a { display: block; line-height: 0; padding: 0; border: 0; background: none; border-radius: 50%; outline-offset: 4px; transition: transform .15s; }
 .member-profile .member-social a:hover { background: none; transform: scale(1.1); }
+
+.member-photo { all: unset; cursor: zoom-in; border-radius: 50%; line-height: 0; }
+.member-photo:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 3px; }
+.member-zoom { all: unset; cursor: zoom-out; display: grid; place-items: center; width: 100%; }
+.member-zoom img { width: 100%; max-height: 70dvh; object-fit: contain; border-radius: 16px; }
+.member-profile .member-birthday { margin: 2px 0 0; font-weight: 600; }
+.member-profile .member-tags { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.member-profile .member-tags li { display: block; }
+.member-profile .member-tags a, .member-profile .member-tags span { display: inline-block; padding: 4px 12px; margin: 0; border-radius: 999px; background: var(--tint); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; }
+.member-profile .member-tags a:hover { background: var(--accent); color: #fff; }

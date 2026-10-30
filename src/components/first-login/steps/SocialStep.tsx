@@ -43,14 +43,15 @@ export function SocialStep({ f, set, go }: StepProps) {
           <span>My Facebook handle is the same as my Instagram handle</span>
         </label>
         <div className="field">
-          <label htmlFor="fb">Facebook handle</label>
-          <div className="handle"><span className="at">@</span>
+          <label htmlFor="fb">Facebook handle or link</label>
+          <div>
             <input id="fb" type="text" autoComplete="off" autoCapitalize="off" spellCheck={false} inputMode="url" disabled={f.fbSame}
               value={fbValue} onChange={(e) => set({ fb: e.target.value })} onBlur={() => tidy("facebook")} /></div>
         </div>
         <p className={"status" + (fbState === "ok" ? " ok" : fbState === "bad" ? " bad" : "")} aria-live="polite">
           {fbState === "ok" ? "Looks good" : fbState === "bad" ? HANDLE_MESSAGES.facebook : ""}
         </p>
+        <p className="when" style={{ margin: "-6px 0 10px" }}>Using a business page, or your handle links to the wrong account? Paste the full link from your browser instead.</p>
         <div className="actions">
           <button className="btn primary" disabled={!canContinue} type="submit">Continue</button>
           <button className="linkbtn" type="button" onClick={skip}>Don&rsquo;t worry, you can enter these later</button>
