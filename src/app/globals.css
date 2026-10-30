@@ -1325,3 +1325,8 @@ a.pc-row:hover { background: var(--tint); }
 .pc-star-pick button { all: unset; cursor: pointer; font-size: 30px; line-height: 1; color: #d6cfc6; padding: 2px 4px; }
 .pc-star-pick button.on { color: #c28a1e; }
 .pc-star-pick button:focus-visible { outline: 2px solid var(--accent-deep); border-radius: 6px; }
+
+/* the next-call card is only as wide as its contents, so the space on its left and right is equal (same on Home and Calls) */
+.home-row > .home-call { width: fit-content; max-width: 100%; }
+.home-row > .home-call .hc-people, .home-row > .home-call .hc-actions { width: 100%; }
+@media (max-width: 640px) { .home-row > .home-call { width: 100%; } }
