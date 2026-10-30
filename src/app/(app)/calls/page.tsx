@@ -36,7 +36,10 @@ export default async function CallsPage(props: PageProps<"/calls">) {
     <>
       <PageHeading lede="Join calls live, or watch the recordings any time.">Calls</PageHeading>
       <div className="settings" style={{ maxWidth: 900 }}>
-        <NextCallCard call={next ?? null} summary={summary} now={now} inviteUsername={session.profile.role === "lead" ? null : session.profile.username} />
+        {/* the same card, at the same width, as on Home */}
+        <div className="home-row next-only">
+          <NextCallCard call={next ?? null} summary={summary} now={now} inviteUsername={session.profile.role === "lead" ? null : session.profile.username} />
+        </div>
 
         <div className="rec-head"><h2 className="qh" style={{ margin: 0 }}>{topic ?? "All"} Recordings{year ? ` · ${year}` : ""}</h2><TopicFilter topics={[...present]} years={years} topic={topic} year={year} /></div>
         {recordings.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>{session.profile.role === "lead" ? "Recordings open to leads will appear here." : "No recordings yet. They are added after each call."}</p></section> : (

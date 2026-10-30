@@ -35,9 +35,11 @@ export function NextCallCard({ call, summary, now, inviteUsername }: { call: Cal
       <p className="hc-meta">{formatInZone(start)} · {callLength(call)}</p>
       <SpeakerBubbles speakers={speakersOf(call)} profiles />
       <LocalTime iso={call.starts_at} />
-      <Countdown startsAt={call.starts_at} endsAt={end.toISOString()} />
-      <div className="hc-rsvp">
-        <RsvpControls callId={call.id} mine={summary?.mine ?? null} liveLabel="I'll be there LIVE" liveOn="You're coming LIVE" replayLabel="I'll catch the replay" replayOn="You'll catch the replay" />
+      <div className="hc-row">
+        <Countdown startsAt={call.starts_at} endsAt={end.toISOString()} />
+        <div className="hc-rsvp">
+          <RsvpControls callId={call.id} mine={summary?.mine ?? null} liveLabel="I'll be there LIVE" liveOn="You're coming LIVE" replayLabel="I'll catch the replay" replayOn="You'll catch the replay" />
+        </div>
       </div>
       {(call.join_url && !over) || (inviteUsername && call.audience === "leads_open") ? (
         <div className="hc-actions">
