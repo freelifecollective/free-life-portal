@@ -1330,3 +1330,9 @@ a.pc-row:hover { background: var(--tint); }
 .home-row > .home-call { width: fit-content; max-width: 100%; }
 .home-row > .home-call .hc-people, .home-row > .home-call .hc-actions { width: 100%; }
 @media (max-width: 640px) { .home-row > .home-call { width: 100%; } }
+
+/* contact-card buttons in one row (Message, services, call closer, Instagram, Facebook); wraps to a second row if there are many */
+.pc-tiles { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+.pc a.pc-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px 12px; border-radius: 16px; text-decoration: none; color: var(--accent-deep); font-size: 13.5px; }
+.pc a.pc-tile:hover { background: var(--tint); }
+.pc-sub.pc-online { color: var(--accent-deep); font-weight: 600; }
