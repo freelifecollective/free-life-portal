@@ -10,6 +10,7 @@ import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
 import type { AppSession } from "@/lib/profile/types";
 import { SearchIcon } from "./SearchIcon";
+import { MessageDock } from "./messages/MessageDock";
 import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
 
@@ -18,13 +19,14 @@ type NavItem = { label: string; href?: string; min: Role; admin?: boolean; headi
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead" },
-  { label: "Calendar", href: "/calendar", min: "lead" },
+  { label: "Calendar", href: "/calendar", min: "lead", group: "FLC Calls" },
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead" },
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
   { label: "Classroom", min: "lead" },
-  { label: "Calls", href: "/calls", min: "lead" },
+  { label: "Calls", href: "/calls", min: "lead", group: "FLC Calls" },
+  { label: "FLC Calls", min: "lead", heading: true, group: "FLC Calls" },
   { label: "Documents", href: "/documents", min: "lead" },
   { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
@@ -46,16 +48,17 @@ const NAV: NavItem[] = [
   { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Admin only" },
 ];
 
-/** Home and Chats first, then the "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
+/** Home and Chats first, then the "FLC Calls", "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
 function ordered(items: NavItem[]): NavItem[] {
   const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
   const top = ["Home", "Chats"].flatMap((l) => items.filter((n) => n.label === l));
   const onboarding = items.filter((n) => n.group === "Onboarding");
   const sales = items.filter((n) => n.group === "Placing Sales");
+  const calls = items.filter((n) => n.group === "FLC Calls");
   const rest = items.filter((n) => n.label !== "Home" && n.label !== "Chats" && !n.admin && !n.group).sort(az);
   const admin = items.filter((n) => n.admin);
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
-  return [...top, ...sections(onboarding), ...sections(sales), ...rest, ...sections(admin)];
+  return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...rest, ...sections(admin)];
 }
 
 export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {
@@ -76,10 +79,11 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
         </div>
         <div className="top-right">
           <SearchIcon />
-          <Link href="/messages" className="hdr-btn" data-tour="messages" aria-label={badges["/messages"] ? `Messages, ${badges["/messages"]} unread` : "Messages"}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-            {badges["/messages"] ? <span className="badge bell-badge" aria-hidden="true">{badges["/messages"] > 99 ? "99+" : badges["/messages"]}</span> : null}
-          </Link>
+{session.mode === "supabase" ? <MessageDock me={session.user.id} unread={badges["/messages"] ?? 0} /> : (
+            <Link href="/messages" className="hdr-btn" data-tour="messages" aria-label="Messages">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+            </Link>
+          )}
           {session.mode === "supabase" ? <span className="desk-only"><NotificationBell count={unread} userId={session.user.id} /></span> : null}
           <UserMenu unread={unread} showNotifications={session.mode === "supabase"} url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
         </div>
