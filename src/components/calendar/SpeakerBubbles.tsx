@@ -10,16 +10,18 @@ export function speakerNames(list: Speaker[]): string {
 }
 
 /** Round pictures of the people speaking on a call, slightly overlapping, with their names beside them. */
-export function SpeakerBubbles({ speakers, size = 52, label = "Speaking" }: { speakers: Speaker[]; size?: number; label?: string | null }) {
+export function SpeakerBubbles({ speakers, size = 52, label }: { speakers: Speaker[]; size?: number; label?: string | null }) {
   if (speakers.length === 0) return null;
+  /* "Speaker" for one person, "Speakers" for more (unless a label such as "Preview" is given) */
+  const heading = label === undefined ? (speakers.length === 1 ? "Speaker" : "Speakers") : label;
   return (
     <div className="speakers">
-      <ul className="speaker-bubbles" aria-label={label ?? "Speakers"}>
+      <ul className="speaker-bubbles" aria-label={heading ?? "Speakers"}>
         {speakers.map((s, i) => (
           <li key={s.name + i} title={s.name}><Avatar url={s.photo_url} initials={initials(s.name)} size={size} label={s.name} /></li>
         ))}
       </ul>
-      <span className="speaker-names">{label ? <small>{label}</small> : null}<strong>{speakerNames(speakers)}</strong></span>
+      <span className="speaker-names">{heading ? <small>{heading}</small> : null}<strong>{speakerNames(speakers)}</strong></span>
     </div>
   );
 }
