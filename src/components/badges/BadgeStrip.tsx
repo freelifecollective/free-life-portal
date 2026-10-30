@@ -1,15 +1,14 @@
 import Link from "next/link";
-import { BadgeMedal, labelFor } from "./BadgeMedal";
+import { BadgeTile } from "./BadgeTile";
 
-const SHOWN = 8;
+const SHOWN = 6;
 
-/** A row of small medals, newest first. Nothing at all appears until the first badge is earned. */
+/** A row of badges, newest first, the same as on the profile but a little smaller. Nothing at all appears until the first badge is earned. */
 export function BadgeStrip({ keys }: { keys: string[] }) {
   if (keys.length === 0) return null;
-  const shown = keys.slice(0, SHOWN);
   return (
     <ul className="badge-strip" aria-label="Your badges">
-      {shown.map((k) => { const l = labelFor(k); return l ? <li key={k} title={`${l.title}: ${l.level}`}><BadgeMedal id={k} size={46} compact /></li> : null; })}
+      {keys.slice(0, SHOWN).map((k) => <li key={k}><BadgeTile id={k} small /></li>)}
       {keys.length > SHOWN ? <li><Link className="badge-more" href="/settings" title="See all your badges">+{keys.length - SHOWN}</Link></li> : null}
     </ul>
   );

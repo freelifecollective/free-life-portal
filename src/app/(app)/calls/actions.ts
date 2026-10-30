@@ -34,12 +34,15 @@ export async function loadFeedback(callId: string): Promise<{ ok: boolean; rows:
   return { ok: true, rows: (data ?? []) as FeedbackRow[] };
 }
 
-/** Notes that someone pressed play on a recording, so the person who invited them can see who watched the replay. */
-export async function markWatched(recordingId: string): Promise<void> {
-  if (!/^[0-9a-f-]{36}$/i.test(recordingId)) return;
-  const { session, supabase } = await requireMember();
-  if (!supabase) return;
-  await supabase.from("recording_views").upsert({ user_id: session.user.id, recording_id: recordingId }, { onConflict: "user_id,recording_id", ignoreDuplicates: true });
+/** Remembers how far someone got through a recording (0 to 100). Past 80% it counts as watched, which earns replay badges. */
+export async function recordView(recordingId: string, pct: number): Promise<{ new: string[] }> {
+  if (!/^[0-9a-f-]{36}$/i.test(recordingId) || !Number.isFinite(pct)) return { new: [] };
+  const { supabase } = await requireMember();
+  if (!supabase) return { new: [] };
+  await supabase.rpc("record_view", { p_recording: recordingId, p_pct: Math.round(pct) });
+  if (pct < 80) return { new: [] };
+  const { data } = await supabase.rpc("badge_state");
+  return { new: Array.isArray(data?.new) ? (data.new as string[]) : [] };
 }
 
 /** "Don't ask me again for this call": the feedback popup will not come back for it. */

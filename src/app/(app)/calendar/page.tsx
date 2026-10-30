@@ -6,6 +6,7 @@ import { CalendarFeed } from "@/components/calendar/CalendarFeed";
 import { requireMember } from "@/lib/auth/guards";
 import { rsvpSummary } from "@/lib/calls/queries";
 import { CALL_COLUMNS, type Call } from "@/lib/calls/types";
+import type { Review } from "@/components/calendar/CallCard";
 import { CALL_ZONE, endsAt, nowMs, toZonedInput, zonedToUtc } from "@/lib/time";
 
 export const instant = false; // depends on who is signed in
@@ -38,6 +39,18 @@ export default async function CalendarPage(props: PageProps<"/calendar">) {
   const { data } = await supabase.from("calls").select(CALL_COLUMNS).gte("starts_at", new Date(first.getTime() - 86400_000).toISOString()).lt("starts_at", new Date(next.getTime() + 86400_000).toISOString()).order("starts_at");
   const calls = (data ?? []) as Call[];
   const summaries = await Promise.all(calls.map((c) => rsvpSummary(supabase, c.id, 50)));
+  /* for calls that are over: did this person attend live, is there a replay, and did they watch it */
+  const ids = calls.map((c) => c.id);
+  const [{ data: att }, { data: recs }] = await Promise.all([
+    supabase.from("call_attendance").select("call_id").in("call_id", ids),
+    supabase.from("recordings").select("id, call_id").in("call_id", ids).eq("published", true).order("recorded_at"),
+  ]);
+  const recIds = (recs ?? []).map((r) => r.id as string);
+  const { data: seen } = recIds.length ? await supabase.from("recording_views").select("recording_id, max_pct, completed_at").in("recording_id", recIds) : { data: [] };
+  const attended = new Set((att ?? []).map((a) => a.call_id as string));
+  const recordingOf = new Map<string, string>();
+  for (const r of recs ?? []) if (r.call_id && !recordingOf.has(r.call_id as string)) recordingOf.set(r.call_id as string, r.id as string);
+  const watchedIds = new Set((seen ?? []).filter((v) => v.completed_at || (v.max_pct ?? 0) >= 50).map((v) => v.recording_id as string));
   const byDay = new Map<string, { call: Call; summary: (typeof summaries)[number] }[]>();
   calls.forEach((c, i) => {
     const day = toZonedInput(new Date(c.starts_at)).slice(0, 10);
@@ -77,10 +90,12 @@ export default async function CalendarPage(props: PageProps<"/calendar">) {
                 <span className="cal-num">{d}</span>
                 {items.map(({ call, summary }) => {
                   const start = new Date(call.starts_at);
+                  const rid = recordingOf.get(call.id) ?? null;
+                  const review: Review = { attended: attended.has(call.id), mode: summary.mine, recordingId: rid, watched: rid ? watchedIds.has(rid) : false };
                   const end = endsAt(start, call.duration_minutes).getTime();
                   return (
                     <CallChip key={call.id} time={timeOf(start)} title={call.title} live={now >= start.getTime() && now < end} past={now >= end}>
-                      <CallCard call={call} summary={summary} now={now} />
+                      <CallCard call={call} summary={summary} now={now} review={review} />
                     </CallChip>
                   );
                 })}
