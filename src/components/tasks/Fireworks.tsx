@@ -12,7 +12,7 @@ export function Fireworks({ onClose }: { onClose: () => void }) {
   useEffect(() => { close.current = onClose; });
 
   useEffect(() => {
-    const t = window.setTimeout(() => close.current(), 3000);
+    const t = window.setTimeout(() => close.current(), 2500);
     const cv = canvas.current;
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!cv || calm) return () => window.clearTimeout(t);

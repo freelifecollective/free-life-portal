@@ -1,11 +1,12 @@
 "use server";
 
 import { requireMember } from "@/lib/auth/guards";
-import { complete, REPEATS, undo, type Area, type Repeat, type Task } from "@/lib/tasks/schedule";
+import { tagOf } from "@/lib/badges/defs";
+import { complete, REPEATS, split, undo, type Area, type Repeat, type Task } from "@/lib/tasks/schedule";
 import { getTz, listTasks, todayIn, validZone } from "@/lib/tasks/queries";
 
 export type TaskInput = { area: string; title: string; note: string; repeat: string; due_on: string };
-type Result = { ok: true; tasks: Task[] } | { ok: false; error: string; tasks?: Task[] };
+type Result = { ok: true; tasks: Task[]; badges?: string[] } | { ok: false; error: string; tasks?: Task[] };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -60,7 +61,15 @@ export async function completeTask(id: string): Promise<Result> {
   if (t.done_on === c.today) return fresh(c);
   const n = complete(t, c.today);
   const { error } = await c.supabase.from("tasks").update({ done_on: n.done_on, prev_due_on: n.prev_due_on, due_on: n.due_on }).eq("id", id);
-  return error ? FAIL() : fresh(c);
+  if (error) return FAIL();
+  /* for the streaks: what was done today, whether the whole list is now clear, and any badge that was just earned */
+  await c.supabase.from("task_completions").insert({ user_id: c.me, task_id: id, tag: tagOf(t.title), done_on: c.today });
+  const tasks = await listTasks(c.supabase);
+  const s = split(tasks, c.today);
+  if (s.todayList.length === 0 && s.doneToday.length > 0) await c.supabase.from("task_clear_days").upsert({ user_id: c.me, day: c.today }, { onConflict: "user_id,day", ignoreDuplicates: true });
+  const { data: st } = await c.supabase.rpc("badge_state");
+  const badges = Array.isArray(st?.new) ? (st.new as string[]) : [];
+  return { ok: true, tasks, badges };
 }
 
 export async function undoTask(id: string): Promise<Result> {
@@ -70,7 +79,10 @@ export async function undoTask(id: string): Promise<Result> {
   if (!data) return FAIL("We could not find that task.");
   const n = undo(data as Task);
   const { error } = await c.supabase.from("tasks").update({ done_on: null, prev_due_on: null, due_on: n.due_on }).eq("id", id);
-  return error ? FAIL() : fresh(c);
+  if (error) return FAIL();
+  await c.supabase.from("task_completions").delete().eq("task_id", id).eq("done_on", c.today);
+  await c.supabase.from("task_clear_days").delete().eq("day", c.today);
+  return fresh(c);
 }
 
 export async function deleteTask(id: string): Promise<Result> {

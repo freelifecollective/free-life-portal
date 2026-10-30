@@ -19,20 +19,21 @@ const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead" },
   { label: "Calendar", href: "/calendar", min: "lead" },
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
-  { label: "Financing Options", href: "/financing", min: "lead" },
+  { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead" },
-  { label: "Verbiage + Objections", href: "/responses", min: "member" },
+  { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
   { label: "Classroom", min: "lead" },
   { label: "Calls", href: "/calls", min: "lead" },
   { label: "Documents", href: "/documents", min: "lead" },
   { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
-  { label: "Earnings Estimator", href: "/calculator", min: "member" },
+  { label: "Earnings Estimator", href: "/calculator", min: "member", group: "Placing Sales" },
   { label: "Graphic maker", min: "member" },
   { label: "Tasks", href: "/tasks", min: "member" },
   { label: "Water Share Map", href: "/water-map", min: "member" },
-  { label: "Call Closers for Hire", min: "member" },
+  { label: "Call Closers for Hire", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", min: "member", group: "Onboarding" },
+  { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
   { label: "Admin only", min: "admin", admin: true, heading: true, group: "Admin only" },
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Admin only" },
   { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Admin only" },
@@ -44,15 +45,16 @@ const NAV: NavItem[] = [
   { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Admin only" },
 ];
 
-/** Home first, then the "Onboarding" section, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
+/** Home first, then the "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
 function ordered(items: NavItem[]): NavItem[] {
   const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
   const home = items.filter((n) => n.label === "Home");
   const onboarding = items.filter((n) => n.group === "Onboarding");
+  const sales = items.filter((n) => n.group === "Placing Sales");
   const rest = items.filter((n) => n.label !== "Home" && !n.admin && !n.group).sort(az);
   const admin = items.filter((n) => n.admin);
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
-  return [...home, ...sections(onboarding), ...rest, ...sections(admin)];
+  return [...home, ...sections(onboarding), ...sections(sales), ...rest, ...sections(admin)];
 }
 
 export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {

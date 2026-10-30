@@ -7,6 +7,9 @@ import { LiveDot } from "./LiveBadge";
 
 export type NavEntry = { label: string; href?: string; heading?: boolean; group?: string; badge?: number; live?: boolean };
 
+/** Sections that are simply labelled and always open (the others, like "Admin only", fold away). */
+const PLAIN = new Set(["Onboarding", "Placing Sales"]);
+
 function Item({ n, path }: { n: NavEntry; path: string }) {
   if (!n.href) return <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}><span>{n.label}<span className="soon">Soon</span></span></li>;
   const active = n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/");
@@ -19,19 +22,19 @@ function Item({ n, path }: { n: NavEntry; path: string }) {
 
 /**
  * The left-hand menu. The page you are on is highlighted; pages that do not exist yet say "Soon".
- * "Onboarding" is a plain labelled section that is always open. "Admin only" folds away until you open it.
+ * "Onboarding" and "Placing Sales" are plain labelled sections that are always open. "Admin only" folds away until you open it.
  */
 export function NavLinks({ items }: { items: NavEntry[] }) {
   const path = usePathname();
   const [manual, setManual] = useState<Record<string, boolean>>({});
   const on = (n: NavEntry) => !!n.href && (n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/"));
-  const isOpen = (label: string) => label === "Onboarding" || (manual[label] ?? items.some((g) => g.group === label && !g.heading && on(g)));
+  const isOpen = (label: string) => PLAIN.has(label) || (manual[label] ?? items.some((g) => g.group === label && !g.heading && on(g)));
   const waiting = (label: string) => items.filter((g) => g.group === label && !g.heading).reduce((n, g) => n + (g.badge ?? 0), 0);
 
   return (
     <ul>
       {items.map((n, idx) => {
-        if (n.heading && n.label === "Onboarding") {
+        if (n.heading && PLAIN.has(n.label)) {
           return <li key={n.label} className="nav-group" data-nav={n.label}><span className="nav-toggle nav-static">{n.label}</span></li>;
         }
         if (n.heading) {
@@ -50,9 +53,9 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
           );
         }
         if (n.group && !isOpen(n.group)) return null;
-        /* a line closes the Onboarding section, matching the one under Home */
-        const closesOnboarding = !n.group && !n.heading && items[idx - 1]?.group === "Onboarding";
-        return closesOnboarding ? <Fragment key={n.label}><li className="nav-rule" aria-hidden="true" /><Item n={n} path={path} /></Fragment> : <Item key={n.label} n={n} path={path} />;
+        /* a line closes a plain section, matching the one under Home */
+        const closesSection = !n.group && !n.heading && PLAIN.has(items[idx - 1]?.group ?? "");
+        return closesSection ? <Fragment key={n.label}><li className="nav-rule" aria-hidden="true" /><Item n={n} path={path} /></Fragment> : <Item key={n.label} n={n} path={path} />;
       })}
     </ul>
   );
