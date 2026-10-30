@@ -46,13 +46,11 @@ export default async function HomePage(props: PageProps<"/">) {
   /* calls booked with leads, coming up, and who is taking each one */
   const tz = supabase ? await getTz(supabase) : "America/New_York";
   let booked: BookedCall[] = [];
-  let closers: Awaited<ReturnType<typeof listAffiliates>> = [];
   if (supabase && affiliate) {
     const [{ data: rows }, list] = await Promise.all([
       supabase.from("booked_calls").select("id, lead_name, starts_at, closer_id").eq("member_id", session.user.id).gte("starts_at", new Date(now - 3600_000).toISOString()).order("starts_at").limit(10),
       listAffiliates(supabase),
     ]);
-    closers = list;
     booked = (rows ?? []).map((r) => {
       const c = r.closer_id ? list.find((x) => x.id === r.closer_id) : null;
       return { id: r.id as string, lead_name: r.lead_name as string, when: formatInZone(new Date(r.starts_at as string), tz), closer: c ? { name: c.name, photo_url: c.photo_url } : null };
@@ -88,7 +86,7 @@ export default async function HomePage(props: PageProps<"/">) {
                   </div>
                 </section>
               ) : null}
-              <BookedCalls calls={booked} closers={closers.map((c) => ({ id: c.id, name: c.name }))} tz={tz} />
+              <BookedCalls calls={booked} />
             </div>
           ) : null}
         </div>

@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Avatar } from "@/components/Avatar";
+import { DmPicture } from "@/components/messages/DmPicture";
+import { EMOJI } from "@/lib/chats/emoji";
 import { createClient } from "@/lib/supabase/client";
 
 type P = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null };
-type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null };
+type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url: string | null };
 type Convo = { other: P; last: Dm; unread: number };
 type Win = { id: string; min: boolean };
 
-const COLS = "id, sender_id, recipient_id, body, created_at, read_at";
+const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url";
 const CARD = "id, first_name, last_name, username, avatar_url";
 const MAX_WINDOWS = 3;
 const name = (p: Pick<P, "first_name" | "last_name">) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "Member";
@@ -139,7 +141,7 @@ export function MessageDock({ me, unread }: { me: string; unread: number }) {
                   <li key={c.other.id} className={c.unread ? "unread" : ""}>
                     <button type="button" onClick={() => openChat(c.other)}>
                       <Avatar url={c.other.avatar_url} initials={initials(c.other)} size={44} />
-                      <span className="dock-who"><strong>{name(c.other)}</strong><span>{c.last.sender_id === me ? "You: " : ""}{c.last.body}</span></span>
+                      <span className="dock-who"><strong>{name(c.other)}</strong><span>{c.last.sender_id === me ? "You: " : ""}{c.last.body || "📷 Picture"}</span></span>
                       <span className="dock-meta">{when(c.last.created_at)}{c.unread ? <i aria-label={`${c.unread} unread`} /> : null}</span>
                     </button>
                   </li>
@@ -170,6 +172,12 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const end = useRef<HTMLDivElement>(null);
+  const file = useRef<HTMLInputElement>(null);
+  const field = useRef<HTMLTextAreaElement>(null);
+  const [tray, setTray] = useState<"emoji" | "gif" | null>(null);
+  const [asking, setAsking] = useState<string | null>(null);
+  const [gifQ, setGifQ] = useState("");
+  const [gifs, setGifs] = useState<{ enabled: boolean; results: { id: string; url: string; preview: string }[] } | null>(null);
 
   const fetchThread = useCallback(async () => {
     const { data } = await supabase.from("direct_messages").select(COLS)
@@ -184,29 +192,72 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
   useEffect(() => { const t = window.setTimeout(() => void fetchThread(), 0); return () => window.clearTimeout(t); }, [fetchThread, tick]);
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [msgs.length, min]);
 
-  async function send() {
-    const body = text.trim();
-    if (!body || sending) return;
-    setSending(true); setError("");
-    const temp: Dm = { id: "tmp-" + Date.now(), sender_id: me, recipient_id: other.id, body, created_at: new Date().toISOString(), read_at: null };
-    setMsgs((cur) => [...cur, temp]); setText("");
-    const { error: e } = await supabase.from("direct_messages").insert({ sender_id: me, recipient_id: other.id, body });
+  async function send(image?: string) {
+    const body = image ? "" : text.trim();
+    if ((!body && !image) || sending) return;
+    setSending(true); setError(""); setTray(null);
+    const temp: Dm = { id: "tmp-" + crypto.randomUUID(), sender_id: me, recipient_id: other.id, body, created_at: new Date().toISOString(), read_at: null, image_url: image ?? null };
+    setMsgs((cur) => [...cur, temp]); if (!image) setText("");
+    const { error: e } = await supabase.from("direct_messages").insert({ sender_id: me, recipient_id: other.id, body, image_url: image ?? null });
     setSending(false);
-    if (e) { setMsgs((cur) => cur.filter((m) => m.id !== temp.id)); setText(body); setError(e.code === "42501" ? "You cannot message this person." : "We could not send that. Please try again."); }
+    if (e) { setMsgs((cur) => cur.filter((m) => m.id !== temp.id)); if (!image) setText(body); setError(e.code === "42501" ? "You cannot message this person." : "We could not send that. Please try again."); }
     else { await fetchThread(); onCounts(); }
+  }
+
+  async function sendPicture(f: File | undefined) {
+    if (!f) return;
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(f.type)) { setError("Please choose a JPG, PNG, WebP or GIF picture."); return; }
+    if (f.size > 5 * 1024 * 1024) { setError("That picture is over 5 MB. Please choose a smaller one."); return; }
+    setError(""); setSending(true);
+    const ext = f.type === "image/jpeg" ? "jpg" : f.type.split("/")[1];
+    const path = `${me}/${crypto.randomUUID()}.${ext}`;
+    const { error: up } = await supabase.storage.from("dm-pictures").upload(path, f, { contentType: f.type });
+    setSending(false);
+    if (up) { setError("We could not upload that picture. Please try again."); return; }
+    await send(supabase.storage.from("dm-pictures").getPublicUrl(path).data.publicUrl);
+  }
+
+  async function remove(m: Dm) {
+    setAsking(null);
+    setMsgs((cur) => cur.filter((x) => x.id !== m.id));
+    const { error: e } = await supabase.from("direct_messages").delete().eq("id", m.id).eq("sender_id", me);
+    if (e) { setError("We could not remove that message."); await fetchThread(); return; }
+    const mark = "/dm-pictures/";
+    if (m.image_url?.includes(mark)) void supabase.storage.from("dm-pictures").remove([m.image_url.split(mark)[1]]);
+    onCounts();
+  }
+
+  function addEmoji(em: string) {
+    const el = field.current;
+    const at = el?.selectionStart ?? text.length;
+    const end2 = el?.selectionEnd ?? text.length;
+    setText((t) => (t.slice(0, at) + em + t.slice(end2)).slice(0, 4000));
+    window.setTimeout(() => { el?.focus(); el?.setSelectionRange(at + em.length, at + em.length); }, 0);
+  }
+
+  async function searchGifs(q: string) {
+    try {
+      const res = await fetch(`/api/gifs?q=${encodeURIComponent(q)}`);
+      setGifs((await res.json()) as { enabled: boolean; results: { id: string; url: string; preview: string }[] });
+    } catch { setGifs({ enabled: true, results: [] }); }
+  }
+  function openGifs() {
+    const next = tray === "gif" ? null : "gif";
+    setTray(next);
+    if (next && !gifs) void searchGifs("");
   }
 
   return (
     <section className={"dock-win" + (min ? " min" : "")} aria-label={`Chat with ${name(other)}`}>
       <header className="dock-win-head">
         <button type="button" className="dock-win-title" onClick={onMin} aria-expanded={!min}>
-          <Avatar url={other.avatar_url} initials={initials(other)} size={32} />
-          <strong>{name(other)}</strong>
+          <Avatar url={other.avatar_url} initials={initials(other)} size={40} />
+          <span className="dock-win-who"><strong>{name(other)}</strong>{other.username ? <small>@{other.username}</small> : null}</span>
         </button>
         <span className="dock-win-tools">
-          {other.username ? <Link href={`/messages/${other.username}`} className="dock-x" aria-label="Open in the Messages page" title="Open in the Messages page">↗</Link> : null}
-          <button type="button" className="dock-x" aria-label={min ? "Open chat" : "Minimise chat"} onClick={onMin}>{min ? "▴" : "–"}</button>
-          <button type="button" className="dock-x" aria-label="Close chat" onClick={onClose}>×</button>
+          {other.username ? <Link href={`/messages/${other.username}`} className="dock-x" aria-label="Open in the Messages page" title="Open in the Messages page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg></Link> : null}
+          <button type="button" className="dock-x" aria-label={min ? "Open chat" : "Minimise chat"} onClick={onMin}>{min ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="m6 15 6-6 6 6" /></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="M6 12h12" /></svg>}</button>
+          <button type="button" className="dock-x" aria-label="Close chat" onClick={onClose}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
         </span>
       </header>
       {!min ? (
@@ -219,17 +270,57 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
               return (
                 <div key={m.id} className="dock-row">
                   {gap ? <time className="dock-time" dateTime={m.created_at}>{new Date(m.created_at).toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" })}</time> : null}
-                  <p className={"dock-msg " + (mine ? "mine" : "theirs")}>{m.body}</p>
+                  <div className={"dock-line " + (mine ? "mine" : "theirs")}>
+                    {mine && !m.id.startsWith("tmp-") ? (
+                      asking === m.id ? (
+                        <span className="dock-ask">Remove? <button type="button" onClick={() => void remove(m)}>Yes</button><button type="button" onClick={() => setAsking(null)}>No</button></span>
+                      ) : (
+                        <button type="button" className="dock-del" aria-label="Remove this message" title="Remove this message" onClick={() => setAsking(m.id)}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>
+                        </button>
+                      )
+                    ) : null}
+                    <div className={"dock-msg " + (mine ? "mine" : "theirs") + (m.image_url ? " pic" : "")}>
+                      {m.image_url ? <DmPicture src={m.image_url} onLoad={() => end.current?.scrollIntoView({ block: "end" })} /> : null}
+                      {m.body ? <p>{m.body}</p> : null}
+                    </div>
+                  </div>
                 </div>
               );
             })}
             <div ref={end} />
           </div>
           {error ? <p className="err" role="alert" style={{ margin: "0 12px 4px" }}>{error}</p> : null}
+          {tray === "emoji" ? (
+            <div className="dock-tray emoji" role="group" aria-label="Emoji">
+              {EMOJI.map((em) => <button key={em} type="button" onClick={() => addEmoji(em)}>{em}</button>)}
+            </div>
+          ) : null}
+          {tray === "gif" ? (
+            <div className="dock-tray gif" role="group" aria-label="GIFs">
+              <input type="search" placeholder="Search GIFs" value={gifQ} aria-label="Search GIFs" onChange={(e) => { setGifQ(e.target.value); void searchGifs(e.target.value); }} />
+              {gifs && !gifs.enabled ? <p className="dock-empty">GIF search is not switched on yet.</p> : null}
+              <div className="dock-gifs">
+                {(gifs?.results ?? []).map((g) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <button key={g.id} type="button" onClick={() => void send(g.url)}><img src={g.preview} alt="" loading="lazy" /></button>
+                ))}
+              </div>
+              <small className="when">Powered by GIPHY</small>
+            </div>
+          ) : null}
           <form className="dock-compose" onSubmit={(e) => { e.preventDefault(); void send(); }}>
-            <textarea rows={1} value={text} maxLength={4000} placeholder="Write a message" aria-label={`Message ${name(other)}`} autoFocus
+            <input ref={file} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(e) => { void sendPicture(e.target.files?.[0]); e.target.value = ""; }} />
+            <button type="button" className="dock-tool" aria-label="Send a picture" title="Send a picture" disabled={sending} onClick={() => file.current?.click()}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="1.6" /><path d="m21 16-5-5-9 9" /></svg>
+            </button>
+            <button type="button" className={"dock-tool gifbtn" + (tray === "gif" ? " on" : "")} aria-label="Send a GIF" title="Send a GIF" aria-expanded={tray === "gif"} onClick={openGifs}>GIF</button>
+            <button type="button" className={"dock-tool" + (tray === "emoji" ? " on" : "")} aria-label="Emoji" title="Emoji" aria-expanded={tray === "emoji"} onClick={() => setTray(tray === "emoji" ? null : "emoji")}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14a4.2 4.2 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>
+            </button>
+            <textarea ref={field} rows={1} value={text} maxLength={4000} placeholder="Aa" aria-label={`Message ${name(other)}`} autoFocus
               onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }} />
-            <button type="submit" className="dock-send" disabled={!text.trim() || sending} aria-label="Send">➤</button>
+            <button type="submit" className="dock-send" disabled={!text.trim() || sending} aria-label="Send"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12 2-12 2z" /></svg></button>
           </form>
         </>
       ) : null}

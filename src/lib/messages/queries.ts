@@ -1,11 +1,11 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null };
+export type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url?: string | null };
 export type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; is_admin: boolean };
 export type Conversation = { other: Person; last: Dm; unread: number; preview: Dm[] };
 
-const COLS = "id, sender_id, recipient_id, body, created_at, read_at";
+const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url";
 export const fullName = (p: Pick<Person, "first_name" | "last_name">) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "Member";
 
 export async function personByUsername(supabase: SupabaseClient, username: string): Promise<Person | null> {
