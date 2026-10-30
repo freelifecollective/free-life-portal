@@ -880,7 +880,6 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .login-form input[type="email"], .login-form input[name="code"] { height: 52px; border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; font: inherit; font-size: 16px; background: #fff; color: var(--ink); text-align: center; }
 .login-form .btn { height: 52px; width: 100%; }
 .login-note { max-width: 420px; margin: 10px 0 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
-.nav li.nav-rule { height: 0; margin: 10px 0 8px; border-top: 1px solid var(--line); }
 /* the Offer your services form */
 .offer-pick { padding-left: 0; padding-right: 0; }
 .offer-pick legend { padding: 0; }
@@ -996,3 +995,11 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .badge-strip li:hover .medal { transform: translateY(-2px) scale(1.06); }
 .badge-more { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 700; font-size: 13px; text-decoration: none; }
 .streak-line { margin: 2px 0 0; display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 13px; font-weight: 600; color: var(--muted); }
+
+/* menu section headings and dividers, in the style of the Chats sections */
+.nav .nav-group .nav-toggle { margin-top: 0; padding: 4px 14px 6px 6px; border-top: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink); }
+.nav .nav-group .nav-toggle:hover { color: var(--ink); }
+.nav .nav-static, .nav .nav-static:hover { border-top: 0; color: var(--ink); cursor: default; }
+.nav li.nav-divider { display: flex; align-items: center; gap: 8px; padding: 10px 6px; color: var(--accent); }
+.nav li.nav-divider span { flex: 1; height: 1px; padding: 0; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.nav li.nav-divider i { font-style: normal; font-size: 12px; line-height: 1; color: var(--accent); display: block; padding: 0; }
