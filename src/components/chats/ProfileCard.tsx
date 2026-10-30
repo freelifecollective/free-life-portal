@@ -25,7 +25,16 @@ function handleOf(v: string): string { return v.startsWith("https://") ? "View p
 
 type Listing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number };
 type Closer = { calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null };
-type View = "profile" | "services" | "closer";
+type View = "profile" | "services" | "closer" | "reviews";
+type Stats = { calls_counted: number; members_booked: number; review_count: number; avg_rating: number | null; viewer_booked: boolean; my_rating: number | null; my_review: string | null };
+
+/** "40+" plus 3 new calls becomes "43+"; a figure that is not a number is shown as typed with the new calls noted. */
+function totalCalls(base: string | null, counted: number): string | null {
+  const m = (base ?? "").match(/^\s*(\d[\d,]*)(.*)$/);
+  if (m) return (Number(m[1].replace(/,/g, "")) + counted).toLocaleString("en-US") + m[2];
+  if (base && base.trim()) return counted ? `${base} (+${counted})` : base;
+  return counted ? String(counted) : null;
+}
 
 /**
  * A profile bubble laid out like a contact card: picture and name on top, a row of buttons (Message, services, call closer),
@@ -71,7 +80,7 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
   return (
     <div className="pc">
       <div className="pc-bar">
-        <button type="button" className={"pc-round" + (view === "profile" && !onBack ? " pc-ghost" : "")} onClick={view !== "profile" ? () => setView("profile") : onBack} aria-label={view !== "profile" ? "Back to the profile" : "Back to the list"} tabIndex={view === "profile" && !onBack ? -1 : 0}>
+        <button type="button" className={"pc-round" + (view === "profile" && !onBack ? " pc-ghost" : "")} onClick={view === "reviews" ? () => setView("closer") : view !== "profile" ? () => setView("profile") : onBack} aria-label={view === "reviews" ? "Back to the call closer details" : view !== "profile" ? "Back to the profile" : "Back to the list"} tabIndex={view === "profile" && !onBack ? -1 : 0}>
           <svg width="20" height="20" viewBox="0 0 24 24" {...svg}><path d="m15 18-6-6 6-6" /></svg>
         </button>
         <button type="button" className="pc-round" onClick={onClose} aria-label="Close"><svg width="20" height="20" viewBox="0 0 24 24" {...svg}><path d="m6 6 12 12M18 6 6 18" /></svg></button>
@@ -84,7 +93,7 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
           </button>
         ) : <Avatar url={null} initials={initialsOf(p)} size={120} />}
         <h2 className="pc-name">{fullName(p)}</h2>
-        <p className="pc-sub">{guest ? "Guest Speaker" : view === "services" ? "Offers services" : view === "closer" ? "Call closer" : p.is_admin ? "Admin" : "FLC member"}</p>
+        <p className="pc-sub">{guest ? "Guest Speaker" : view === "services" ? "Offers services" : view === "closer" ? "Call closer" : view === "reviews" ? "Call closer reviews" : p.is_admin ? "Admin" : "FLC member"}</p>
       </div>
 
       {view === "profile" ? (
@@ -159,7 +168,8 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
       ) : null}
 
       {view === "services" ? <ServicesView id={p.id} /> : null}
-      {view === "closer" ? <CloserView id={p.id} admin={admin} /> : null}
+      {view === "closer" ? <CloserView id={p.id} admin={admin} onReviews={() => setView("reviews")} /> : null}
+      {view === "reviews" ? <ReviewsView id={p.id} /> : null}
     </div>
   );
 }
@@ -186,18 +196,25 @@ function ServicesView({ id }: { id: string }) {
   );
 }
 
-function CloserView({ id, admin }: { id: string; admin: boolean }) {
+function CloserView({ id, admin, onReviews }: { id: string; admin: boolean; onReviews: () => void }) {
   const [d, setD] = useState<Closer | null | undefined>(undefined);
   const [edit, setEdit] = useState(false);
   const [vals, setVals] = useState({ calls: "", since: "", rate: "", perCall: "", perSale: "" });
   const [msg, setMsg] = useState("");
+  const [stats, setStats] = useState<Stats | null>(null);
 
   const load = useCallback(() => createClient().from("call_closer_details").select("calls_taken, closer_since, close_rate, price_per_call_cents, price_per_sale").eq("member_id", id).maybeSingle()
     .then(({ data }) => setD((data as Closer | null) ?? null)), [id]);
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let live = true;
+    void createClient().rpc("closer_stats", { p_id: id }).then(({ data }) => { if (live) setStats(((data as Stats[] | null) ?? [])[0] ?? null); });
+    return () => { live = false; };
+  }, [id]);
+  const shownCalls = totalCalls(d?.calls_taken ?? null, stats?.calls_counted ?? 0);
 
   function startEdit() {
-    setVals({ calls: d?.calls_taken ?? "", since: d?.closer_since ? sinceText(d.closer_since) : "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
+    setVals({ calls: shownCalls ?? "", since: d?.closer_since ? sinceText(d.closer_since) : "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
       perCall: d?.price_per_call_cents == null ? "" : String(d.price_per_call_cents / 100), perSale: d?.price_per_sale ?? "" });
     setMsg(""); setEdit(true);
   }
@@ -209,7 +226,9 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
     if (bad || (vals.since.trim() && !since)) { setMsg(!bad ? "Type the start as a month and year, like January 2024." : "Please type numbers only in the number boxes."); return; }
     const money2 = (v: string) => { const n = num(v); return n === null ? null : Math.round(n * 100); };
     const rate = num(vals.rate);
-    const row = { member_id: id, calls_taken: vals.calls.trim().slice(0, 40) || null, closer_since: since, close_rate: rate === null ? null : Math.min(100, Math.max(0, rate)),
+    /* if the calls figure was changed by hand, it becomes the new starting point and the automatic count starts again from now */
+    const callsChanged = vals.calls.trim() !== (shownCalls ?? "");
+    const row = { member_id: id, ...(callsChanged ? { calls_taken: vals.calls.trim().slice(0, 40) || null, counted_from: new Date().toISOString() } : {}), closer_since: since, close_rate: rate === null ? null : Math.min(100, Math.max(0, rate)),
       price_per_call_cents: money2(vals.perCall), price_per_sale: vals.perSale.trim().slice(0, 400) || null, updated_at: new Date().toISOString() };
     const { error } = await createClient().from("call_closer_details").upsert(row, { onConflict: "member_id" });
     if (error) { setMsg("We could not save that. Check the numbers and try again."); return; }
@@ -220,7 +239,7 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
   if (edit) {
     return (
       <form className="pc-card pc-pad pc-form" onSubmit={(e) => void save(e)}>
-        <label>Calls taken<input type="text" autoComplete="off" maxLength={40} placeholder="e.g. 50+" value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
+        <label>Calls taken (counts up by itself after each call)<input type="text" autoComplete="off" maxLength={40} placeholder="e.g. 50+" value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
         <label>Taking calls since<input type="text" autoComplete="off" placeholder="e.g. January 2024" value={vals.since} onChange={(e) => setVals({ ...vals, since: e.target.value })} /></label>
         <label>Close rate (%)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 85" value={vals.rate} onChange={(e) => setVals({ ...vals, rate: e.target.value })} /></label>
         <label>Charge per call (USD)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 50" value={vals.perCall} onChange={(e) => setVals({ ...vals, perCall: e.target.value })} /></label>
@@ -234,12 +253,19 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
   return (
     <>
       <div className="pc-card">
-        <div className="pc-row pc-plain"><div><small>calls taken</small><span>{d?.calls_taken || "Not set yet"}</span></div></div>
+        <div className="pc-row pc-plain"><div><small>calls taken</small><span>{shownCalls || "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>taking calls for</small><span>{since ?? "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>close rate</small><span>{d?.close_rate != null ? `${d.close_rate}%` : "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>charges per call (USD)</small><span>{money(d?.price_per_call_cents ?? null)}</span></div></div>
         <div className="pc-row pc-plain"><div><small>charges per product sale (USD)</small><span className="pc-multiline">{d?.price_per_sale || "Not set"}</span></div></div>
       </div>
+      <div className="pc-card">
+        <div className="pc-row pc-plain"><div><small>FLC members who have booked them</small><span>{stats ? stats.members_booked.toLocaleString("en-US") : "…"}</span></div></div>
+      </div>
+      <button type="button" className="pc-tile pc-reviews-btn" onClick={onReviews}>
+        <span className="pc-stars" aria-hidden="true">{"★".repeat(Math.round(stats?.avg_rating ?? 0)).padEnd(5, "☆")}</span>
+        <span>Reviews{stats ? ` (${stats.review_count})` : ""}{stats?.avg_rating ? ` · ${stats.avg_rating} out of 5` : ""}</span>
+      </button>
       {admin ? <button type="button" className="btn small pc-edit" onClick={startEdit}>Edit these details</button> : null}
     </>
   );
@@ -273,4 +299,90 @@ function lengthSince(iso: string): string {
   if (months < 1) return "Less than a month";
   const yrs = Math.floor(months / 12), mo = months % 12;
   return [yrs ? `${yrs} ${yrs === 1 ? "year" : "years"}` : "", mo ? `${mo} ${mo === 1 ? "month" : "months"}` : ""].filter(Boolean).join(", ");
+}
+
+type Review = { id: string; reviewer_id: string; rating: number; review: string | null; created_at: string };
+type Reviewer = { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null };
+
+function ReviewsView({ id }: { id: string }) {
+  const [list, setList] = useState<Review[] | null>(null);
+  const [people, setPeople] = useState<Record<string, Reviewer>>({});
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [rating, setRating] = useState(0);
+  const [text, setText] = useState("");
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    const s = createClient();
+    const [{ data: rows }, { data: st }] = await Promise.all([
+      s.from("closer_reviews").select("id, reviewer_id, rating, review, created_at").eq("closer_id", id).order("created_at", { ascending: false }).limit(50),
+      s.rpc("closer_stats", { p_id: id }),
+    ]);
+    const reviews = (rows ?? []) as Review[];
+    const ids = [...new Set(reviews.map((r) => r.reviewer_id))];
+    const { data: cards } = ids.length ? await s.from("profile_cards").select("id, first_name, last_name, avatar_url").in("id", ids) : { data: [] };
+    setPeople(Object.fromEntries(((cards ?? []) as Reviewer[]).map((c) => [c.id, c])));
+    const mine = ((st as Stats[] | null) ?? [])[0] ?? null;
+    setStats(mine);
+    setRating((cur) => cur || mine?.my_rating || 0);
+    setText((cur) => cur || mine?.my_review || "");
+    setList(reviews);
+  }, [id]);
+  useEffect(() => { const t = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(t); }, [load]);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!rating) { setMsg("Choose a star rating first."); return; }
+    setBusy(true); setMsg("");
+    const s = createClient();
+    const { data: u } = await s.auth.getUser();
+    const { error } = await s.from("closer_reviews").upsert({ closer_id: id, reviewer_id: u.user?.id, rating, review: text.trim().slice(0, 1000) || null, updated_at: new Date().toISOString() }, { onConflict: "closer_id,reviewer_id" });
+    setBusy(false);
+    if (error) { setMsg("We could not save your review. Please try again."); return; }
+    await load();
+  }
+  async function removeMine() {
+    const s = createClient();
+    const { data: u } = await s.auth.getUser();
+    await s.from("closer_reviews").delete().eq("closer_id", id).eq("reviewer_id", u.user?.id ?? "");
+    setRating(0); setText(""); await load();
+  }
+
+  if (!list) return <p className="pc-empty">Loading…</p>;
+  return (
+    <>
+      <div className="pc-card pc-pad">
+        <p className="pc-headline">{stats?.avg_rating ? `★ ${stats.avg_rating} out of 5` : "No reviews yet"}{stats?.review_count ? <span className="pc-label"> · {stats.review_count} {stats.review_count === 1 ? "review" : "reviews"}</span> : null}</p>
+        {list.length === 0 ? <p className="pc-label" style={{ margin: 0 }}>Reviews from FLC members who booked them will show here.</p> : (
+          <ul className="pc-review-list">
+            {list.map((r) => {
+              const who = people[r.reviewer_id];
+              return (
+                <li key={r.id}>
+                  <div className="pc-review-top"><strong>{who ? fullName(who) : "FLC member"}</strong><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
+                  {r.review ? <p className="pc-about">{r.review}</p> : null}
+                  <small className="pc-label">{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</small>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+      {stats?.viewer_booked ? (
+        <form className="pc-card pc-pad pc-form" onSubmit={(e) => void save(e)}>
+          <strong>{stats.my_rating ? "Your review" : "Leave a review"}</strong>
+          <div className="pc-star-pick" role="radiogroup" aria-label="Your rating">
+            {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} out of 5`} className={n <= rating ? "on" : ""} onClick={() => setRating(n)}>★</button>)}
+          </div>
+          <textarea rows={3} maxLength={1000} placeholder="How was your call? (optional)" value={text} onChange={(e) => setText(e.target.value)} />
+          {msg ? <p className="err" role="alert">{msg}</p> : null}
+          <div className="dlg-actions">
+            {stats.my_rating ? <button type="button" className="linkbtn" onClick={() => void removeMine()}>Remove my review</button> : null}
+            <button type="submit" className="btn small primary" disabled={busy}>{busy ? "Saving…" : "Save review"}</button>
+          </div>
+        </form>
+      ) : <p className="pc-empty">Only FLC members who booked a call with them can leave a review.</p>}
+    </>
+  );
 }

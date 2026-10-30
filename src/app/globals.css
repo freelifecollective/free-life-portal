@@ -1314,6 +1314,18 @@ a.pc-row:hover { background: var(--tint); }
 .pc-multiline { white-space: pre-line; }
 .pc-form textarea { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; color: var(--ink); background: #fff; resize: vertical; width: 100%; }
 
+/* call closer reviews */
+.pc-reviews-btn { flex-direction: row; justify-content: center; gap: 10px; padding: 14px 16px; font-size: 15px; }
+.pc-stars { color: #c28a1e; letter-spacing: 2px; font-size: 16px; }
+.pc-review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; width: 100%; }
+.pc-review-list li { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.pc-review-list li:first-child { border-top: 0; padding-top: 0; }
+.pc-review-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.pc-star-pick { display: flex; gap: 2px; }
+.pc-star-pick button { all: unset; cursor: pointer; font-size: 30px; line-height: 1; color: #d6cfc6; padding: 2px 4px; }
+.pc-star-pick button.on { color: #c28a1e; }
+.pc-star-pick button:focus-visible { outline: 2px solid var(--accent-deep); border-radius: 6px; }
+
 /* the next-call card is only as wide as its contents, so the space on its left and right is equal (same on Home and Calls) */
 .home-row > .home-call { width: fit-content; max-width: 100%; }
 .home-row > .home-call .hc-people, .home-row > .home-call .hc-actions { width: 100%; }
