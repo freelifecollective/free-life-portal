@@ -7,9 +7,10 @@ import { formatInZone } from "@/lib/time";
 import { LocalTime } from "@/components/calendar/LocalTime";
 
 export const metadata = { title: "Register for the call" };
+import { callLength } from "@/lib/calls/length";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type PublicCall = { id: string; title: string; description: string | null; starts_at: string; duration_minutes: number };
+type PublicCall = { id: string; title: string; description: string | null; starts_at: string; duration_minutes: number; length_label?: string | null };
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -34,7 +35,7 @@ async function Content({ params }: { params: PageProps<"/register/[callId]">["pa
   }
   return (
     <Shell>
-      <PageHeading lede={`${formatInZone(new Date(call.starts_at))} · ${call.duration_minutes} minutes`}>{call.title}</PageHeading>
+      <PageHeading lede={`${formatInZone(new Date(call.starts_at))} · ${callLength(call)}`}>{call.title}</PageHeading>
       <p style={{ marginTop: -16 }}><LocalTime iso={call.starts_at} /></p>
       {call.description ? <p className="call-desc" style={{ marginBottom: 28 }}>{call.description}</p> : null}
       <RegisterForm callId={call.id} />

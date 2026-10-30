@@ -2,16 +2,17 @@
 
 import { useActionState, useState } from "react";
 import type { CallFormState } from "@/app/(app)/admin/calls/actions";
-import { SpeakersField, type SpeakerValue } from "./SpeakersField";
+import { LENGTHS } from "@/lib/calls/length";
+import { SpeakersField, type Affiliate, type SpeakerValue } from "./SpeakersField";
 import { AUDIENCE_LABEL, KIND_LABEL, defaultAudience, type Audience, type CallKind } from "@/lib/calls/types";
 
 export type CallFormValues = {
-  title: string; kind: CallKind; audience: Audience; starts: string; duration: number; description: string; join_url: string; pinned: boolean; speakers: SpeakerValue[];
+  title: string; kind: CallKind; audience: Audience; starts: string; length: string; description: string; join_url: string; pinned: boolean; speakers: SpeakerValue[];
 };
-export const EMPTY_CALL: CallFormValues = { title: "", kind: "community", audience: "leads_open", starts: "", duration: 60, description: "", join_url: "", pinned: false, speakers: [] };
+export const EMPTY_CALL: CallFormValues = { title: "", kind: "community", audience: "leads_open", starts: "", length: "1h", description: "", join_url: "", pinned: false, speakers: [] };
 
-export function CallForm({ action, initial = EMPTY_CALL, submitLabel }: {
-  action: (prev: CallFormState, form: FormData) => Promise<CallFormState>; initial?: CallFormValues; submitLabel: string;
+export function CallForm({ action, initial = EMPTY_CALL, submitLabel, affiliates = [] }: {
+  action: (prev: CallFormState, form: FormData) => Promise<CallFormState>; initial?: CallFormValues; submitLabel: string; affiliates?: Affiliate[];
 }) {
   const [state, run, pending] = useActionState(action, { error: "" });
   const [kind, setKind] = useState<CallKind>(initial.kind);
@@ -21,7 +22,7 @@ export function CallForm({ action, initial = EMPTY_CALL, submitLabel }: {
     <form action={run} className="admin-form" noValidate>
       <div className="field"><label htmlFor="title">Title</label>
         <input id="title" name="title" type="text" maxLength={120} required defaultValue={initial.title} placeholder="Weekly community call" /></div>
-      <SpeakersField initial={initial.speakers} />
+      <SpeakersField initial={initial.speakers} affiliates={affiliates} />
       <div className="row">
         <div className="field"><label htmlFor="kind">Kind of call</label>
           <select id="kind" name="kind" value={kind} onChange={(e) => { const k = e.target.value as CallKind; setKind(k); setAudience(defaultAudience(k)); }}>
@@ -35,8 +36,11 @@ export function CallForm({ action, initial = EMPTY_CALL, submitLabel }: {
       <div className="row">
         <div className="field"><label htmlFor="starts">Starts (Eastern time)</label>
           <input id="starts" name="starts" type="datetime-local" required defaultValue={initial.starts} /></div>
-        <div className="field"><label htmlFor="duration">Length in minutes</label>
-          <input id="duration" name="duration" type="number" min={15} max={480} step={5} required defaultValue={initial.duration} /></div>
+        <div className="field"><label htmlFor="length">How long is the call?</label>
+          <select id="length" name="length" required defaultValue={initial.length}>
+            {initial.length === "keep" ? <option value="keep">Keep the current length</option> : null}
+            {LENGTHS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+          </select></div>
       </div>
       <div className="field"><label htmlFor="description">Description (optional)</label>
         <textarea id="description" name="description" rows={4} maxLength={2000} defaultValue={initial.description} placeholder="What the call is about, who is speaking…" /></div>

@@ -1047,3 +1047,4 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .nav li.nav-section.open li > a:hover { background: rgba(255, 255, 255, 0.55); }
 .nav li.nav-section > .nav-toggle, .nav .nav-section .nav-toggle { padding: 8px 8px 8px 6px; }
 .nav li.nav-section + li:not(.nav-section) { margin-top: 8px; }
+.speaker-edit select { height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; font: inherit; background: #fff; color: var(--ink); max-width: 100%; }

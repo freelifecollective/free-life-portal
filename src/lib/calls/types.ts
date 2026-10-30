@@ -15,6 +15,7 @@ export type Call = {
   pinned: boolean;
   join_url: string | null;
   host: string | null;
+  length_label?: string | null;
   /** who is speaking (as the database returns it; use speakersOf() for the sorted list) */
   call_speakers?: { name: string; photo_url: string | null; position: number }[];
 };
@@ -37,4 +38,4 @@ export function defaultAudience(kind: CallKind): Audience {
   return kind === "masterclass" ? "affiliates_only" : "leads_open";
 }
 
-export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host, call_speakers(name, photo_url, position)";
+export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host, length_label, call_speakers(name, photo_url, position)";

@@ -5,7 +5,7 @@ import { RecordingPlayer } from "@/components/calls/RecordingPlayer";
 import { SeeFeedback } from "@/components/calls/SeeFeedback";
 import { requireMember } from "@/lib/auth/guards";
 import { getRecording } from "@/lib/recordings/queries";
-import { formatInZone } from "@/lib/time";
+import { formatDateInZone } from "@/lib/time";
 
 export const instant = false;
 
@@ -18,7 +18,7 @@ export default async function RecordingPage(props: PageProps<"/calls/[id]">) {
   return (
     <>
       <p style={{ margin: "0 0 8px" }}><Link className="doc-back" href="/calls">← Back to Calls</Link></p>
-      <PageHeading lede={formatInZone(new Date(rec.recorded_at))}>{rec.title}</PageHeading>
+      <PageHeading lede={formatDateInZone(new Date(rec.recorded_at))}>{rec.title}</PageHeading>
       <div style={{ maxWidth: 900 }}>
         <RecordingPlayer recordingId={rec.id} vimeoId={rec.vimeo_id} hash={rec.vimeo_hash} start={rec.start_secs} end={rec.end_secs} title={rec.title} />
         {rec.topics.length ? <p className="tags-row">{rec.topics.map((t) => <Link key={t} className="doc-tag" href={`/calls?topic=${encodeURIComponent(t)}`} style={{ textDecoration: "none", color: "inherit" }}>{t}</Link>)}</p> : null}

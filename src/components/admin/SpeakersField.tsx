@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { SUPABASE_URL } from "@/lib/env";
 
 export type SpeakerValue = { name: string; photo_url: string };
+export type Affiliate = { id: string; name: string; photo_url: string | null };
 type Row = SpeakerValue & { key: string; busy: boolean };
 const MAX = 6;
 const OUT = 400; // pictures are saved as 400 x 400 squares and shown round
@@ -23,7 +24,7 @@ async function square(file: File): Promise<Blob> {
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
 
 /** Admin: who is speaking on the call. Each speaker has a name and a round picture; several speakers overlap a little when shown. */
-export function SpeakersField({ initial }: { initial: SpeakerValue[] }) {
+export function SpeakersField({ initial, affiliates = [] }: { initial: SpeakerValue[]; affiliates?: Affiliate[] }) {
   const [rows, setRows] = useState<Row[]>(() => initial.map((s) => ({ ...s, key: crypto.randomUUID(), busy: false })));
   const [error, setError] = useState("");
   const pick = useRef<HTMLInputElement>(null);
@@ -52,13 +53,19 @@ export function SpeakersField({ initial }: { initial: SpeakerValue[] }) {
   return (
     <fieldset className="speakers-field">
       <legend>Speakers</legend>
-      <p className="when" style={{ margin: "0 0 10px" }}>Add a picture and name for each person speaking. With more than one, their pictures overlap slightly where people see the call.</p>
+      <p className="when" style={{ margin: "0 0 10px" }}>Choose a paying affiliate from the list, or type any name, such as a guest. Their profile picture fills in, and you can change the picture for this call only. With more than one, their pictures overlap slightly where people see the call.</p>
       <input ref={pick} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void upload(f); }} />
       <ul className="speaker-rows">
         {rows.map((r) => (
           <li key={r.key}>
             <Avatar url={r.photo_url || null} initials={initials(r.name)} size={64} label={r.name || "Speaker"} />
             <div className="speaker-edit">
+              {affiliates.length ? (
+                <select aria-label="Choose an affiliate" value="" onChange={(e) => { const a = affiliates.find((x) => x.id === e.target.value); if (a) patch(r.key, { name: a.name, photo_url: a.photo_url ?? "" }); }}>
+                  <option value="">Choose a paying affiliate (their picture fills in)…</option>
+                  {affiliates.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              ) : null}
               <input type="text" name="speaker_name" maxLength={80} placeholder="Speaker's name" aria-label="Speaker's name" value={r.name} onChange={(e) => patch(r.key, { name: e.target.value })} />
               <input type="hidden" name="speaker_photo" value={r.photo_url} />
               <span className="speaker-actions">

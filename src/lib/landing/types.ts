@@ -18,6 +18,7 @@ export type PublicCall = {
   description: string | null;
   starts_at: string;
   duration_minutes: number;
+  length_label?: string | null;
   registered: number;
   speakers?: { name: string; photo_url: string | null }[];
 };
