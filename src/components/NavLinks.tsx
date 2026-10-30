@@ -10,6 +10,11 @@ export type NavEntry = { label: string; href?: string; heading?: boolean; group?
 /** Sections that are simply labelled and always open (the others, like "Admin only", fold away). */
 const PLAIN = new Set(["Onboarding", "Placing Sales"]);
 
+/** The gentle line with a small sparkle in the middle that separates the menu's sections. */
+function Divider() {
+  return <li className="nav-divider" aria-hidden="true"><span /><i>✦</i><span /></li>;
+}
+
 function Item({ n, path }: { n: NavEntry; path: string }) {
   if (!n.href) return <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}><span>{n.label}<span className="soon">Soon</span></span></li>;
   const active = n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/");
@@ -35,13 +40,15 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
     <ul>
       {items.map((n, idx) => {
         if (n.heading && PLAIN.has(n.label)) {
-          return <li key={n.label} className="nav-group" data-nav={n.label}><span className="nav-toggle nav-static">{n.label}</span></li>;
+          return <Fragment key={n.label}><Divider /><li className="nav-group" data-nav={n.label}><span className="nav-toggle nav-static">{n.label}</span></li></Fragment>;
         }
         if (n.heading) {
           const open = isOpen(n.label);
           const w = waiting(n.label);
           return (
-            <li key={n.label} className="nav-group" data-nav={n.label}>
+            <Fragment key={n.label}>
+            <Divider />
+            <li className="nav-group" data-nav={n.label}>
               <button type="button" className="nav-toggle" aria-expanded={open} onClick={() => setManual({ ...manual, [n.label]: !open })}>
                 <span>{n.label}</span>
                 <span className="nav-toggle-right">
@@ -50,12 +57,13 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
                 </span>
               </button>
             </li>
+            </Fragment>
           );
         }
         if (n.group && !isOpen(n.group)) return null;
         /* a line closes a plain section, matching the one under Home */
         const closesSection = !n.group && !n.heading && PLAIN.has(items[idx - 1]?.group ?? "");
-        return closesSection ? <Fragment key={n.label}><li className="nav-rule" aria-hidden="true" /><Item n={n} path={path} /></Fragment> : <Item key={n.label} n={n} path={path} />;
+        return closesSection ? <Fragment key={n.label}><Divider /><Item n={n} path={path} /></Fragment> : <Item key={n.label} n={n} path={path} />;
       })}
     </ul>
   );
