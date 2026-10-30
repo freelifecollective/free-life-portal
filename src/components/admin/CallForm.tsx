@@ -6,9 +6,9 @@ import { SpeakersField, type SpeakerValue } from "./SpeakersField";
 import { AUDIENCE_LABEL, KIND_LABEL, defaultAudience, type Audience, type CallKind } from "@/lib/calls/types";
 
 export type CallFormValues = {
-  title: string; kind: CallKind; audience: Audience; starts: string; duration: number; description: string; join_url: string; host: string; pinned: boolean; speakers: SpeakerValue[];
+  title: string; kind: CallKind; audience: Audience; starts: string; duration: number; description: string; join_url: string; pinned: boolean; speakers: SpeakerValue[];
 };
-export const EMPTY_CALL: CallFormValues = { title: "", kind: "community", audience: "leads_open", starts: "", duration: 60, description: "", join_url: "", host: "", pinned: false, speakers: [] };
+export const EMPTY_CALL: CallFormValues = { title: "", kind: "community", audience: "leads_open", starts: "", duration: 60, description: "", join_url: "", pinned: false, speakers: [] };
 
 export function CallForm({ action, initial = EMPTY_CALL, submitLabel }: {
   action: (prev: CallFormState, form: FormData) => Promise<CallFormState>; initial?: CallFormValues; submitLabel: string;
@@ -21,8 +21,6 @@ export function CallForm({ action, initial = EMPTY_CALL, submitLabel }: {
     <form action={run} className="admin-form" noValidate>
       <div className="field"><label htmlFor="title">Title</label>
         <input id="title" name="title" type="text" maxLength={120} required defaultValue={initial.title} placeholder="Weekly community call" /></div>
-      <div className="field"><label htmlFor="host">Who is leading the call</label>
-        <input id="host" name="host" type="text" maxLength={80} defaultValue={initial.host} placeholder="Sonya Fruthven" /></div>
       <SpeakersField initial={initial.speakers} />
       <div className="row">
         <div className="field"><label htmlFor="kind">Kind of call</label>
