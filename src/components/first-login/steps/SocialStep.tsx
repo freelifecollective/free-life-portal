@@ -13,11 +13,11 @@ export function SocialStep({ f, set, go }: StepProps) {
     e.preventDefault();
     if (!canContinue) return;
     set({ ig: igState === "ok" ? cleanHandle(f.ig, "instagram") : "", fb: fbState === "ok" ? cleanHandle(fbValue, "facebook") : "", fbSame: f.fbSame });
-    go("picture");
+    go("birthday");
   }
   function skip() {
     set({ ig: "", fb: "", fbSame: false, igTouched: true });
-    go("picture");
+    go("birthday");
   }
   const tidy = (net: "instagram" | "facebook") => {
     if (net === "instagram" && igState === "ok") set({ ig: cleanHandle(f.ig, "instagram") });

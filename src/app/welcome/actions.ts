@@ -32,7 +32,7 @@ export async function suggestUsernameAction(first: string, last: string): Promis
 }
 
 export type SaveInput = {
-  first: string; last: string; username: string; instagram: string; facebook: string;
+  first: string; last: string; username: string; instagram: string; facebook: string; birthMonth?: string; birthDay?: string; birthYear?: string;
   avatarKind: AvatarKind; avatarUrl: string | null;
 };
 export type SaveResult = { ok: true } | { ok: false; error: string; field?: "username" | "name" | "instagram" | "facebook" | "avatar" };
@@ -57,6 +57,11 @@ export async function saveProfileAction(input: SaveInput): Promise<SaveResult> {
   const instagram = igRaw.trim() ? cleanHandle(igRaw, "instagram") : null;
   const facebook = fbRaw.trim() ? cleanHandle(fbRaw, "facebook") : null;
 
+  const bm = Number(input.birthMonth || 0), bd = Number(input.birthDay || 0), by = Number(input.birthYear || 0);
+  if ((bm === 0) !== (bd === 0) || (bm && (!Number.isInteger(bm) || !Number.isInteger(bd) || bm < 1 || bm > 12 || bd < 1 || bd > new Date(2000, bm, 0).getDate()))
+    || (by && (!bm || !Number.isInteger(by) || by < 1900 || by > 2100))) return { ok: false, error: "Check your birthday." };
+  const birthday = bm ? { birth_month: bm, birth_day: bd, birth_year: by || null } : {};
+
   if (!AVATAR_KINDS.includes(input.avatarKind)) return { ok: false, error: "Choose a profile picture.", field: "avatar" };
   const done = new Date().toISOString();
 
@@ -72,7 +77,7 @@ export async function saveProfileAction(input: SaveInput): Promise<SaveResult> {
 
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({
-    first_name: first, last_name: last, username, instagram, facebook,
+    first_name: first, last_name: last, username, instagram, facebook, ...birthday,
     avatar_url: input.avatarUrl, avatar_kind: input.avatarKind, onboarded_at: done,
   }).eq("id", session.user.id);
 

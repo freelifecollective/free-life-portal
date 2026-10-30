@@ -17,13 +17,13 @@ export default async function SettingsPage() {
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   const isMember = p.role !== "lead";
   let rank: number | null = null;
-  let extra = null as { birth_month: number | null; birth_day: number | null; call_closer: boolean } | null;
+  let extra = null as { birth_month: number | null; birth_day: number | null; birth_year: number | null } | null;
   let ranks: { id: number; name: string }[] = [];
   if (supabase && isMember) {
     const [{ data: mine }, { data: all }, { data: ex }] = await Promise.all([
       supabase.from("member_private").select("rank_id").maybeSingle(),
       supabase.from("ranks").select("id, name").order("sort"),
-      supabase.from("profiles").select("birth_month, birth_day, call_closer").eq("id", session.user.id).maybeSingle(),
+      supabase.from("profiles").select("birth_month, birth_day, birth_year").eq("id", session.user.id).maybeSingle(),
     ]);
     extra = (ex as typeof extra) ?? null;
     rank = (mine as { rank_id: number | null } | null)?.rank_id ?? null;
@@ -56,7 +56,7 @@ export default async function SettingsPage() {
         <section className="card-s">
           <h2 className="qh" style={{ marginTop: 0 }}>Your profile</h2>
           {supabase
-            ? <SettingsForm first={p.first_name ?? ""} last={p.last_name ?? ""} username={p.username ?? ""} email={session.user.email ?? ""} instagram={p.instagram ?? ""} facebook={p.facebook ?? ""} isMember={isMember} rank={rank} ranks={ranks} birthMonth={extra?.birth_month ?? null} birthDay={extra?.birth_day ?? null} callCloser={extra?.call_closer ?? false} />
+            ? <SettingsForm first={p.first_name ?? ""} last={p.last_name ?? ""} username={p.username ?? ""} email={session.user.email ?? ""} instagram={p.instagram ?? ""} facebook={p.facebook ?? ""} isMember={isMember} rank={rank} ranks={ranks} birthMonth={extra?.birth_month ?? null} birthDay={extra?.birth_day ?? null} birthYear={extra?.birth_year ?? null} />
             : <p style={{ margin: 0 }}>Editing needs the database, which preview mode does not have.</p>}
         </section>
 

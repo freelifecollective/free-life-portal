@@ -1206,3 +1206,13 @@ li.unread .dock-who strong { font-weight: 800; }
 .member-profile .member-tags li { display: block; }
 .member-profile .member-tags a, .member-profile .member-tags span { display: inline-block; padding: 4px 12px; margin: 0; border-radius: 999px; background: var(--tint); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; }
 .member-profile .member-tags a:hover { background: var(--accent); color: #fff; }
+
+/* profile bubble laid out sideways: picture on the left, details on the right */
+.members-dialog:has(.member-profile) { width: min(620px, calc(100vw - 32px)); }
+.member-profile { align-items: stretch; text-align: left; gap: 14px; }
+.member-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: center; }
+.member-side { display: grid; place-items: center; }
+.member-info { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.member-profile .member-info .btn { height: 46px; padding: 0 26px; margin-top: 4px; }
+.member-profile .member-tags, .member-profile .member-social { justify-content: flex-start; margin: 4px 0; }
+@media (max-width: 520px) { .member-card { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; } .member-info { align-items: center; } .member-profile .member-tags, .member-profile .member-social { justify-content: center; } }

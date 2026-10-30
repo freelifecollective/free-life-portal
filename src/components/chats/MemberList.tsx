@@ -7,7 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { openDockChat } from "@/components/messages/MessageDock";
 import { createClient } from "@/lib/supabase/client";
 
-type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; instagram: string | null; facebook: string | null; is_admin: boolean; birth_month: number | null; birth_day: number | null; call_closer: boolean; offers_services: boolean };
+type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; instagram: string | null; facebook: string | null; is_admin: boolean; birth_month: number | null; birth_day: number | null; birth_year: number | null; call_closer: boolean; offers_services: boolean };
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const name = (p: Person) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "Member";
 const initials = (p: Person) => ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
@@ -44,14 +44,18 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
         ) : picked ? (
           <div className="member-profile">
             <button type="button" className="linkbtn" onClick={() => setPicked(null)}>← Back to the list</button>
+            <div className="member-card">
+            <div className="member-side">
             {picked.avatar_url ? (
               <button type="button" className="member-photo" onClick={() => setZoom(true)} aria-label={`Enlarge ${name(picked)}'s picture`} title="Click to enlarge">
-                <Avatar url={picked.avatar_url} initials={initials(picked)} size={96} />
+                <Avatar url={picked.avatar_url} initials={initials(picked)} size={140} />
               </button>
-            ) : <Avatar url={null} initials={initials(picked)} size={96} />}
-            <h2 className="qh" style={{ margin: "8px 0 0" }}>{name(picked)}</h2>
+            ) : <Avatar url={null} initials={initials(picked)} size={140} />}
+            </div>
+            <div className="member-info">
+            <h2 className="qh" style={{ margin: 0 }}>{name(picked)}</h2>
             {picked.username ? <p className="when" style={{ margin: 0 }}>@{picked.username}{picked.is_admin ? " · Admin" : ""}</p> : null}
-            {picked.birth_month && picked.birth_day ? <p className="member-birthday">🎂 {MONTHS[picked.birth_month - 1]} {picked.birth_day}</p> : null}
+            {picked.birth_month && picked.birth_day ? <p className="member-birthday">🎂 {MONTHS[picked.birth_month - 1]} {picked.birth_day}{picked.birth_year ? `, ${picked.birth_year}` : ""}</p> : null}
             {picked.offers_services || picked.call_closer ? (
               <ul className="member-tags" aria-label="What they offer">
                 {picked.offers_services ? <li><Link href="/outsourcing" onClick={() => dlg.current?.close()}>Offers services in Outsourcing</Link></li> : null}
@@ -82,6 +86,8 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
             {canMessage && picked.username ? (
               <button type="button" className="btn" onClick={() => { openDockChat(picked.id); dlg.current?.close(); }}>Message</button>
             ) : null}
+            </div>
+            </div>
           </div>
         ) : (
           <>

@@ -15,6 +15,7 @@ import {
 } from "./flow";
 import "./first-login.css";
 import { AdjustStep } from "./steps/AdjustStep";
+import { BirthdayStep } from "./steps/BirthdayStep";
 import { DoneStep } from "./steps/DoneStep";
 import { FrameStep } from "./steps/FrameStep";
 import { GenStep } from "./steps/GenStep";
@@ -124,7 +125,7 @@ export function FirstLogin({ env, alreadyOnboarded, pictureOnly }: {
         return;
       }
       const r = await saveProfileAction({
-        first: s.first, last: s.last, username: s.username, instagram: s.ig, facebook: s.fb,
+        first: s.first, last: s.last, username: s.username, instagram: s.ig, facebook: s.fb, birthMonth: s.bMonth, birthDay: s.bDay, birthYear: s.bYear,
         avatarKind: KIND_OF[s.mode], avatarUrl,
       });
       if (!r.ok) {
@@ -166,6 +167,7 @@ export function FirstLogin({ env, alreadyOnboarded, pictureOnly }: {
         {step === "name" && <NameStep {...p} fade={fade} />}
         {step === "username" && <UsernameStep {...p} />}
         {step === "instagram" && <SocialStep {...p} />}
+        {step === "birthday" && <BirthdayStep {...p} />}
         {step === "picture" && <PictureStep {...p} />}
         {step === "frame" && <FrameStep {...p} />}
         {step === "style" && <StyleStep {...p} />}
