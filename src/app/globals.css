@@ -962,10 +962,11 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
 @media (max-width: 640px) { .task-row { flex-wrap: wrap; } .task-tools { width: 100%; justify-content: flex-start; padding-left: 74px; } .task-help { margin-left: 0; } }
 /* the celebration */
-.party { position: fixed; inset: 0; z-index: 100; background: rgba(31, 26, 23, 0.9); display: grid; place-items: center; cursor: pointer; animation: party-in .4s ease-out; }
+.party { position: fixed; inset: 0; z-index: 100; background: rgba(31, 26, 23, 0.9); display: grid; place-items: center; cursor: pointer; animation: party-in .25s ease-out, party-out .25s ease-in 1.25s forwards; }
 .party canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .party-card { position: relative; text-align: center; padding: 28px 24px; display: grid; gap: 10px; justify-items: center; }
 .party-title { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: clamp(44px, 9vw, 92px); line-height: 1.05; color: #F1E9DF; text-shadow: 0 4px 30px rgba(0,0,0,.35); animation: party-pop .7s cubic-bezier(.2,1.4,.4,1) both; }
-.party-sub { margin: 0 0 8px; font-family: var(--font-label); font-weight: 300; font-size: clamp(18px, 3vw, 28px); color: #fff; }
+.party-sub { margin: 0; font-family: var(--font-label); font-weight: 300; font-size: clamp(18px, 3vw, 28px); color: #fff; }
 @keyframes party-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes party-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes party-pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }

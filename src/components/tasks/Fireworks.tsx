@@ -5,12 +5,12 @@ import { useEffect, useRef } from "react";
 const COLOURS = ["#AB9080", "#C9A24B", "#F1E9DF", "#8C6F5E", "#FFFFFF", "#E3C9B6", "#D8B98E"];
 type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; c: string; r: number };
 
-/** A full-screen burst of fireworks in the portal's colours, with the "Crushed it!" message. Tap anywhere (or wait a few seconds) to close. */
+/** A quick full-screen burst of fireworks in the portal's colours, with the "Crushed it!" message. It closes by itself after a moment (or on a tap). */
 export function Fireworks({ onClose }: { onClose: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const t = window.setTimeout(onClose, 9000);
+    const t = window.setTimeout(onClose, 1500);
     const cv = canvas.current;
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!cv || calm) return () => window.clearTimeout(t);
@@ -33,7 +33,7 @@ export function Fireworks({ onClose }: { onClose: () => void }) {
     let raf = 0, frame = 0;
     const tick = () => {
       frame++;
-      if (frame % 28 === 1) burst();
+      if (frame === 1) { burst(); burst(); } else if (frame % 14 === 0) burst();
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       for (let i = parts.length - 1; i >= 0; i--) {
         const p = parts[i];
@@ -56,7 +56,6 @@ export function Fireworks({ onClose }: { onClose: () => void }) {
       <div className="party-card">
         <p className="party-title">Crushed it!</p>
         <p className="party-sub">You cleared your to-do list 🙌</p>
-        <button type="button" className="btn primary" onClick={onClose}>Keep going</button>
       </div>
     </div>
   );
