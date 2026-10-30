@@ -2,15 +2,16 @@ import Link from "next/link";
 import { AUDIENCE_LABEL, KIND_LABEL, type Call, type RsvpMode, type RsvpSummary } from "@/lib/calls/types";
 import { endsAt, formatInZone } from "@/lib/time";
 import { LiveBadge } from "@/components/LiveBadge";
+import { FeedbackLink } from "@/components/calls/FeedbackLink";
 import { JoinButton } from "@/components/calls/JoinButton";
 import { Attendees } from "./Attendees";
 import { LocalTime } from "./LocalTime";
 import { RsvpControls } from "./RsvpControls";
 
 /** What happened for this person on a call that is over. */
-export type Review = { attended: boolean; mode: RsvpMode | null; recordingId: string | null; watched: boolean };
+export type Review = { attended: boolean; mode: RsvpMode | null; recordingId: string | null; watched: boolean; canFeedback?: boolean; gaveFeedback?: boolean };
 
-function ReviewBlock({ review }: { review: Review }) {
+function ReviewBlock({ review, call }: { review: Review; call: Pick<Call, "id" | "title"> }) {
   const status = review.attended
     ? review.watched ? "✓ You attended live and watched the replay" : "✓ You attended live"
     : review.watched ? "✓ You watched the replay"
@@ -23,6 +24,7 @@ function ReviewBlock({ review }: { review: Review }) {
       {review.recordingId
         ? <Link className="btn primary" href={`/calls/${review.recordingId}`} style={{ textDecoration: "none" }}>{review.watched ? "Watch the replay again" : "Watch the replay"}</Link>
         : <p className="when" style={{ margin: 0 }}>The replay is not up yet. We will let you know when it is.</p>}
+      {review.canFeedback ? (review.gaveFeedback ? <p className="when" style={{ margin: 0 }}>✓ Thanks for sharing your feedback</p> : <FeedbackLink callId={call.id} title={call.title} />) : null}
     </div>
   );
 }
@@ -47,7 +49,7 @@ export function CallCard({ call, summary, featured = false, now, review }: { cal
       </p>
       {call.description ? <p className="call-desc">{call.description}</p> : null}
       {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} durationMinutes={call.duration_minutes} /></p> : null}
-      {!notOver && review ? <ReviewBlock review={review} /> : notOver ? <RsvpControls callId={call.id} mine={summary.mine} /> : null}
+      {!notOver && review ? <ReviewBlock review={review} call={call} /> : notOver ? <RsvpControls callId={call.id} mine={summary.mine} /> : null}
       <Attendees summary={summary} />
     </article>
   );

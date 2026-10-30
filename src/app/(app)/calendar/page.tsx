@@ -41,15 +41,18 @@ export default async function CalendarPage(props: PageProps<"/calendar">) {
   const summaries = await Promise.all(calls.map((c) => rsvpSummary(supabase, c.id, 50)));
   /* for calls that are over: did this person attend live, is there a replay, and did they watch it */
   const ids = calls.map((c) => c.id);
-  const [{ data: att }, { data: recs }] = await Promise.all([
+  const [{ data: att }, { data: recs }, { data: gave }] = await Promise.all([
     supabase.from("call_attendance").select("call_id").in("call_id", ids),
     supabase.from("recordings").select("id, call_id").in("call_id", ids).eq("published", true).order("recorded_at"),
+    supabase.from("call_feedback").select("call_id").in("call_id", ids),
   ]);
   const recIds = (recs ?? []).map((r) => r.id as string);
   const { data: seen } = recIds.length ? await supabase.from("recording_views").select("recording_id, max_pct, completed_at").in("recording_id", recIds) : { data: [] };
   const attended = new Set((att ?? []).map((a) => a.call_id as string));
   const recordingOf = new Map<string, string>();
   for (const r of recs ?? []) if (r.call_id && !recordingOf.has(r.call_id as string)) recordingOf.set(r.call_id as string, r.id as string);
+  const gaveFeedback = new Set((gave ?? []).map((g) => g.call_id as string));
+  const confirmedIds = new Set((seen ?? []).filter((v) => v.completed_at).map((v) => v.recording_id as string));
   const watchedIds = new Set((seen ?? []).filter((v) => v.completed_at || (v.max_pct ?? 0) >= 50).map((v) => v.recording_id as string));
   const byDay = new Map<string, { call: Call; summary: (typeof summaries)[number] }[]>();
   calls.forEach((c, i) => {
@@ -91,7 +94,9 @@ export default async function CalendarPage(props: PageProps<"/calendar">) {
                 {items.map(({ call, summary }) => {
                   const start = new Date(call.starts_at);
                   const rid = recordingOf.get(call.id) ?? null;
-                  const review: Review = { attended: attended.has(call.id), mode: summary.mine, recordingId: rid, watched: rid ? watchedIds.has(rid) : false };
+                  const review: Review = { attended: attended.has(call.id), mode: summary.mine, recordingId: rid, watched: rid ? watchedIds.has(rid) : false,
+                    /* feedback is offered once they were live, or are confirmed to have watched the replay */
+                    canFeedback: attended.has(call.id) || (rid ? confirmedIds.has(rid) : false), gaveFeedback: gaveFeedback.has(call.id) };
                   const end = endsAt(start, call.duration_minutes).getTime();
                   return (
                     <CallChip key={call.id} time={timeOf(start)} title={call.title} live={now >= start.getTime() && now < end} past={now >= end}>
