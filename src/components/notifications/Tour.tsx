@@ -10,14 +10,15 @@ const q = (sel: string) => () => document.querySelector<HTMLElement>(sel);
 
 /** What each tab is for, in plain words. A tab that is not listed still gets a short, generic step. */
 const TABS: Record<string, string> = {
-  "Home": "Your starting point. See your next call and a quick summary of your profile.",
+  "Home": "Your starting point. See your next call and copy your invite link, then check how your landing page is doing: visits, clicks, form fill-outs and who joined.",
+  "Tasks": "Your own to-do list for business and life. Pick how often a task repeats, drag to reorder, and get reminders. Clear your list for the day and we celebrate with you.",
   "Accountability Buddy": "Answer a few questions and we match you with people who will keep you on track. You choose your buddy, and you can pause any time.",
   "Calendar": "Every call, with the date and time. Tap I'll be there live or I'll watch the recording. Times are Eastern, and your own time shows underneath if you are somewhere else.",
-  "Calls": "Call replays will live here. Coming soon.",
+  "Calls": "Join live calls from here, and watch replays any time. Filter recordings by topic and year.",
   "Chats": "Talk with the community. New Members chats are open to everyone, and Affiliates Only chats unlock when you join as an affiliate. Important Updates has the latest team news.",
   "Classroom": "Courses and lessons, with your progress saved. Coming soon.",
   "Earnings Estimator": "Pick your country and points, then tap products to see what your commissions could be.",
-  "Documents": "Guides and resources to download and share. Coming soon.",
+  "Documents": "Guides and resources to download and share, organised in folders.",
   "Financing Options": "Different ways to fund your business, sorted by country. Affiliates can suggest new ones for approval.",
   "Outsourcing": "Find help from other members, or list what you can do for others. See their rates, how many people hired them, and reviews.",
   "Verbiage + Objections": "The answers the community has voted best for replying to leads' questions and objections.",

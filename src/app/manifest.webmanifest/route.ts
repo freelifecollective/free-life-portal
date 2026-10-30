@@ -12,6 +12,8 @@ export function GET(req: NextRequest) {
       start_url: "/",
       scope: "/",
       display: "standalone",
+      handle_links: "preferred",
+      launch_handler: { client_mode: ["navigate-existing", "auto"] },
       background_color: "#F6F5F1",
       theme_color: "#F6F5F1",
       related_applications: [{ platform: "webapp", url: `${origin}/manifest.webmanifest` }],

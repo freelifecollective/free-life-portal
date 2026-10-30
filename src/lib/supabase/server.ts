@@ -6,6 +6,8 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 export async function createClient() {
   const store = await cookies();
   return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    /* stay signed in on this device for well over a year, until the person logs out */
+    cookieOptions: { maxAge: 60 * 60 * 24 * 400 },
     cookies: {
       getAll: () => store.getAll(),
       setAll(list) {

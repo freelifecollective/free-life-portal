@@ -29,7 +29,7 @@ const NAV: NavItem[] = [
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
   { label: "Earnings Estimator", href: "/calculator", min: "member" },
   { label: "Graphic maker", min: "member" },
-  { label: "Tasks", min: "member" },
+  { label: "Tasks", href: "/tasks", min: "member" },
   { label: "Water Share Map", href: "/water-map", min: "member" },
   { label: "Call Closers for Hire", min: "member" },
   { label: "Facebook Follows", min: "member", group: "Onboarding" },

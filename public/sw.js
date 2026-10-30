@@ -13,6 +13,8 @@ self.addEventListener("push", (event) => {
       badge: "/icons/icon-192.png",
       tag: d.tag,
       data: { url: d.url || "/notifications" },
+      silent: false,
+      vibrate: [200, 100, 200],
     });
     if (typeof d.badge === "number" && self.navigator && "setAppBadge" in self.navigator) {
       try { await self.navigator.setAppBadge(d.badge); } catch { /* not supported here */ }

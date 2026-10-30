@@ -12,6 +12,7 @@ const PUBLIC_PREFIXES = ["/login", "/auth", "/register", "/api/push", "/api/cale
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookieOptions: { maxAge: 60 * 60 * 24 * 400 },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(list) {

@@ -6,7 +6,7 @@ import { markAllRead, markRead } from "@/app/(app)/notifications/actions";
 import { formatInZone } from "@/lib/time";
 
 export type Item = { id: string; kind: string; title: string; body: string | null; url: string | null; created_at: string; read_at: string | null };
-const ICON: Record<string, string> = { new_lead: "🌱", call_reminder: "📞", call_new: "🗓️", important_update: "📣", submission_result: "✅", announcement: "✨", direct_message: "💬", payment: "💳" };
+const ICON: Record<string, string> = { new_lead: "🌱", call_reminder: "📞", call_new: "🗓️", important_update: "📣", submission_result: "✅", announcement: "✨", direct_message: "💬", payment: "💳", task: "📝" };
 
 export function NotificationList({ items }: { items: Item[] }) {
   const router = useRouter();
