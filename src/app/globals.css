@@ -1281,3 +1281,22 @@ a.pc-row:hover { background: var(--tint); }
 .pc a.pc-row > svg { flex: none; }
 .pc a.pc-row:hover { background: var(--tint); }
 .pc .pc-card > .pc-row:first-child { border-top: 0; }
+
+/* next-call card, shorter: smaller timer (days, hours, minutes) with the two RSVP buttons stacked to its right */
+.home-call { padding: 22px 28px; gap: 8px; }
+.home-call .hc-title { margin: 0; font-size: clamp(24px, 2.6vw, 32px); }
+.home-call .hc-meta { font-size: 16px; }
+.hc-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; margin: 6px 0 2px; }
+.hc-row .cd { grid-template-columns: repeat(3, 76px); gap: 8px; margin: 0; }
+.hc-row .cd-box { padding: 8px 4px 7px; border-radius: 12px; gap: 2px; }
+.hc-row .cd-n { font-size: 26px; }
+.hc-row .cd-l { font-size: 9px; letter-spacing: 0.14em; }
+.hc-row .cd-note { margin: 0; }
+.hc-row .hc-rsvp .rsvp { flex-direction: column; flex-wrap: nowrap; gap: 8px; margin: 0; }
+.hc-row .hc-rsvp .rsvp .btn { flex: none; width: 100%; height: 44px; padding: 0 18px; font-size: 12.5px; }
+.hc-row .hc-rsvp .err { margin: 0; }
+.home-call .hc-actions { margin-top: 4px; }
+.home-call .hc-people { padding-top: 10px; margin-top: 0; }
+.home-row.next-only { align-items: start; }
+@media (max-width: 640px) { .hc-row { grid-template-columns: minmax(0, 1fr); } .hc-row .cd { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.home-row > .home-call { align-self: start; }
