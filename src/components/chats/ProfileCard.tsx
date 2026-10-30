@@ -197,15 +197,20 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
   useEffect(() => { void load(); }, [load]);
 
   function startEdit() {
-    setVals({ calls: String(d?.calls_taken ?? 0), since: d?.closer_since ?? "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
+    setVals({ calls: String(d?.calls_taken ?? 0), since: d?.closer_since ? sinceText(d.closer_since) : "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
       perCall: d?.price_per_call_cents == null ? "" : String(d.price_per_call_cents / 100), perSale: d?.price_per_sale_cents == null ? "" : String(d.price_per_sale_cents / 100) });
     setMsg(""); setEdit(true);
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    const cents = (v: string) => (v.trim() === "" ? null : Math.round(Number(v) * 100));
-    const row = { member_id: id, calls_taken: Math.max(0, Math.floor(Number(vals.calls) || 0)), closer_since: vals.since || null, close_rate: vals.rate.trim() === "" ? null : Number(vals.rate),
-      price_per_call_cents: cents(vals.perCall), price_per_sale_cents: cents(vals.perSale), updated_at: new Date().toISOString() };
+    const num = (v: string) => { const n = Number(v.replace(/[$,%\s]/g, "")); return v.trim() === "" || Number.isNaN(n) ? null : n; };
+    const bad = [vals.calls, vals.rate, vals.perCall, vals.perSale].some((v) => v.trim() !== "" && num(v) === null);
+    const since = vals.since.trim() ? parseSince(vals.since) : null;
+    if (bad || (vals.since.trim() && !since)) { setMsg(!bad ? "Type the start as a month and year, like January 2024." : "Please type numbers only in the number boxes."); return; }
+    const money2 = (v: string) => { const n = num(v); return n === null ? null : Math.round(n * 100); };
+    const rate = num(vals.rate);
+    const row = { member_id: id, calls_taken: Math.max(0, Math.floor(num(vals.calls) ?? 0)), closer_since: since, close_rate: rate === null ? null : Math.min(100, Math.max(0, rate)),
+      price_per_call_cents: money2(vals.perCall), price_per_sale_cents: money2(vals.perSale), updated_at: new Date().toISOString() };
     const { error } = await createClient().from("call_closer_details").upsert(row, { onConflict: "member_id" });
     if (error) { setMsg("We could not save that. Check the numbers and try again."); return; }
     setEdit(false); await load();
@@ -215,11 +220,11 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
   if (edit) {
     return (
       <form className="pc-card pc-pad pc-form" onSubmit={(e) => void save(e)}>
-        <label>Calls taken<input type="number" min={0} value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
-        <label>Taking calls since<input type="date" value={vals.since} onChange={(e) => setVals({ ...vals, since: e.target.value })} /></label>
-        <label>Close rate (%)<input type="number" min={0} max={100} step="0.1" value={vals.rate} onChange={(e) => setVals({ ...vals, rate: e.target.value })} /></label>
-        <label>Charge per call ($)<input type="number" min={0} step="0.01" value={vals.perCall} onChange={(e) => setVals({ ...vals, perCall: e.target.value })} /></label>
-        <label>Charge per product sale ($)<input type="number" min={0} step="0.01" value={vals.perSale} onChange={(e) => setVals({ ...vals, perSale: e.target.value })} /></label>
+        <label>Calls taken<input type="text" inputMode="numeric" autoComplete="off" placeholder="e.g. 40" value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
+        <label>Taking calls since<input type="text" autoComplete="off" placeholder="e.g. January 2024" value={vals.since} onChange={(e) => setVals({ ...vals, since: e.target.value })} /></label>
+        <label>Close rate (%)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 85" value={vals.rate} onChange={(e) => setVals({ ...vals, rate: e.target.value })} /></label>
+        <label>Charge per call ($)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 50" value={vals.perCall} onChange={(e) => setVals({ ...vals, perCall: e.target.value })} /></label>
+        <label>Charge per product sale ($)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 100" value={vals.perSale} onChange={(e) => setVals({ ...vals, perSale: e.target.value })} /></label>
         {msg ? <p className="err" role="alert">{msg}</p> : null}
         <div className="dlg-actions"><button type="button" className="btn small" onClick={() => setEdit(false)}>Cancel</button><button type="submit" className="btn small primary">Save</button></div>
       </form>
@@ -238,6 +243,25 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
       {admin ? <button type="button" className="btn small pc-edit" onClick={startEdit}>Edit these details</button> : null}
     </>
   );
+}
+
+/** "January 2024" for the text box. */
+function sinceText(iso: string): string {
+  const [y, m] = iso.split("-").map(Number);
+  return `${MONTHS[m - 1]} ${y}`;
+}
+/** Understands "January 2024", "Jan 2024", "1/2024", "01-2024" or a full date, and returns the first of that month as YYYY-MM-DD (or null). */
+function parseSince(text: string): string | null {
+  const t = text.trim();
+  let y = 0, m = 0;
+  const num = t.match(/^(\d{1,2})\s*[/.-]\s*(\d{4})$/);
+  const word = t.match(/^([A-Za-z]{3,9})\.?,?\s+(\d{4})$/);
+  const full = t.match(/^(\d{4})-(\d{1,2})(?:-\d{1,2})?$/);
+  if (num) { m = Number(num[1]); y = Number(num[2]); }
+  else if (word) { m = MONTHS.findIndex((x) => x.toLowerCase().startsWith(word[1].toLowerCase().slice(0, 3))) + 1; y = Number(word[2]); }
+  else if (full) { y = Number(full[1]); m = Number(full[2]); }
+  if (!m || m > 12 || y < 1980 || y > 2100) return null;
+  return `${y}-${String(m).padStart(2, "0")}-01`;
 }
 
 /** "2 years, 3 months" from a date to today. */
