@@ -1275,3 +1275,9 @@ a.pc-row:hover { background: var(--tint); }
 @media (min-width: 769px) {
   .nav > ul { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 92px); max-height: calc(100dvh - 116px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 }
+
+/* social rows: icon on the left, label and handle beside it, all on one line (the chat list's link rules would otherwise stack them) */
+.pc a.pc-row { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 16px; padding: 12px 18px; border-radius: 0; color: inherit; }
+.pc a.pc-row > svg { flex: none; }
+.pc a.pc-row:hover { background: var(--tint); }
+.pc .pc-card > .pc-row:first-child { border-top: 0; }

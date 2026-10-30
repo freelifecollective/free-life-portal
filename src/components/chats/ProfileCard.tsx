@@ -125,7 +125,6 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
               ) : null}
               {p.instagram ? (
                 <a className="pc-row" href={instagramUrl(p.instagram)} target="_blank" rel="noopener noreferrer">
-                  <div><small>instagram</small><span className="pc-link">{handleOf(p.instagram)}</span></div>
                   <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
                     <defs><radialGradient id="ig-grad" cx="30%" cy="107%" r="150%"><stop offset="0" stopColor="#FED576" /><stop offset=".26" stopColor="#F47133" /><stop offset=".61" stopColor="#BC3081" /><stop offset="1" stopColor="#4C63D2" /></radialGradient></defs>
                     <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#ig-grad)" />
@@ -133,15 +132,16 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
                     <circle cx="12" cy="12" r="3.1" fill="none" stroke="#fff" strokeWidth="1.8" />
                     <circle cx="16.4" cy="7.6" r="1" fill="#fff" />
                   </svg>
+                  <div><small>instagram</small><span className="pc-link">{handleOf(p.instagram)}</span></div>
                 </a>
               ) : null}
               {p.facebook ? (
                 <a className="pc-row" href={facebookUrl(p.facebook)} target="_blank" rel="noopener noreferrer">
-                  <div><small>facebook</small><span className="pc-link">{handleOf(p.facebook)}</span></div>
                   <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="11" fill="#1877F2" />
                     <path fill="#fff" d="M13.4 22v-7.6h2.5l.4-3h-2.9V9.5c0-.9.3-1.5 1.5-1.5h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.4H8v3h2.5V22z" />
                   </svg>
+                  <div><small>facebook</small><span className="pc-link">{handleOf(p.facebook)}</span></div>
                 </a>
               ) : null}
               {p.birth_month && p.birth_day ? (
