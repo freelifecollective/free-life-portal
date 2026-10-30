@@ -1300,3 +1300,6 @@ a.pc-row:hover { background: var(--tint); }
 .home-row.next-only { align-items: start; }
 @media (max-width: 640px) { .hc-row { grid-template-columns: minmax(0, 1fr); } .hc-row .cd { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .home-row > .home-call { align-self: start; }
+
+.pc-multiline { white-space: pre-line; }
+.pc-form textarea { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; color: var(--ink); background: #fff; resize: vertical; width: 100%; }
