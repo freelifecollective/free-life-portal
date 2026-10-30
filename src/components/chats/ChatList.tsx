@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { canSee, type Role } from "@/lib/roles";
+import { MemberList } from "./MemberList";
 import type { ChatSection } from "@/lib/chats/types";
 
 function Lock() {
@@ -11,6 +12,8 @@ function Lock() {
   );
 }
 
+const kindOf = (n: string) => { const k = n.trim().toLowerCase(); return k === "affiliates only" ? "affiliates" as const : k === "new members" ? "leads" as const : null; };
+
 /** Sections with bold headings, each listing its chats. Chats you cannot open yet are faded with a lock. */
 export function ChatList({ sections, current, role }: { sections: ChatSection[]; current: string; role: Role }) {
   return (
@@ -19,7 +22,9 @@ export function ChatList({ sections, current, role }: { sections: ChatSection[];
         const locked = !canSee(role, s.min_role);
         return (
           <section key={s.id} className={locked ? "locked" : undefined}>
-            <h2 className="chat-section">{s.name}{locked ? <Lock /> : null}</h2>
+            {!locked && role !== "lead" && kindOf(s.name)
+              ? <MemberList kind={kindOf(s.name)!} title={kindOf(s.name) === "affiliates" ? "FLC Members" : "New Members"} canMessage>{s.name}</MemberList>
+              : <h2 className="chat-section">{s.name}{locked ? <Lock /> : null}</h2>}
             <ul>
               {s.chats.map((c) => (
                 <Fragment key={c.id}>
