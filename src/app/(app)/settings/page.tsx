@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { PageHeading } from "@/components/PageHeading";
+import { ProfileBadges } from "@/components/badges/ProfileBadges";
+import type { BadgeState } from "@/lib/badges/defs";
 import { QuoteStyle } from "@/components/settings/QuoteStyle";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { isQuoteStyle, type QuoteStyle as Style } from "@/lib/quotes";
@@ -23,6 +25,11 @@ export default async function SettingsPage() {
     ]);
     rank = (mine as { rank_id: number | null } | null)?.rank_id ?? null;
     ranks = (all ?? []) as { id: number; name: string }[];
+  }
+  let badges: BadgeState | null = null;
+  if (supabase && isMember) {
+    const { data } = await supabase.rpc("badge_state");
+    badges = (data as BadgeState | null) ?? null;
   }
   let quoteStyle: Style = "general";
   if (supabase) {
@@ -49,6 +56,13 @@ export default async function SettingsPage() {
             ? <SettingsForm first={p.first_name ?? ""} last={p.last_name ?? ""} username={p.username ?? ""} email={session.user.email ?? ""} instagram={p.instagram ?? ""} facebook={p.facebook ?? ""} isMember={isMember} rank={rank} ranks={ranks} />
             : <p style={{ margin: 0 }}>Editing needs the database, which preview mode does not have.</p>}
         </section>
+
+        {badges ? (
+          <section className="card-s">
+            <h2 className="qh" style={{ marginTop: 0 }}>My badges</h2>
+            <ProfileBadges state={badges} />
+          </section>
+        ) : null}
 
         {supabase ? (
           <section className="card-s">

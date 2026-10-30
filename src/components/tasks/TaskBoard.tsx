@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addTask, completeTask, deleteTask, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
 import { complete, dueLabel, REPEAT_LABEL, split, stateOf, suggestOrder, taskHelp, undo, type Suggestion, type Task } from "@/lib/tasks/schedule";
+import { BadgeToast } from "@/components/badges/BadgeToast";
 import { Fireworks } from "./Fireworks";
 import { TaskForm } from "./TaskForm";
 import { TrashButton } from "./TrashButton";
@@ -21,6 +22,7 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
   const [helpOpen, setHelpOpen] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [party, setParty] = useState(false);
+  const [newBadges, setNewBadges] = useState<string[]>([]);
   const [pending, run] = useTransition();
 
   const { todayList, upcoming, doneToday } = split(tasks, today);
@@ -38,22 +40,26 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
     setParty(true);
   }
 
-  function apply(call: () => Promise<{ ok: true; tasks: Task[] } | { ok: false; error: string }>, rollback: Task[]) {
+  function apply(call: () => Promise<{ ok: true; tasks: Task[]; badges?: string[] } | { ok: false; error: string }>, rollback: Task[], refresh = false) {
     run(async () => {
       const r = await call();
-      if (r.ok) { setTasks(r.tasks); setError(""); } else { setTasks(rollback); setError(r.error); }
+      if (r.ok) {
+        setTasks(r.tasks); setError("");
+        if (r.badges?.length) setNewBadges(r.badges);
+        if (refresh) router.refresh(); // so the streaks below update
+      } else { setTasks(rollback); setError(r.error); }
     });
   }
 
   function tick(t: Task) {
     const next = tasks.map((x) => (x.id === t.id ? complete(x, today) : x));
     setTasks(next); setSuggestion(null);
-    apply(() => completeTask(t.id), tasks);
+    apply(() => completeTask(t.id), tasks, true);
     celebrateIfClear(next);
   }
   function untick(t: Task) {
     setTasks(tasks.map((x) => (x.id === t.id ? undo(x) : x)));
-    apply(() => undoTask(t.id), tasks);
+    apply(() => undoTask(t.id), tasks, true);
   }
 
   function save(v: TaskInput) {
@@ -206,6 +212,7 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
       <TaskForm key={formKey} open={editing !== null} task={editing && editing !== "new" ? editing : null} today={today} busy={pending} error={formError}
         onSave={save} onClose={() => setEditing(null)} />
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
+      {newBadges.length ? <BadgeToast keys={newBadges} onClose={() => setNewBadges([])} /> : null}
     </div>
   );
 }
