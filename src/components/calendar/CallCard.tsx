@@ -1,4 +1,5 @@
-import { AUDIENCE_LABEL, KIND_LABEL, type Call, type RsvpSummary } from "@/lib/calls/types";
+import Link from "next/link";
+import { AUDIENCE_LABEL, KIND_LABEL, type Call, type RsvpMode, type RsvpSummary } from "@/lib/calls/types";
 import { endsAt, formatInZone } from "@/lib/time";
 import { LiveBadge } from "@/components/LiveBadge";
 import { JoinButton } from "@/components/calls/JoinButton";
@@ -6,8 +7,28 @@ import { Attendees } from "./Attendees";
 import { LocalTime } from "./LocalTime";
 import { RsvpControls } from "./RsvpControls";
 
-/** A call with its time, who it is for, the RSVP buttons and who is coming. */
-export function CallCard({ call, summary, featured = false, now }: { call: Call; summary: RsvpSummary; featured?: boolean; now: number }) {
+/** What happened for this person on a call that is over. */
+export type Review = { attended: boolean; mode: RsvpMode | null; recordingId: string | null; watched: boolean };
+
+function ReviewBlock({ review }: { review: Review }) {
+  const status = review.attended
+    ? review.watched ? "✓ You attended live and watched the replay" : "✓ You attended live"
+    : review.watched ? "✓ You watched the replay"
+    : review.mode === "recording" ? "You're going to catch the replay"
+    : review.mode === "live" ? "You planned to join live. You can still catch the replay."
+    : "You did not RSVP to this call.";
+  return (
+    <div className="call-review">
+      <p className="call-status">{status}</p>
+      {review.recordingId
+        ? <Link className="btn primary" href={`/calls/${review.recordingId}`} style={{ textDecoration: "none" }}>{review.watched ? "Watch the replay again" : "Watch the replay"}</Link>
+        : <p className="when" style={{ margin: 0 }}>The replay is not up yet. We will let you know when it is.</p>}
+    </div>
+  );
+}
+
+/** A call with its time, who it is for, the RSVP buttons and who is coming. Once it is over, it shows what you did and a button to the replay. */
+export function CallCard({ call, summary, featured = false, now, review }: { call: Call; summary: RsvpSummary; featured?: boolean; now: number; review?: Review }) {
   const start = new Date(call.starts_at);
   const live = now >= start.getTime() && now < endsAt(start, call.duration_minutes).getTime();
   const notOver = now < endsAt(start, call.duration_minutes).getTime();
@@ -26,7 +47,7 @@ export function CallCard({ call, summary, featured = false, now }: { call: Call;
       </p>
       {call.description ? <p className="call-desc">{call.description}</p> : null}
       {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} durationMinutes={call.duration_minutes} /></p> : null}
-      <RsvpControls callId={call.id} mine={summary.mine} />
+      {!notOver && review ? <ReviewBlock review={review} /> : notOver ? <RsvpControls callId={call.id} mine={summary.mine} /> : null}
       <Attendees summary={summary} />
     </article>
   );

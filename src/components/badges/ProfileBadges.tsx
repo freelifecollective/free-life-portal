@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BadgeMedal, labelFor } from "./BadgeMedal";
+import { BadgeTile } from "./BadgeTile";
 import { FAMILIES, type BadgeState } from "@/lib/badges/defs";
 
 /** The badges someone has earned, shown on their profile. */
@@ -12,9 +12,7 @@ export function ProfileBadges({ state }: { state: BadgeState }) {
         <p style={{ margin: 0 }}>No badges yet. Join a live call or keep a streak going in Tasks, and your first one lands here.</p>
       ) : (
         <ul className="profile-medals">
-          {earned.map((e) => { const l = labelFor(e.key); return l ? (
-            <li key={e.key} title={`${l.title}: ${l.level}`}><BadgeMedal id={e.key} size={66} /><span>{l.level}</span><small>{l.title}</small></li>
-          ) : null; })}
+          {earned.map((e) => <li key={e.key}><BadgeTile id={e.key} /></li>)}
         </ul>
       )}
       <p style={{ margin: "14px 0 0" }}><Link href="/tasks">See all badges and track your streaks →</Link></p>

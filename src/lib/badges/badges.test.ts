@@ -4,7 +4,7 @@ import { FAMILIES, family, newestFirst, parseKey, tagOf, tierOf } from "./defs";
 
 describe("badges", () => {
   it("matches the levels handed out by the database", () => {
-    const sql = readFileSync("supabase/migrations/0032_badges.sql", "utf8") + readFileSync("supabase/migrations/0033_milestones.sql", "utf8");
+    const sql = ["0032_badges", "0033_milestones", "0034_replays"].map((f) => readFileSync(`supabase/migrations/${f}.sql`, "utf8")).join("\n");
     const arrays = [...sql.matchAll(/array\[([0-9, ]+)\]/g)].map((m) => m[1].split(",").map((x) => Number(x.trim())));
     for (const f of FAMILIES) if (f.steps) expect(arrays.some((a) => a.join() === f.steps!.join()), f.id).toBe(true);
     // the open-ended ones: coaching 1 then every 10; sales 1, 5 then every 10
