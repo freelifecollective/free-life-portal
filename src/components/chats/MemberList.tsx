@@ -42,7 +42,7 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
             <ul className="member-social" aria-label="Social profiles">
               {picked.instagram ? (
                 <li><a href={instagramUrl(picked.instagram)} target="_blank" rel="noopener noreferrer" aria-label={`Instagram: @${picked.instagram}`}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
                     <defs><radialGradient id="ig-grad" cx="30%" cy="107%" r="150%"><stop offset="0" stopColor="#FED576" /><stop offset=".26" stopColor="#F47133" /><stop offset=".61" stopColor="#BC3081" /><stop offset="1" stopColor="#4C63D2" /></radialGradient></defs>
                     <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#ig-grad)" />
                     <rect x="5.4" y="5.4" width="13.2" height="13.2" rx="4" fill="none" stroke="#fff" strokeWidth="1.8" />
@@ -53,7 +53,7 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
               ) : null}
               {picked.facebook ? (
                 <li><a href={facebookUrl(picked.facebook)} target="_blank" rel="noopener noreferrer" aria-label={`Facebook: ${picked.facebook}`}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="11" fill="#1877F2" />
                     <path fill="#fff" d="M13.4 22v-7.6h2.5l.4-3h-2.9V9.5c0-.9.3-1.5 1.5-1.5h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.4H8v3h2.5V22z" />
                   </svg>
