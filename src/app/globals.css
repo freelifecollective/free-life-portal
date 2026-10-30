@@ -873,8 +873,6 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .offer-pick .check, .va-choices .check { margin: 0; }
 .offer-pick .check { display: flex; align-items: center; gap: 8px; padding: 9px 4px; font-size: 14.5px; background: #fff; cursor: pointer; line-height: 1.25; }
 
-.nav .nav-static { cursor: default; border-top: 1px solid var(--line); }
-.nav .nav-static:hover { color: var(--muted); }
 .login-splash .splash-name { margin-top: 0; }
 .login-form { display: grid; gap: 10px; width: min(380px, 100%); margin-top: 18px; text-align: left; }
 .login-form input[type="email"], .login-form input[name="code"] { height: 52px; border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; font: inherit; font-size: 16px; background: #fff; color: var(--ink); text-align: center; }
@@ -999,7 +997,11 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 /* menu section headings and dividers, in the style of the Chats sections */
 .nav .nav-group .nav-toggle { margin-top: 0; padding: 4px 14px 6px 6px; border-top: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink); }
 .nav .nav-group .nav-toggle:hover { color: var(--ink); }
-.nav .nav-static, .nav .nav-static:hover { border-top: 0; color: var(--ink); cursor: default; }
 .nav li.nav-divider { display: flex; align-items: center; gap: 8px; padding: 10px 6px; color: var(--accent); }
 .nav li.nav-divider span { flex: 1; height: 1px; padding: 0; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
 .nav li.nav-divider i { font-style: normal; font-size: 12px; line-height: 1; color: var(--accent); display: block; padding: 0; }
+
+/* menu: headings in the portal's tan, tabs in black, headings always fold */
+.nav .nav-group .nav-toggle, .nav .nav-group .nav-toggle:hover { color: var(--accent); cursor: pointer; }
+.nav li > a { color: #111; }
+.nav li > a[aria-current="page"] { color: #000; }
