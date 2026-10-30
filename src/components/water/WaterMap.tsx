@@ -1,5 +1,6 @@
 "use client";
 
+import { openDockChat } from "@/components/messages/MessageDock";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Map as LMap, Marker, CircleMarker } from "leaflet";
@@ -35,6 +36,8 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
         const mine = p.member_id === myId;
         const c = L.circleMarker([p.lat, p.lng], { radius: mine ? 10 : 8, color: "#fff", weight: 2, fillColor: mine ? "#e5251b" : "#1e78b4", fillOpacity: 0.95 }).addTo(m);
         c.bindPopup(popupFor(p, mine));
+        /* clicking a dot zooms in to where that person is */
+        c.on("click", () => m.flyTo([p.lat, p.lng], Math.max(m.getZoom(), 12), { duration: 0.8 }));
         markers.current.set(p.member_id, c);
       }
       map.current = m;
@@ -137,6 +140,14 @@ function popupFor(p: WaterPin, mine: boolean): HTMLElement {
   if (p.rank) add("span", "Rank: " + p.rank);
   add("span", p.prefilter ? "Has a prefilter" : "No prefilter");
   add("span", WATER_LABEL[p.water_type]);
+  if (!mine) {
+    const msg = document.createElement("button");
+    msg.type = "button";
+    msg.className = "btn small primary ws-pop-msg";
+    msg.textContent = "Message";
+    msg.addEventListener("click", () => openDockChat(p.member_id));
+    el.appendChild(msg);
+  }
   return el;
 }
 

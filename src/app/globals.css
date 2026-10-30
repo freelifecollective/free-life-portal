@@ -1102,12 +1102,13 @@ li.unread .dock-who strong { font-weight: 800; }
 .dock-all { display: block; text-align: center; padding: 11px; font-size: 14px; border-top: 1px solid rgba(0,0,0,.08); }
 .dock-windows { position: fixed; bottom: 0; right: 16px; display: flex; flex-direction: row-reverse; align-items: flex-end; gap: 12px; z-index: 55; pointer-events: none; }
 .dock-win { pointer-events: auto; width: 320px; max-width: calc(100vw - 24px); background: var(--card, #fff); border-radius: 12px 12px 0 0; box-shadow: 0 0 18px rgba(0,0,0,.25); display: flex; flex-direction: column; overflow: hidden; }
-.dock-win-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #2b2522; color: #fff; cursor: pointer; }
-.dock-win-title { flex: 1; min-width: 0; display: flex !important; align-items: center; gap: 8px; text-align: left; }
-.dock-win-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-.dock-win-tools { display: flex; gap: 2px; }
-.dock-win-head button, .dock-win-head a { all: unset; cursor: pointer; color: #fff; padding: 4px 7px; border-radius: 6px; font-size: 16px; line-height: 1; }
-.dock-win-head button:hover, .dock-win-head a:hover { background: rgba(255,255,255,.18); }
+.dock-win-head { display: flex; align-items: center; gap: 4px; padding: 6px 8px 6px 6px; min-height: 56px; background: #fff; color: var(--ink); border-bottom: 1px solid var(--line); box-shadow: 0 1px 3px rgba(43,37,34,.06); }
+.dock-win-head .dock-win-title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; text-align: left; padding: 4px 8px; border-radius: 10px; cursor: pointer; color: var(--ink); }
+.dock-win-head .dock-win-title:hover { background: rgba(43,37,34,.06); }
+.dock-win-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; font-weight: 700; line-height: 1.2; }
+.dock-win-tools { display: flex; align-items: center; gap: 2px; flex: none; }
+.dock-win-head .dock-x { all: unset; box-sizing: border-box; cursor: pointer; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--accent-deep); font-size: 19px; font-weight: 700; line-height: 1; text-decoration: none; }
+.dock-win-head .dock-x:hover, .dock-win-head .dock-x:focus-visible { background: var(--tint); }
 .dock-thread { height: 300px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .dock-msg { max-width: 80%; width: fit-content; padding: 7px 11px; border-radius: 16px; background: #eee; font-size: 14px; overflow-wrap: anywhere; align-self: flex-start; }
 .dock-msg.mine { align-self: flex-end; margin-left: auto !important; background: var(--accent-deep, #a2662f); color: #fff; }
@@ -1119,6 +1120,73 @@ li.unread .dock-who strong { font-weight: 800; }
 .dock-compose textarea { flex: 1; min-width: 0; resize: none; max-height: 90px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 18px; font: inherit; }
 .dock-send { border: 0; background: transparent; color: var(--accent-deep, #a2662f); font-size: 20px; cursor: pointer; padding: 4px 8px; }
 .dock-send:disabled { opacity: .35; cursor: default; }
-.dock-win.min .dock-win-head { border-radius: 12px 12px 0 0; }
+.dock-win.min .dock-win-head { border-radius: 12px 12px 0 0; border-bottom: 0; }
 .dock-win.min { width: 220px; }
 @media (max-width: 700px) { .dock-windows { right: 8px; } .dock-win:nth-child(n+2) { display: none; } .dock-win { width: calc(100vw - 16px); } }
+
+.ws-pop-msg { margin-top: 10px; width: 100%; height: 40px; }
+
+/* notifications dropdown */
+.notif-wrap { position: relative; }
+.notif-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; width: min(380px, calc(100vw - 24px)); background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); overflow: hidden; }
+.notif-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 6px; }
+.notif-panel .notif-list { max-height: min(460px, 70dvh); overflow-y: auto; padding: 0 6px 6px; gap: 2px; }
+.notif-panel .notif-list li > button { border: 0; border-radius: 10px; background: transparent; padding: 10px; }
+.notif-panel .notif-list li > button:hover { background: rgba(43,37,34,.06); }
+.notif-panel .notif-list li.unread > button { background: var(--tint); }
+.notif-panel .notif-main strong { font-weight: 600; font-size: 14px; }
+.notif-panel .notif-main span { font-size: 13px; }
+.notif-all { display: block; text-align: center; padding: 11px; font-size: 14px; border-top: 1px solid rgba(0,0,0,.08); }
+
+/* chat window styled after Messenger: roomy header, name with a small line under it, soft grey message box */
+.dock-win-head { min-height: 64px; padding: 8px 10px 8px 8px; border-bottom: 0; box-shadow: 0 2px 6px rgba(43,37,34,.1); position: relative; z-index: 1; }
+.dock-win-head .dock-win-title { gap: 12px; }
+.dock-win-who { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.dock-win-who strong { font-size: 16px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock-win-who small { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock-win-tools { gap: 4px; }
+.dock-compose { border-top: 0; padding: 10px 12px 12px; align-items: center; gap: 8px; }
+.dock-compose textarea { background: #F0EEEA; border: 0; border-radius: 22px; padding: 11px 16px; line-height: 1.3; }
+.dock-compose textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+.dock-send { width: 38px; height: 38px; display: grid; place-items: center; padding: 0; border-radius: 50%; }
+.dock-send:not(:disabled):hover { background: var(--tint); }
+.dock-thread { padding: 14px 12px; }
+.dock-msg { padding: 8px 13px; }
+.dock-msg:not(.mine) { background: #F0EEEA; }
+.dock-win { border-radius: 14px 14px 0 0; }
+
+/* chat window: delete, pictures, GIFs, emoji */
+.dm-pic { display: block; max-width: 100%; max-height: 240px; border-radius: 12px; object-fit: cover; }
+.bubble .dm-pic { margin-bottom: 6px; max-width: 260px; }
+.dock-line { display: flex; align-items: center; gap: 4px; max-width: 100%; }
+.dock-line.mine { justify-content: flex-end; }
+.dock-line .dock-msg { margin: 0; min-width: 0; }
+.dock-line .dock-msg p { margin: 0; }
+.dock-line.mine .dock-msg { margin-left: 0 !important; }
+.dock-msg.pic { padding: 4px; background: transparent !important; }
+.dock-msg.pic p { padding: 4px 8px; }
+.dock-msg.pic.mine p { background: var(--accent-deep); color: #fff; border-radius: 14px; margin-top: 4px; }
+.dock-msg.pic.theirs p { background: #F0EEEA; border-radius: 14px; margin-top: 4px; }
+.dock-del { all: unset; cursor: pointer; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); opacity: 0; flex: none; }
+.dock-line:hover .dock-del, .dock-del:focus-visible { opacity: 1; }
+@media (hover: none) { .dock-del { opacity: .7; } }
+.dock-del:hover { background: var(--tint); color: #b42318; }
+.dock-ask { font-size: 12px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+.dock-ask button { all: unset; cursor: pointer; font-weight: 700; color: var(--ink); padding: 2px 6px; border-radius: 6px; }
+.dock-ask button:first-of-type { color: #b42318; }
+.dock-ask button:hover { background: var(--tint); }
+.dock-tool { all: unset; cursor: pointer; flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--accent-deep); box-sizing: border-box; }
+.dock-tool:hover, .dock-tool.on, .dock-tool:focus-visible { background: var(--tint); }
+.dock-tool:disabled { opacity: .4; cursor: default; }
+.dock-tool.gifbtn { font-family: var(--font-label); font-weight: 800; font-size: 12px; letter-spacing: .02em; }
+.dock-compose { gap: 2px; padding: 10px 8px 12px; }
+.dock-compose textarea { margin: 0 4px; }
+.dock-tray { border-top: 1px solid rgba(0,0,0,.08); padding: 8px; background: #fff; }
+.dock-tray.emoji { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); max-height: 170px; overflow-y: auto; gap: 2px; }
+.dock-tray.emoji button { all: unset; cursor: pointer; font-size: 22px; line-height: 1; padding: 6px; text-align: center; border-radius: 8px; }
+.dock-tray.emoji button:hover { background: var(--tint); }
+.dock-tray.gif { display: grid; gap: 8px; }
+.dock-tray.gif input { width: 100%; padding: 8px 12px; border: 0; background: #F0EEEA; border-radius: 18px; font: inherit; }
+.dock-gifs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 190px; overflow-y: auto; }
+.dock-gifs button { all: unset; cursor: pointer; border-radius: 8px; overflow: hidden; background: var(--tint); min-height: 60px; }
+.dock-gifs img { width: 100%; height: 100%; object-fit: cover; display: block; }

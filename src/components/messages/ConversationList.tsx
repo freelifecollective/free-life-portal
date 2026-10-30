@@ -1,4 +1,5 @@
 "use client";
+import { DmPicture } from "@/components/messages/DmPicture";
 
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -22,7 +23,7 @@ export function ConversationList({ items, me }: { items: Conversation[]; me: str
               <Avatar url={c.other.avatar_url} initials={name(c.other).charAt(0).toUpperCase()} size={44} />
               <span className="convo-text">
                 <strong>{name(c.other)}{c.other.is_admin ? <small className="admin-tag"> Admin</small> : null}</strong>
-                <span className="convo-last">{c.last.sender_id === me ? "You: " : ""}{c.last.body}</span>
+                <span className="convo-last">{c.last.sender_id === me ? "You: " : ""}{c.last.body || "📷 Picture"}</span>
               </span>
               <span className="convo-meta"><time className="when" dateTime={c.last.created_at}>{formatInZone(new Date(c.last.created_at))}</time>{c.unread ? <span className="badge">{c.unread}</span> : null}</span>
             </Link>
@@ -40,7 +41,7 @@ export function ConversationList({ items, me }: { items: Conversation[]; me: str
             <h2 id="peek-title" className="qh" style={{ marginTop: 0 }}>Peek: {name(peek.other)}</h2>
             <p className="when" style={{ margin: "0 0 12px" }}>{name(peek.other)} will not see a Read receipt.</p>
             <ul className="thread">
-              {peek.preview.map((m) => <li key={m.id} className={m.sender_id === me ? "mine" : "theirs"}><div className="bubble">{m.body}</div><span className="when">{formatInZone(new Date(m.created_at))}</span></li>)}
+              {peek.preview.map((m) => <li key={m.id} className={m.sender_id === me ? "mine" : "theirs"}><div className="bubble">{m.image_url ? <DmPicture src={m.image_url} /> : null}{m.body}</div><span className="when">{formatInZone(new Date(m.created_at))}</span></li>)}
             </ul>
             <div className="dlg-actions"><button className="btn" type="button" onClick={() => dialog.current?.close()}>Close</button><Link className="btn primary" href={`/messages/${peek.other.username}`} style={{ textDecoration: "none" }}>Open and reply</Link></div>
           </div>
