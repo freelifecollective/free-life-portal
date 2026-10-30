@@ -10,7 +10,7 @@ export function Fireworks({ onClose }: { onClose: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const t = window.setTimeout(onClose, 1500);
+    const t = window.setTimeout(onClose, 3000);
     const cv = canvas.current;
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!cv || calm) return () => window.clearTimeout(t);
@@ -33,7 +33,7 @@ export function Fireworks({ onClose }: { onClose: () => void }) {
     let raf = 0, frame = 0;
     const tick = () => {
       frame++;
-      if (frame === 1) { burst(); burst(); } else if (frame % 14 === 0) burst();
+      if (frame === 1) { burst(); burst(); } else if (frame % 16 === 0) burst();
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       for (let i = parts.length - 1; i >= 0; i--) {
         const p = parts[i];
