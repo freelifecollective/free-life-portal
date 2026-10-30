@@ -1,12 +1,13 @@
 -- Replays: how much of a recording someone watched, and badges for watching replays.
 
+-- (safe to run more than once)
 alter table public.recording_views
-  add column last_viewed_at timestamptz not null default now(),
-  add column max_pct integer not null default 0 check (max_pct between 0 and 100),
-  add column completed_at timestamptz;   -- set once at least 80% has been watched
+  add column if not exists last_viewed_at timestamptz not null default now(),
+  add column if not exists max_pct integer not null default 0 check (max_pct between 0 and 100),
+  add column if not exists completed_at timestamptz;   -- set once at least 80% has been watched
 
 -- Called by the player: remembers the furthest point reached (0 to 100) and when it passes 80% marks the replay as watched.
-create function public.record_view(p_recording uuid, p_pct integer) returns void
+create or replace function public.record_view(p_recording uuid, p_pct integer) returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare pct integer := greatest(0, least(coalesce(p_pct, 0), 100));
