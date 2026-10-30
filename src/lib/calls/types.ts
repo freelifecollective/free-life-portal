@@ -30,10 +30,14 @@ export function speakersOf(call: Pick<Call, "call_speakers">): Speaker[] {
 export type Person = { name: string; username: string | null; avatar_url: string | null; mode: RsvpMode };
 export type RsvpSummary = { live: number; recording: number; mine: RsvpMode | null; people: Person[] };
 
-export const KIND_LABEL: Record<CallKind, string> = { community: "Community call", masterclass: "Masterclass", other: "Call" };
+export const KIND_LABEL: Record<CallKind, string> = { community: "Community call", masterclass: "Mastermind Call", other: "Call" };
+/** The kinds an admin can pick for a new call ("Call" only survives on older calls). */
+export const SELECTABLE_KINDS: CallKind[] = ["community", "masterclass"];
+/** The heading on the next-call card, by what kind of call it is. */
+export const NEXT_LABEL: Record<CallKind, string> = { community: "Next Community Call", masterclass: "Next Mastermind Call", other: "Next Call" };
 export const AUDIENCE_LABEL: Record<Audience, string> = { leads_open: "Open to leads", affiliates_only: "Affiliates only" };
 
-/** Masterclasses are for affiliates; community calls are open. The admin can still change it per call. */
+/** Mastermind calls are for affiliates; community calls are open. The admin can still change it per call. */
 export function defaultAudience(kind: CallKind): Audience {
   return kind === "masterclass" ? "affiliates_only" : "leads_open";
 }

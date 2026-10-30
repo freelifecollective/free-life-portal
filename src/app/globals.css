@@ -1048,3 +1048,23 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .nav li.nav-section > .nav-toggle, .nav .nav-section .nav-toggle { padding: 8px 8px 8px 6px; }
 .nav li.nav-section + li:not(.nav-section) { margin-top: 8px; }
 .speaker-edit select { height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 0 10px; font: inherit; background: #fff; color: var(--ink); max-width: 100%; }
+
+/* next call card: the two RSVP choices, join, and the booked-calls bubble */
+.hc-rsvp .rsvp { margin-top: 4px; }
+.hc-rsvp .rsvp .btn { flex: 1 1 200px; height: 52px; background: rgba(255, 255, 255, 0.6); }
+.hc-rsvp .rsvp .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.hc-note { margin: 0; font-size: 13px; color: #6E5C4F; }
+.home-call .join-wrap { display: contents; }
+.home-col { display: grid; gap: 20px; align-content: start; }
+.booked { display: grid; gap: 14px; align-content: start; }
+.booked-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.booked-head .hs-big { display: block; margin-top: 4px; }
+.booked-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.booked-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.booked-main { display: grid; gap: 2px; flex: 1; min-width: 150px; }
+.booked-closer { display: flex; align-items: center; gap: 8px; }
+.booked-closer span { display: grid; line-height: 1.2; }
+.booked-closer small { font-size: 11px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; font-weight: 700; }
+.hc-people { border-top: 1px solid rgba(43, 37, 34, 0.12); padding-top: 14px; margin-top: 4px; }
+.home-call .attendee-count, .home-call .attendees-empty { color: #5E4D41; }
+.home-call .bubbles .avatar, .home-call .bubble-more { border-color: #e8dacd; }

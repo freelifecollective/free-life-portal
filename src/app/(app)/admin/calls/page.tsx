@@ -46,7 +46,7 @@ export default async function AdminCallsPage() {
       </section>
       <h2 className="qh" style={{ marginTop: 36 }}>Upcoming</h2>
       {upcoming.length ? <CallList items={upcoming} /> : <p className="page-lede" style={{ marginBottom: 0 }}>Nothing scheduled.</p>}
-      {past.length ? <><h2 className="qh" style={{ marginTop: 36 }}>Earlier</h2><CallList items={past} /></> : null}
+      {past.length ? <><h2 className="qh" style={{ marginTop: 36 }}>Past Calls</h2><CallList items={past} /></> : null}
     </>
   );
 }

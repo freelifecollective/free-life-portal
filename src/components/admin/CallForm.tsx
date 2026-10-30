@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import type { CallFormState } from "@/app/(app)/admin/calls/actions";
 import { LENGTHS } from "@/lib/calls/length";
 import { SpeakersField, type Affiliate, type SpeakerValue } from "./SpeakersField";
-import { AUDIENCE_LABEL, KIND_LABEL, defaultAudience, type Audience, type CallKind } from "@/lib/calls/types";
+import { AUDIENCE_LABEL, KIND_LABEL, SELECTABLE_KINDS, defaultAudience, type Audience, type CallKind } from "@/lib/calls/types";
 
 export type CallFormValues = {
   title: string; kind: CallKind; audience: Audience; starts: string; length: string; description: string; join_url: string; pinned: boolean; speakers: SpeakerValue[];
@@ -26,7 +26,7 @@ export function CallForm({ action, initial = EMPTY_CALL, submitLabel, affiliates
       <div className="row">
         <div className="field"><label htmlFor="kind">Kind of call</label>
           <select id="kind" name="kind" value={kind} onChange={(e) => { const k = e.target.value as CallKind; setKind(k); setAudience(defaultAudience(k)); }}>
-            {Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+            {(initial.kind === "other" ? [...SELECTABLE_KINDS, "other" as CallKind] : SELECTABLE_KINDS).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
           </select></div>
         <div className="field"><label htmlFor="audience">Who can see it</label>
           <select id="audience" name="audience" value={audience} onChange={(e) => setAudience(e.target.value as Audience)}>
