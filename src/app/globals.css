@@ -1216,3 +1216,11 @@ li.unread .dock-who strong { font-weight: 800; }
 .member-profile .member-info .btn { height: 46px; padding: 0 26px; margin-top: 4px; }
 .member-profile .member-tags, .member-profile .member-social { justify-content: flex-start; margin: 4px 0; }
 @media (max-width: 520px) { .member-card { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; } .member-info { align-items: center; } .member-profile .member-tags, .member-profile .member-social { justify-content: center; } }
+
+/* speakers you can click to see their profile */
+.speaker-hit { all: unset; cursor: pointer; border-radius: 50%; line-height: 0; display: block; transition: transform .15s; }
+.speaker-hit:hover { transform: translateY(-2px); }
+.speaker-hit:focus-visible, .speaker-name-btn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 3px; }
+.speaker-name-btn { all: unset; cursor: pointer; font: inherit; border-bottom: 1px dashed transparent; }
+.speaker-name-btn:hover { border-bottom-color: currentColor; }
+.speakers > dialog { font-weight: 400; }
