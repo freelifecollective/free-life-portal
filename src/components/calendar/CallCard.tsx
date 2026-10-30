@@ -49,7 +49,7 @@ export function CallCard({ call, summary, featured = false, now, review, attenda
         {formatInZone(start)} · {callLength(call)}
         <LocalTime iso={call.starts_at} />
       </p>
-      <SpeakerBubbles speakers={speakersOf(call)} />
+      <SpeakerBubbles speakers={speakersOf(call)} profiles />
       {call.description ? <p className="call-desc">{call.description}</p> : null}
       {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} durationMinutes={call.duration_minutes} /></p> : null}
       {!notOver && attendance ? <Attendees summary={attendance} past /> : null}

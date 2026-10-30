@@ -33,7 +33,7 @@ export function NextCallCard({ call, summary, now, inviteUsername }: { call: Cal
       </div>
       <h2 className="hc-title">{call.title}</h2>
       <p className="hc-meta">{formatInZone(start)} · {callLength(call)}</p>
-      <SpeakerBubbles speakers={speakersOf(call)} />
+      <SpeakerBubbles speakers={speakersOf(call)} profiles />
       <LocalTime iso={call.starts_at} />
       <Countdown startsAt={call.starts_at} endsAt={end.toISOString()} />
       <div className="hc-rsvp">
