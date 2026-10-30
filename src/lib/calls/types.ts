@@ -17,14 +17,14 @@ export type Call = {
   host: string | null;
   length_label?: string | null;
   /** who is speaking (as the database returns it; use speakersOf() for the sorted list) */
-  call_speakers?: { name: string; photo_url: string | null; position: number }[];
+  call_speakers?: { name: string; photo_url: string | null; position: number; member_id?: string | null }[];
 };
 
-export type Speaker = { name: string; photo_url: string | null };
+export type Speaker = { name: string; photo_url: string | null; /** set when chosen from the FLC Member list; empty for a guest */ member_id?: string | null };
 
 /** The speakers of a call, in the order the admin set. */
 export function speakersOf(call: Pick<Call, "call_speakers">): Speaker[] {
-  return [...(call.call_speakers ?? [])].sort((a, b) => a.position - b.position).map(({ name, photo_url }) => ({ name, photo_url }));
+  return [...(call.call_speakers ?? [])].sort((a, b) => a.position - b.position).map(({ name, photo_url, member_id }) => ({ name, photo_url, member_id: member_id ?? null }));
 }
 
 export type Person = { name: string; username: string | null; avatar_url: string | null; mode: RsvpMode };
@@ -42,4 +42,4 @@ export function defaultAudience(kind: CallKind): Audience {
   return kind === "masterclass" ? "affiliates_only" : "leads_open";
 }
 
-export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host, length_label, call_speakers(name, photo_url, position)";
+export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host, length_label, call_speakers(name, photo_url, position, member_id)";

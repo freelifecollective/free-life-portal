@@ -37,14 +37,16 @@ function parse(form: FormData): Parsed {
 const SPEAKER_PHOTOS = [`${SUPABASE_URL}/storage/v1/object/public/speakers/`, `${SUPABASE_URL}/storage/v1/object/public/avatars/`];
 
 /** The speakers typed into the form, in order (blank names dropped, pictures only from our own storage). */
-function speakersFrom(form: FormData): { name: string; photo_url: string | null; position: number }[] {
+function speakersFrom(form: FormData): { name: string; photo_url: string | null; position: number; member_id: string | null }[] {
   const names = form.getAll("speaker_name").map(String);
   const photos = form.getAll("speaker_photo").map(String);
-  const out: { name: string; photo_url: string | null; position: number }[] = [];
+  const members = form.getAll("speaker_member").map(String);
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const out: { name: string; photo_url: string | null; position: number; member_id: string | null }[] = [];
   names.forEach((n, i) => {
     const name = n.trim().slice(0, 80);
     const photo = (photos[i] ?? "").trim();
-    if (name && out.length < 6) out.push({ name, photo_url: SPEAKER_PHOTOS.some((p) => photo.startsWith(p)) && photo.length < 400 ? photo : null, position: out.length });
+    if (name && out.length < 6) out.push({ name, photo_url: SPEAKER_PHOTOS.some((p) => photo.startsWith(p)) && photo.length < 400 ? photo : null, position: out.length, member_id: UUID.test(members[i] ?? "") ? members[i] : null });
   });
   return out;
 }
