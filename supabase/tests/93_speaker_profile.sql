@@ -38,13 +38,13 @@ update public.profiles set first_name='Liz', last_name='Z', username='lizlead', 
 
 do $$ begin
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  perform tests.eq('an affiliate finds a member speaker', (select s.found from public.speaker_profile('max x') s), true);
-  perform tests.eq('and sees their username', (select s.username::text from public.speaker_profile('Max X') s), 'maxmember');
-  perform tests.eq('an unknown name is a guest', (select s.found from public.speaker_profile('Some Guest') s), false);
+  perform tests.eq('an affiliate finds a linked member', (select s.found from public.speaker_profile('00000000-0000-0000-0000-0000000000a5') s), true);
+  perform tests.eq('and sees their username', (select s.username::text from public.speaker_profile('00000000-0000-0000-0000-0000000000a5') s), 'maxmember');
+  perform tests.eq('an unknown id is not found', (select s.found from public.speaker_profile('00000000-0000-0000-0000-0000000000ff') s), false);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a3');
-  perform tests.eq('a lead finds the member too', (select s.found from public.speaker_profile('Max X') s), true);
-  perform tests.eq('but gets no username', (select s.username::text from public.speaker_profile('Max X') s), null::text);
+  perform tests.eq('a lead finds the member too', (select s.found from public.speaker_profile('00000000-0000-0000-0000-0000000000a5') s), true);
+  perform tests.eq('but gets no username', (select s.username::text from public.speaker_profile('00000000-0000-0000-0000-0000000000a5') s), null::text);
   perform tests.logout();
 end $$;
 rollback;

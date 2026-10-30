@@ -27,7 +27,7 @@ export default async function EditCallPage({ params }: PageProps<"/admin/calls/[
           submitLabel="Save changes"
           affiliates={await listAffiliates(supabase)}
           action={updateCall.bind(null, id)}
-          initial={{ title: data.title, kind: data.kind, audience: data.audience, starts: toZonedInput(new Date(data.starts_at)), length: lengthIdOf(data) ?? "keep", description: data.description ?? "", join_url: data.join_url ?? "", pinned: data.pinned, speakers: speakersOf(data).map((s) => ({ name: s.name, photo_url: s.photo_url ?? "" })) }}
+          initial={{ title: data.title, kind: data.kind, audience: data.audience, starts: toZonedInput(new Date(data.starts_at)), length: lengthIdOf(data) ?? "keep", description: data.description ?? "", join_url: data.join_url ?? "", pinned: data.pinned, speakers: speakersOf(data).map((s) => ({ name: s.name, photo_url: s.photo_url ?? "", member_id: s.member_id ?? "" })) }}
         />
       </section>
       <form action={deleteCall.bind(null, id)} style={{ marginTop: 24 }}>

@@ -32,9 +32,13 @@ export function SpeakerBubbles({ speakers, size = 52, label, profiles = false }:
   async function open(s: Speaker) {
     if (!profiles || busy) return;
     setBusy(s.name);
-    const { data } = await createClient().rpc("speaker_profile", { p_name: s.name });
+    /* only a speaker chosen from the FLC Member list has a profile; one typed in by hand is a guest */
+    let r: Found | undefined;
+    if (s.member_id) {
+      const { data } = await createClient().rpc("speaker_profile", { p_id: s.member_id });
+      r = (data as Found[] | null)?.[0];
+    }
     setBusy(null);
-    const r = (data as Found[] | null)?.[0];
     const guestPerson: MemberPerson = { id: "", first_name: s.name, last_name: null, username: null, avatar_url: s.photo_url, instagram: null, facebook: null, is_admin: false, birth_month: null, birth_day: null, birth_year: null, call_closer: false, offers_services: false };
     if (r?.found) setShown({ person: { ...r, avatar_url: r.avatar_url ?? s.photo_url }, guest: false, canMessage: r.viewer_is_member });
     else setShown({ person: guestPerson, guest: true, canMessage: false });
