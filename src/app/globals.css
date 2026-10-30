@@ -903,8 +903,8 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .qs-opt input { margin-top: 3px; accent-color: var(--accent); width: 18px; height: 18px; }
 .qs-opt span { display: grid; gap: 2px; }
 .qs-opt small { color: var(--muted); font-size: 13px; }
-.home-quote { margin: 14px auto 0; max-width: 760px; text-align: center; display: grid; gap: 8px; }
-.home-quote q { quotes: "\201C" "\201D"; font-family: var(--font-label); font-weight: 300; font-style: normal; font-size: clamp(18px, 2vw, 23px); line-height: 1.55; color: var(--ink); }
+.home-quote { margin: 14px auto 0; max-width: 1200px; text-align: center; display: grid; gap: 8px; }
+.home-quote q { text-wrap: balance; quotes: "\201C" "\201D"; font-family: var(--font-label); font-weight: 300; font-style: normal; font-size: clamp(18px, 2vw, 23px); line-height: 1.55; color: var(--ink); }
 .home-quote cite { font-family: var(--font-label); font-style: normal; font-size: 12px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
 .home-row.one { grid-template-columns: minmax(0, 1fr); }
 
