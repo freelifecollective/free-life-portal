@@ -1190,3 +1190,7 @@ li.unread .dock-who strong { font-weight: 800; }
 .dock-gifs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 190px; overflow-y: auto; }
 .dock-gifs button { all: unset; cursor: pointer; border-radius: 8px; overflow: hidden; background: var(--tint); min-height: 60px; }
 .dock-gifs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.member-profile .social { margin: 6px 0 10px; gap: 14px; }
+.member-profile .social a { width: 46px; height: 46px; }
+.member-profile .social svg { width: 22px; height: 22px; }

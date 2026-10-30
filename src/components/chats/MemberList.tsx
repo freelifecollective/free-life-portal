@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SocialButtons } from "@/components/landing/SocialButtons";
 import { Avatar } from "@/components/Avatar";
 import { openDockChat } from "@/components/messages/MessageDock";
 import { createClient } from "@/lib/supabase/client";
@@ -8,7 +9,6 @@ import { createClient } from "@/lib/supabase/client";
 type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; instagram: string | null; facebook: string | null; is_admin: boolean };
 const name = (p: Person) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "Member";
 const initials = (p: Person) => ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
-const link = (v: string | null, base: string) => (!v ? null : /^https?:\/\//i.test(v) ? v : base + v.replace(/^@/, ""));
 
 /** A section heading you can click: it opens a popup listing everyone in that group. Choosing a name shows their profile and a Message button. */
 export function MemberList({ kind, title, children, canMessage }: { kind: "affiliates" | "leads"; title: string; children: React.ReactNode; canMessage: boolean }) {
@@ -39,10 +39,7 @@ export function MemberList({ kind, title, children, canMessage }: { kind: "affil
             <Avatar url={picked.avatar_url} initials={initials(picked)} size={96} />
             <h2 className="qh" style={{ margin: "8px 0 0" }}>{name(picked)}</h2>
             {picked.username ? <p className="when" style={{ margin: 0 }}>@{picked.username}{picked.is_admin ? " · Admin" : ""}</p> : null}
-            <p className="member-links">
-              {link(picked.instagram, "https://instagram.com/") ? <a href={link(picked.instagram, "https://instagram.com/")!} target="_blank" rel="noreferrer">Instagram</a> : null}
-              {link(picked.facebook, "https://facebook.com/") ? <a href={link(picked.facebook, "https://facebook.com/")!} target="_blank" rel="noreferrer">Facebook</a> : null}
-            </p>
+            <SocialButtons instagram={picked.instagram} facebook={picked.facebook} />
             {canMessage && picked.username ? (
               <button type="button" className="btn" onClick={() => { openDockChat(picked.id); dlg.current?.close(); }}>Message</button>
             ) : null}
