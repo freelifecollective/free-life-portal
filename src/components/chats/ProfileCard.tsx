@@ -223,8 +223,8 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
         <label>Calls taken<input type="text" autoComplete="off" maxLength={40} placeholder="e.g. 50+" value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
         <label>Taking calls since<input type="text" autoComplete="off" placeholder="e.g. January 2024" value={vals.since} onChange={(e) => setVals({ ...vals, since: e.target.value })} /></label>
         <label>Close rate (%)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 85" value={vals.rate} onChange={(e) => setVals({ ...vals, rate: e.target.value })} /></label>
-        <label>Charge per call ($)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 50" value={vals.perCall} onChange={(e) => setVals({ ...vals, perCall: e.target.value })} /></label>
-        <label>Charge per product sale (press Enter for a new line)<textarea rows={4} maxLength={400} placeholder={"1A-3A = $50\n4A+ = 8% of total sales commission"} value={vals.perSale} onChange={(e) => setVals({ ...vals, perSale: e.target.value })} /></label>
+        <label>Charge per call (USD)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 50" value={vals.perCall} onChange={(e) => setVals({ ...vals, perCall: e.target.value })} /></label>
+        <label>Charge per product sale (USD) (press Enter for a new line)<textarea rows={4} maxLength={400} placeholder={"1A-3A = $50\n4A+ = 8% of total sales commission"} value={vals.perSale} onChange={(e) => setVals({ ...vals, perSale: e.target.value })} /></label>
         {msg ? <p className="err" role="alert">{msg}</p> : null}
         <div className="dlg-actions"><button type="button" className="btn small" onClick={() => setEdit(false)}>Cancel</button><button type="submit" className="btn small primary">Save</button></div>
       </form>
@@ -237,8 +237,8 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
         <div className="pc-row pc-plain"><div><small>calls taken</small><span>{d?.calls_taken || "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>taking calls for</small><span>{since ?? "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>close rate</small><span>{d?.close_rate != null ? `${d.close_rate}%` : "Not set yet"}</span></div></div>
-        <div className="pc-row pc-plain"><div><small>charges per call</small><span>{money(d?.price_per_call_cents ?? null)}</span></div></div>
-        <div className="pc-row pc-plain"><div><small>charges per product sale</small><span className="pc-multiline">{d?.price_per_sale || "Not set"}</span></div></div>
+        <div className="pc-row pc-plain"><div><small>charges per call (USD)</small><span>{money(d?.price_per_call_cents ?? null)}</span></div></div>
+        <div className="pc-row pc-plain"><div><small>charges per product sale (USD)</small><span className="pc-multiline">{d?.price_per_sale || "Not set"}</span></div></div>
       </div>
       {admin ? <button type="button" className="btn small pc-edit" onClick={startEdit}>Edit these details</button> : null}
     </>
