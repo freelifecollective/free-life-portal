@@ -8,9 +8,11 @@ type P = { x: number; y: number; vx: number; vy: number; life: number; max: numb
 /** A quick full-screen burst of fireworks in the portal's colours, with the "Crushed it!" message. It closes by itself after a moment (or on a tap). */
 export function Fireworks({ onClose }: { onClose: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const close = useRef(onClose);
+  useEffect(() => { close.current = onClose; });
 
   useEffect(() => {
-    const t = window.setTimeout(onClose, 3000);
+    const t = window.setTimeout(() => close.current(), 3000);
     const cv = canvas.current;
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!cv || calm) return () => window.clearTimeout(t);
@@ -48,7 +50,7 @@ export function Fireworks({ onClose }: { onClose: () => void }) {
     };
     raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", size); window.clearTimeout(t); };
-  }, [onClose]);
+  }, []);
 
   return (
     <div className="party" role="dialog" aria-modal="true" aria-label="You cleared your to-do list" onClick={onClose}>

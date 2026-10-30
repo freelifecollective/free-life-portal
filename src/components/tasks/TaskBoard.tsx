@@ -9,8 +9,6 @@ import { Fireworks } from "./Fireworks";
 import { TaskForm } from "./TaskForm";
 import { TrashButton } from "./TrashButton";
 
-const CELEBRATED = "flc_tasks_celebrated";
-
 /** The whole Tasks screen: today's list (drag or use the arrows to reorder), what is coming up, and what is done. */
 export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: string; tz: string }) {
   const router = useRouter();
@@ -37,7 +35,6 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
   function celebrateIfClear(next: Task[]) {
     const s = split(next, today);
     if (s.todayList.length > 0 || s.doneToday.length === 0) return;
-    try { if (localStorage.getItem(CELEBRATED) === today) return; localStorage.setItem(CELEBRATED, today); } catch { /* still celebrate */ }
     setParty(true);
   }
 
