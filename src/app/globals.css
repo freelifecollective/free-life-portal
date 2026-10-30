@@ -1313,3 +1313,8 @@ a.pc-row:hover { background: var(--tint); }
 
 .pc-multiline { white-space: pre-line; }
 .pc-form textarea { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 16px; color: var(--ink); background: #fff; resize: vertical; width: 100%; }
+
+/* the next-call card is only as wide as its contents, so the space on its left and right is equal (same on Home and Calls) */
+.home-row > .home-call { width: fit-content; max-width: 100%; }
+.home-row > .home-call .hc-people, .home-row > .home-call .hc-actions { width: 100%; }
+@media (max-width: 640px) { .home-row > .home-call { width: 100%; } }
