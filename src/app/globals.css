@@ -997,6 +997,7 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 /* menu section headings and dividers, in the style of the Chats sections */
 .nav .nav-group .nav-toggle { margin-top: 0; padding: 4px 14px 6px 6px; border-top: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: var(--ink); }
 .nav .nav-group .nav-toggle:hover { color: var(--ink); }
+.nav li.nav-divider { display: flex; align-items: center; gap: 8px; padding: 10px 6px; color: var(--accent); }
 .nav li.nav-divider span { flex: 1; height: 1px; padding: 0; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
 .nav li.nav-divider i { font-style: normal; font-size: 12px; line-height: 1; color: var(--accent); display: block; padding: 0; }
 
