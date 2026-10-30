@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { AUDIENCE_LABEL, KIND_LABEL, type Call, type RsvpMode, type RsvpSummary } from "@/lib/calls/types";
+import { AUDIENCE_LABEL, KIND_LABEL, speakersOf, type Call, type RsvpMode, type RsvpSummary } from "@/lib/calls/types";
 import { endsAt, formatInZone } from "@/lib/time";
 import { LiveBadge } from "@/components/LiveBadge";
 import { FeedbackLink } from "@/components/calls/FeedbackLink";
 import { JoinButton } from "@/components/calls/JoinButton";
 import { Attendees } from "./Attendees";
+import { SpeakerBubbles } from "./SpeakerBubbles";
 import { LocalTime } from "./LocalTime";
 import { RsvpControls } from "./RsvpControls";
 
@@ -30,7 +31,7 @@ function ReviewBlock({ review, call }: { review: Review; call: Pick<Call, "id" |
 }
 
 /** A call with its time, who it is for, the RSVP buttons and who is coming. Once it is over, it shows what you did and a button to the replay. */
-export function CallCard({ call, summary, featured = false, now, review }: { call: Call; summary: RsvpSummary; featured?: boolean; now: number; review?: Review }) {
+export function CallCard({ call, summary, featured = false, now, review, attendance }: { call: Call; summary: RsvpSummary; featured?: boolean; now: number; review?: Review; attendance?: RsvpSummary }) {
   const start = new Date(call.starts_at);
   const live = now >= start.getTime() && now < endsAt(start, call.duration_minutes).getTime();
   const notOver = now < endsAt(start, call.duration_minutes).getTime();
@@ -47,10 +48,12 @@ export function CallCard({ call, summary, featured = false, now, review }: { cal
         {formatInZone(start)} · {call.duration_minutes} min
         <LocalTime iso={call.starts_at} />
       </p>
+      <SpeakerBubbles speakers={speakersOf(call)} />
       {call.description ? <p className="call-desc">{call.description}</p> : null}
       {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} durationMinutes={call.duration_minutes} /></p> : null}
+      {!notOver && attendance ? <Attendees summary={attendance} past /> : null}
       {!notOver && review ? <ReviewBlock review={review} call={call} /> : notOver ? <RsvpControls callId={call.id} mine={summary.mine} /> : null}
-      <Attendees summary={summary} />
+      {notOver || !review ? <Attendees summary={summary} /> : null}
     </article>
   );
 }

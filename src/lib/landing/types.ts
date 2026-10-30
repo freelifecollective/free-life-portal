@@ -19,6 +19,7 @@ export type PublicCall = {
   starts_at: string;
   duration_minutes: number;
   registered: number;
+  speakers?: { name: string; photo_url: string | null }[];
 };
 
 export const instagramUrl = (h: string) => `https://www.instagram.com/${encodeURIComponent(h)}/`;

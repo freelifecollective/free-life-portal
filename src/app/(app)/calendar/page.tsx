@@ -5,7 +5,7 @@ import { CallChip } from "@/components/calendar/CallChip";
 import { CalendarFeed } from "@/components/calendar/CalendarFeed";
 import { requireMember } from "@/lib/auth/guards";
 import { rsvpSummary } from "@/lib/calls/queries";
-import { CALL_COLUMNS, type Call } from "@/lib/calls/types";
+import { CALL_COLUMNS, type Call, type RsvpSummary } from "@/lib/calls/types";
 import type { Review } from "@/components/calendar/CallCard";
 import { CALL_ZONE, endsAt, nowMs, toZonedInput, zonedToUtc } from "@/lib/time";
 
@@ -51,6 +51,14 @@ export default async function CalendarPage(props: PageProps<"/calendar">) {
   const attended = new Set((att ?? []).map((a) => a.call_id as string));
   const recordingOf = new Map<string, string>();
   for (const r of recs ?? []) if (r.call_id && !recordingOf.has(r.call_id as string)) recordingOf.set(r.call_id as string, r.id as string);
+  /* who actually joined each finished call live */
+  const finished = calls.filter((c) => now >= endsAt(new Date(c.starts_at), c.duration_minutes).getTime());
+  const attendedBy = new Map<string, RsvpSummary>();
+  await Promise.all(finished.map(async (c) => {
+    const { data: a } = await supabase.rpc("call_attendance_summary", { p_call: c.id, p_limit: 50 });
+    const r = a as { count: number; people: RsvpSummary["people"] } | null;
+    if (r) attendedBy.set(c.id, { live: r.count, recording: 0, mine: null, people: r.people });
+  }));
   const gaveFeedback = new Set((gave ?? []).map((g) => g.call_id as string));
   const confirmedIds = new Set((seen ?? []).filter((v) => v.completed_at).map((v) => v.recording_id as string));
   const watchedIds = new Set((seen ?? []).filter((v) => v.completed_at || (v.max_pct ?? 0) >= 50).map((v) => v.recording_id as string));
@@ -100,7 +108,7 @@ export default async function CalendarPage(props: PageProps<"/calendar">) {
                   const end = endsAt(start, call.duration_minutes).getTime();
                   return (
                     <CallChip key={call.id} time={timeOf(start)} title={call.title} live={now >= start.getTime() && now < end} past={now >= end}>
-                      <CallCard call={call} summary={summary} now={now} review={review} />
+                      <CallCard call={call} summary={summary} now={now} review={review} attendance={attendedBy.get(call.id)} />
                     </CallChip>
                   );
                 })}
