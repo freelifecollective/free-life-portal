@@ -1191,7 +1191,8 @@ li.unread .dock-who strong { font-weight: 800; }
 .dock-gifs button { all: unset; cursor: pointer; border-radius: 8px; overflow: hidden; background: var(--tint); min-height: 60px; }
 .dock-gifs img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.member-social { list-style: none; margin: 8px 0 12px; padding: 0; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 22px; }
-.member-social li { display: block; }
-.member-social a { display: block; line-height: 0; border: 0; outline-offset: 4px; border-radius: 50%; transition: transform .15s; }
-.member-social a:hover { transform: scale(1.08); }
+/* the popup sits inside the chat list, so these rules are written to win over the chat list's own link and list rules */
+.member-profile .member-social { list-style: none; margin: 8px 0 12px; padding: 0; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 20px; }
+.member-profile .member-social li { display: block; }
+.member-profile .member-social a { display: block; line-height: 0; padding: 0; border: 0; background: none; border-radius: 50%; outline-offset: 4px; transition: transform .15s; }
+.member-profile .member-social a:hover { background: none; transform: scale(1.1); }
