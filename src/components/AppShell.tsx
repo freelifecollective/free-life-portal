@@ -45,16 +45,16 @@ const NAV: NavItem[] = [
   { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Admin only" },
 ];
 
-/** Home first, then the "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
+/** Home and Chats first, then the "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
 function ordered(items: NavItem[]): NavItem[] {
   const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
-  const home = items.filter((n) => n.label === "Home");
+  const top = ["Home", "Chats"].flatMap((l) => items.filter((n) => n.label === l));
   const onboarding = items.filter((n) => n.group === "Onboarding");
   const sales = items.filter((n) => n.group === "Placing Sales");
-  const rest = items.filter((n) => n.label !== "Home" && !n.admin && !n.group).sort(az);
+  const rest = items.filter((n) => n.label !== "Home" && n.label !== "Chats" && !n.admin && !n.group).sort(az);
   const admin = items.filter((n) => n.admin);
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
-  return [...home, ...sections(onboarding), ...sections(sales), ...rest, ...sections(admin)];
+  return [...top, ...sections(onboarding), ...sections(sales), ...rest, ...sections(admin)];
 }
 
 export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {
