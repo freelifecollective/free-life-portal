@@ -5,13 +5,16 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addTask, completeTask, deleteTask, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
 import { complete, dueLabel, REPEAT_LABEL, split, stateOf, suggestOrder, taskHelp, undo, type Suggestion, type Task } from "@/lib/tasks/schedule";
+import { BadgeStrip } from "@/components/badges/BadgeStrip";
 import { BadgeToast } from "@/components/badges/BadgeToast";
+import { StreakLine } from "@/components/badges/StreakLine";
+import type { BadgeState } from "@/lib/badges/defs";
 import { Fireworks } from "./Fireworks";
 import { TaskForm } from "./TaskForm";
 import { TrashButton } from "./TrashButton";
 
 /** The whole Tasks screen: today's list (drag or use the arrows to reorder), what is coming up, and what is done. */
-export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: string; tz: string }) {
+export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial: Task[]; today: string; tz: string; badgeKeys: string[]; streaks: BadgeState["streaks"] | null }) {
   const router = useRouter();
   const [tasks, setTasks] = useState(initial);
   const [editing, setEditing] = useState<Task | "new" | null>(null);
@@ -107,10 +110,12 @@ export function TaskBoard({ initial, today, tz }: { initial: Task[]; today: stri
         <div className="tasks-progress" aria-label={`${doneToday.length} of ${total} done today`}>
           <div className="tasks-count"><strong>{doneToday.length}</strong> of {total} done today</div>
           <div className="tasks-bar"><i style={{ width: total ? `${(doneToday.length / total) * 100}%` : "0%" }} /></div>
+          {streaks ? <StreakLine streaks={streaks} /> : null}
         </div>
         <div className="tasks-actions">
           {todayList.length > 1 ? <button type="button" className="btn" onClick={() => setSuggestion(suggestOrder(todayList, today))}>Suggest the best order</button> : null}
           <button type="button" className="btn primary" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
+          <BadgeStrip keys={badgeKeys} />
         </div>
       </div>
 

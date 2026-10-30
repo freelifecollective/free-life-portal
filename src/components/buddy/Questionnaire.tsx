@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { resetBuddyAnswers, saveBuddyAnswers } from "@/app/(app)/buddy/actions";
+import { celebrateRankUp } from "@/lib/celebrate";
 import { CITIES, MINLEN, PNA, QUESTIONS, ZONES, type Question } from "@/lib/buddy/questions";
 import { firstIncomplete, isValid, type Answer, type Answers } from "@/lib/buddy/validate";
 
@@ -147,7 +148,7 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
       const next = { ...cur };
       if (v === undefined) delete next[k]; else next[k] = v;
       window.clearTimeout(timer.current);
-      timer.current = window.setTimeout(() => { void saveBuddyAnswers(next); }, 600);
+      timer.current = window.setTimeout(() => { void saveBuddyAnswers(next).then((r) => { if (r.rankUp) celebrateRankUp(r.rankUp); }); }, 600);
       return next;
     });
   }
@@ -156,6 +157,7 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
     setBusy(true); setError("");
     window.clearTimeout(timer.current);
     const r = await saveBuddyAnswers(ans);
+    if (r.rankUp) celebrateRankUp(r.rankUp);
     setBusy(false);
     if (!r.ok || !r.complete) return setError(r.error ?? "Some answers are missing. Please check them and try again.");
     onFinished();

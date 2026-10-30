@@ -5,10 +5,11 @@ import { requireMember } from "@/lib/auth/guards";
 import { SUPABASE_URL } from "@/lib/env";
 import { cleanHandle, handleState } from "@/lib/handles";
 import { AVATAR_KINDS, type AvatarKind } from "@/lib/profile/types";
+import { currentRank, rankUp } from "@/lib/buddy/rank";
 import { isQuoteStyle } from "@/lib/quotes";
 import { checkUsernameFormat } from "@/lib/username";
 
-export type SettingsState = { error: string; saved?: boolean };
+export type SettingsState = { error: string; saved?: boolean; rankUp?: string };
 
 export async function saveSettings(_prev: SettingsState, form: FormData): Promise<SettingsState> {
   const first = String(form.get("first") ?? "").trim();
@@ -25,6 +26,7 @@ export async function saveSettings(_prev: SettingsState, form: FormData): Promis
   const { session, supabase } = await requireMember();
   if (!supabase) return { error: "Settings need the database, which preview mode does not have." };
   const isMember = session.profile.role !== "lead";
+  let rankChange: string | undefined;
   const patch: Record<string, unknown> = { first_name: first, last_name: last, username };
   if (isMember) {
     patch.instagram = igRaw.trim() ? cleanHandle(igRaw, "instagram") : null;
@@ -39,11 +41,13 @@ export async function saveSettings(_prev: SettingsState, form: FormData): Promis
   if (isMember) {
     const rank = rankRaw ? Number(rankRaw) : null;
     if (rank !== null && !(Number.isInteger(rank) && rank >= 1 && rank <= 7)) return { error: "Choose a rank from the list." };
+    const before = await currentRank(supabase);
     const { error: rErr } = await supabase.from("member_private").upsert({ member_id: session.user.id, rank_id: rank, updated_at: new Date().toISOString() }, { onConflict: "member_id" });
     if (rErr) return { error: "Your details saved, but your rank did not. Please try again." };
+    rankChange = rankUp(before, rank) ?? undefined;
   }
   revalidatePath("/", "layout");
-  return { error: "", saved: true };
+  return { error: "", saved: true, rankUp: rankChange };
 }
 
 /** Saves a new profile picture that the browser has already uploaded to this person's own folder. */

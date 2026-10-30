@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { confirmBuddyRank, setBuddyStatus } from "@/app/(app)/buddy/actions";
 import { RANKS } from "@/lib/buddy/questions";
+import { celebrateRankUp } from "@/lib/celebrate";
 
 /**
  * "Are you still a 4A?" Used when someone comes back to find a new buddy ("return"),
@@ -26,7 +27,7 @@ export function BuddyDialog({ kind, rank, open, onClose }: { kind: "return" | "r
 
   const finish = (msg: string) => { setNote(msg); onClose(); router.refresh(); };
   const stay = () => start(async () => { const r = await setBuddyStatus("in_pool"); if (r.ok) finish("Saved. You are back in the pool."); });
-  const setRank = (r: string) => start(async () => { const res = await confirmBuddyRank(RANKS.indexOf(r as (typeof RANKS)[number]) + 1); if (res.ok) finish("Saved. Your rank is updated and you are back in the pool."); });
+  const setRank = (r: string) => start(async () => { const res = await confirmBuddyRank(RANKS.indexOf(r as (typeof RANKS)[number]) + 1); if (res.ok) { if (res.rankUp) celebrateRankUp(res.rankUp); finish("Saved. Your rank is updated and you are back in the pool."); } });
   const leave = (s: "paused" | "has_ab") => start(async () => { const r = await setBuddyStatus(s); if (r.ok) finish("Saved. You are out of the pool and will not see this popup."); });
   const confirmRank = () => start(async () => { const res = await confirmBuddyRank(RANKS.indexOf(rank as (typeof RANKS)[number]) + 1); if (res.ok) finish("Saved. You are back in the pool."); });
 

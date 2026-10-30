@@ -13,7 +13,7 @@ export function ProfileBadges({ state }: { state: BadgeState }) {
       ) : (
         <ul className="profile-medals">
           {earned.map((e) => { const l = labelFor(e.key); return l ? (
-            <li key={e.key} title={`${l.title}: ${l.level}`}><BadgeMedal id={e.key} size={78} /><span>{l.level}</span><small>{l.title}</small></li>
+            <li key={e.key} title={`${l.title}: ${l.level}`}><BadgeMedal id={e.key} size={66} /><span>{l.level}</span><small>{l.title}</small></li>
           ) : null; })}
         </ul>
       )}

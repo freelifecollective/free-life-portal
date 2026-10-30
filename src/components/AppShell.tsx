@@ -10,6 +10,7 @@ import { NavLinks } from "./NavLinks";
 import { canSee, type Role } from "@/lib/roles";
 import type { AppSession } from "@/lib/profile/types";
 import { SearchIcon } from "./SearchIcon";
+import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
 
 type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string };
@@ -93,6 +94,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
     <Tour show={showTour} />
     {buddyRemind ? <BuddyReminder rank={buddyRemind} /> : null}
     {waterPrompt ? <WaterPrompt /> : null}
+    <RankCelebration />
     {pendingFeedback.length ? <FeedbackPrompt calls={pendingFeedback} /> : null}
     </MenuProvider>
   );

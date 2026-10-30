@@ -979,20 +979,8 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .btn.small.danger-fill:hover { background: #8f1c12; }
 
 /* ---- badges ---- */
-.badges { display: grid; gap: 22px; }
 .medal { display: block; filter: drop-shadow(0 4px 8px rgba(43, 37, 34, 0.18)); }
 .medal.locked { filter: none; opacity: .75; }
-.streak-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-.streak-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
-.streak-name { font-family: var(--font-label); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-.streak-n { font-family: var(--font-display); font-size: 38px; font-weight: 600; line-height: 1.1; }
-.streak-n small { font-family: var(--font-label); font-size: 15px; font-weight: 600; color: var(--muted); }
-.shelf { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px 18px; display: grid; gap: 12px; }
-.shelf-head { display: grid; gap: 2px; }
-.shelf-row { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; }
-.shelf-row li { display: grid; justify-items: center; gap: 4px; width: 112px; text-align: center; }
-.shelf-label { font-size: 13px; font-weight: 600; line-height: 1.25; }
-.shelf-row li:not(.on) .shelf-label { color: var(--muted); font-weight: 500; }
 .profile-medals { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 14px 18px; }
 .profile-medals li { display: grid; justify-items: center; gap: 2px; width: 108px; text-align: center; }
 .profile-medals li span { font-size: 13px; font-weight: 700; line-height: 1.25; }
@@ -1002,3 +990,9 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 .badge-toast strong { font-family: var(--font-display); font-size: 20px; }
 .badge-toast span { font-weight: 700; } .badge-toast small { color: var(--muted); }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 24px) scale(.9); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+.tasks-actions { align-items: center; }
+.badge-strip { list-style: none; margin: 0 0 0 6px; padding: 0 0 0 14px; border-left: 1px solid var(--line); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.badge-strip .medal { filter: drop-shadow(0 2px 3px rgba(43, 37, 34, 0.22)); transition: transform .15s; }
+.badge-strip li:hover .medal { transform: translateY(-2px) scale(1.06); }
+.badge-more { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 700; font-size: 13px; text-decoration: none; }
+.streak-line { margin: 2px 0 0; display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 13px; font-weight: 600; color: var(--muted); }
