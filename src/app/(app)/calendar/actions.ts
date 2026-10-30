@@ -19,6 +19,7 @@ export async function setRsvp(callId: string, mode: RsvpMode | null): Promise<{ 
   revalidatePath("/calendar");
   revalidatePath("/");
   revalidatePath("/calls");
+  revalidatePath("/tasks");
   return { ok: true };
 }
 

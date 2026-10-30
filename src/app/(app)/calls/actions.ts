@@ -9,6 +9,7 @@ export async function joinCall(callId: string): Promise<{ ok: boolean; url?: str
   const { supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Needs the database." };
   const { data, error } = await supabase.rpc("join_call", { p_call: callId });
+  revalidatePath("/tasks");
   if (error || !data) return { ok: false, error: "This call has no join link yet." };
   return { ok: true, url: String(data) };
 }
