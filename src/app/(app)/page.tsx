@@ -1,17 +1,13 @@
 import Link from "next/link";
-import { LiveBadge } from "@/components/LiveBadge";
-import { LocalTime } from "@/components/calendar/LocalTime";
 import { requireMember } from "@/lib/auth/guards";
-import { Attendees } from "@/components/calendar/Attendees";
-import { SpeakerBubbles } from "@/components/calendar/SpeakerBubbles";
-import { speakersOf } from "@/lib/calls/types";
-import { AddToCalendar } from "@/components/dashboard/AddToCalendar";
-import { Countdown } from "@/components/dashboard/Countdown";
-import { CopyInvite } from "@/components/dashboard/CopyInvite";
+import { BookedCalls, type BookedCall } from "@/components/dashboard/BookedCalls";
+import { NextCallCard } from "@/components/dashboard/NextCallCard";
+import { listAffiliates } from "@/lib/calls/affiliates";
+import { getTz } from "@/lib/tasks/queries";
 import { parseRange, presets } from "@/lib/dashboard/range";
 import { isQuoteStyle, quoteFor, type QuoteStyle } from "@/lib/quotes";
 import { listUpcomingCalls, pickFeatured, rsvpSummary } from "@/lib/calls/queries";
-import { endsAt, formatInZone, nowMs, toZonedInput } from "@/lib/time";
+import { formatInZone, nowMs, toZonedInput } from "@/lib/time";
 
 export const instant = false; // renders per signed-in member
 export const metadata = { title: "Home" };
@@ -32,7 +28,6 @@ export default async function HomePage(props: PageProps<"/">) {
   /* Affiliates promote the next call that is open to leads; leads just see the next call. */
   const next = (affiliate ? upcoming.find((c) => c.audience === "leads_open") : null) ?? pickFeatured(upcoming);
   const summary = supabase && next ? await rsvpSummary(supabase, next.id, 50) : null;
-  const isLive = !!next && now >= new Date(next.starts_at).getTime() && now < endsAt(new Date(next.starts_at), next.duration_minutes).getTime();
 
   let quoteStyle: QuoteStyle = "general";
   if (supabase) {
@@ -48,9 +43,23 @@ export default async function HomePage(props: PageProps<"/">) {
     const { data: st } = await supabase.rpc("member_stats", { p_from: range.fromIso, p_to: range.toIso, p_call: next?.id ?? null });
     stats = (st as Stats | null) ?? null;
   }
+  /* calls booked with leads, coming up, and who is taking each one */
+  const tz = supabase ? await getTz(supabase) : "America/New_York";
+  let booked: BookedCall[] = [];
+  let closers: Awaited<ReturnType<typeof listAffiliates>> = [];
+  if (supabase && affiliate) {
+    const [{ data: rows }, list] = await Promise.all([
+      supabase.from("booked_calls").select("id, lead_name, starts_at, closer_id").eq("member_id", session.user.id).gte("starts_at", new Date(now - 3600_000).toISOString()).order("starts_at").limit(10),
+      listAffiliates(supabase),
+    ]);
+    closers = list;
+    booked = (rows ?? []).map((r) => {
+      const c = r.closer_id ? list.find((x) => x.id === r.closer_id) : null;
+      return { id: r.id as string, lead_name: r.lead_name as string, when: formatInZone(new Date(r.starts_at as string), tz), closer: c ? { name: c.name, photo_url: c.photo_url } : null };
+    });
+  }
   const leadsHref = (show?: string) => `/leads?from=${range.from}&to=${range.to}${show ? `&show=${show}` : ""}`;
 
-  const endIso = next ? endsAt(new Date(next.starts_at), next.duration_minutes).toISOString() : "";
   const registeredFromLink = stats?.call_registered ?? 0;
 
   return (
@@ -66,45 +75,22 @@ export default async function HomePage(props: PageProps<"/">) {
 
       {supabase ? (
         <div className="home-row">
-          <section className={"home-call" + (isLive ? " live" : "")} aria-label="Next call">
-            <div className="hc-top">
-              <span className="hc-label">{affiliate ? "Next community call" : "Next call"}</span>
-              {isLive ? <LiveBadge>LIVE</LiveBadge> : next?.audience === "leads_open" ? <span className="hc-open"><span className="hc-dot" />Registration open</span> : null}
-            </div>
-            {next ? (
-              <>
-                <h2 className="hc-title">{next.title}</h2>
-                <p className="hc-meta">{formatInZone(new Date(next.starts_at))}</p>
-                <SpeakerBubbles speakers={speakersOf(next)} />
-                <LocalTime iso={next.starts_at} />
-                <Countdown startsAt={next.starts_at} endsAt={endIso} />
-                <div className="hc-actions">
-                  {affiliate && profile.username && next.audience === "leads_open" ? <CopyInvite username={profile.username} className="dc-btn" /> : <Link className="dc-btn" href="/calendar">RSVP on the calendar</Link>}
-                  <AddToCalendar call={next} />
-                </div>
-              </>
-            ) : <p className="hc-title" style={{ fontSize: 22 }}>No calls are scheduled yet. <Link href="/calendar" style={{ color: "inherit" }}>Open the calendar</Link></p>}
-          </section>
+          <NextCallCard call={next ?? null} summary={summary} now={now} inviteUsername={affiliate ? profile.username : null} />
 
-          <section className="home-side" aria-label="Who is coming">
-            {next ? (
-              <>
-                {affiliate && next.audience === "leads_open" ? (
+          {affiliate ? (
+            <div className="home-col">
+              {next?.audience === "leads_open" ? (
+                <section className="home-side" aria-label="Registered from your link">
                   <div className="hs-block">
                     <span className="hs-label">Registered from your link</span>
                     <span className="hs-big">{registeredFromLink}</span>
                     <span className="when">{registeredFromLink === 1 ? "lead has" : "leads have"} registered for this call</span>
                   </div>
-                ) : null}
-                <div className="hs-block">
-                  <span className="hs-label">Total RSVPs</span>
-                  <span className="hs-big">{(summary?.live ?? 0) + (summary?.recording ?? 0)}</span>
-                  {summary ? <Attendees summary={summary} /> : null}
-                </div>
-                <Link className="linkbtn" href="/calendar" style={{ padding: 0 }}>RSVP on the calendar →</Link>
-              </>
-            ) : <p className="when" style={{ margin: 0 }}>When a call is scheduled, everyone who RSVPs shows up here.</p>}
-          </section>
+                </section>
+              ) : null}
+              <BookedCalls calls={booked} closers={closers.map((c) => ({ id: c.id, name: c.name }))} tz={tz} />
+            </div>
+          ) : null}
         </div>
       ) : null}
 

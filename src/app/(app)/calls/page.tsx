@@ -1,15 +1,9 @@
 import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
-import { JoinButton } from "@/components/calls/JoinButton";
 import { requireMember } from "@/lib/auth/guards";
-import { LiveBadge } from "@/components/LiveBadge";
-import { Attendees } from "@/components/calendar/Attendees";
-import { RsvpControls } from "@/components/calendar/RsvpControls";
 import { listUpcomingCalls, rsvpSummary } from "@/lib/calls/queries";
-import { callLength } from "@/lib/calls/length";
-import { KIND_LABEL, speakersOf } from "@/lib/calls/types";
-import { SpeakerBubbles } from "@/components/calendar/SpeakerBubbles";
-import { formatInZone, endsAt, nowMs } from "@/lib/time";
+import { NextCallCard } from "@/components/dashboard/NextCallCard";
+import { formatInZone, nowMs } from "@/lib/time";
 import { formatTime } from "@/lib/recordings/vimeo";
 import { listRecordings } from "@/lib/recordings/queries";
 import { TOPICS } from "@/lib/recordings/topics";
@@ -36,34 +30,13 @@ export default async function CallsPage(props: PageProps<"/calls">) {
   const year = years.includes(yearParam) ? yearParam : null;
   const recordings = year ? inTopic.filter((r) => yearOf(r.recorded_at) === year) : inTopic;
   const next = upcoming[0];
-  const live = next && now >= new Date(next.starts_at).getTime() && now < endsAt(new Date(next.starts_at), next.duration_minutes).getTime();
   const summary = next ? await rsvpSummary(supabase, next.id, 50) : null;
-  const mine = summary?.mine ?? null;
 
   return (
     <>
       <PageHeading lede="Join calls live, or watch the recordings any time.">Calls</PageHeading>
       <div className="settings" style={{ maxWidth: 900 }}>
-        <section className={"card-s live-card" + (live ? " on" : "")}>
-          {next ? (
-            <div className="live-grid">
-              <div className="live-left">
-                <p className="offer-label" style={{ margin: "0 0 6px" }}>{live ? <LiveBadge>LIVE · Happening now</LiveBadge> : "Next call"}</p>
-                <h2 className="qh" style={{ margin: "0 0 4px" }}>{next.title}</h2>
-                <p className="when" style={{ margin: "0 0 14px" }}>{KIND_LABEL[next.kind]} · {formatInZone(new Date(next.starts_at))} · {callLength(next)}</p>
-                <div style={{ margin: "0 0 14px" }}><SpeakerBubbles speakers={speakersOf(next)} /></div>
-                <RsvpControls callId={next.id} mine={mine} liveLabel="I'll be there LIVE" liveOn="You're coming LIVE" replayLabel="I'll catch the replay" replayOn="You'll catch the replay" />
-                {summary ? <div style={{ marginTop: 14 }}><Attendees summary={summary} /></div> : null}
-              </div>
-              {next.join_url ? (
-                <div className="live-right">
-                  <JoinButton callId={next.id} startsAt={next.starts_at} durationMinutes={next.duration_minutes} />
-                  <p className="when join-note">The waiting room opens 10 minutes before the call starts.</p>
-                </div>
-              ) : null}
-            </div>
-          ) : <p style={{ margin: 0 }}>No calls are scheduled right now. Check the <Link href="/calendar">calendar</Link> for new ones.</p>}
-        </section>
+        <NextCallCard call={next ?? null} summary={summary} now={now} inviteUsername={session.profile.role === "lead" ? null : session.profile.username} />
 
         <div className="rec-head"><h2 className="qh" style={{ margin: 0 }}>{topic ?? "All"} Recordings{year ? ` · ${year}` : ""}</h2><TopicFilter topics={[...present]} years={years} topic={topic} year={year} /></div>
         {recordings.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>{session.profile.role === "lead" ? "Recordings open to leads will appear here." : "No recordings yet. They are added after each call."}</p></section> : (

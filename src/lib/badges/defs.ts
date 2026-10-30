@@ -21,7 +21,7 @@ export const FAMILIES: FamilyDef[] = [
   { id: "morning", title: "Morning Routine", blurb: "Did their morning routine", icon: "morning", ...fixed(STREAK_STEPS), label: days },
   { id: "cleared", title: "List Cleared", blurb: "Cleared their to-do list", icon: "cleared", ...fixed(STREAK_STEPS), label: days },
   { id: "community", title: "Community Calls", blurb: "Showed up live", icon: "community", ...fixed([1, 5, 10, 25, 50, 100]), label: (n) => (n === 1 ? "First community call" : `${n} community calls`) },
-  { id: "masterclass", title: "Masterclasses", blurb: "Showed up live", icon: "masterclass", ...fixed([1, 3, 5, 10, 25]), label: (n) => (n === 1 ? "First masterclass" : `${n} masterclasses`) },
+  { id: "masterclass", title: "Mastermind Calls", blurb: "Showed up live", icon: "masterclass", ...fixed([1, 3, 5, 10, 25]), label: (n) => (n === 1 ? "First mastermind call" : `${n} mastermind calls`) },
   { id: "replays", title: "Replay Watcher", blurb: "Watched call replays", icon: "replays", ...fixed([1, 5, 10, 25, 50, 100]), label: (n) => (n === 1 ? "First replay watched" : `${n} replays watched`) },
   { id: "answers", title: "Chat Helper", blurb: "Responded to questions in the chats", icon: "answers", ...fixed([100, 250, 500, 1000]), label: (n) => `Responded to ${n.toLocaleString("en-US")} questions` },
   { id: "coaching", title: "Coaching Calls", blurb: "Took coaching calls", icon: "coaching", steps: null, isStep: (n) => n === 1 || (n >= 10 && n % 10 === 0), position: (n) => (n === 1 ? 0 : n / 10), label: (n) => (n === 1 ? "First coaching call" : `${n} coaching calls`) },
