@@ -41,3 +41,12 @@ export async function markWatched(recordingId: string): Promise<void> {
   if (!supabase) return;
   await supabase.from("recording_views").upsert({ user_id: session.user.id, recording_id: recordingId }, { onConflict: "user_id,recording_id", ignoreDuplicates: true });
 }
+
+/** "Don't ask me again for this call": the feedback popup will not come back for it. */
+export async function dismissFeedback(callId: string): Promise<{ ok: boolean }> {
+  if (!/^[0-9a-f-]{36}$/i.test(callId)) return { ok: false };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false };
+  const { error } = await supabase.from("feedback_dismissed").upsert({ user_id: session.user.id, call_id: callId }, { onConflict: "user_id,call_id", ignoreDuplicates: true });
+  return { ok: !error };
+}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { submitFeedback } from "@/app/(app)/calls/actions";
+import { dismissFeedback, submitFeedback } from "@/app/(app)/calls/actions";
 
 export type PendingCall = { call_id: string; title: string };
 
@@ -32,6 +32,12 @@ export function FeedbackPrompt({ calls }: { calls: PendingCall[] }) {
     if (!r.ok) return setError(r.error ?? "That did not work.");
     setThanks(true);
   });
+  /* hide this call for good, then move on to the next one waiting (or close) */
+  const never = () => start(async () => {
+    await dismissFeedback(call.call_id);
+    setA({ thoughts: "", favourite: "", takeaway: "" }); setError("");
+    if (i + 1 < calls.length) setI(i + 1); else { dlg.current?.close(); router.refresh(); }
+  });
   const done = () => { setThanks(false); setA({ thoughts: "", favourite: "", takeaway: "" }); if (i + 1 < calls.length) setI(i + 1); else { dlg.current?.close(); router.refresh(); } };
 
   return (
@@ -50,6 +56,7 @@ export function FeedbackPrompt({ calls }: { calls: PendingCall[] }) {
           <div className="field" style={{ marginTop: 12 }}><label htmlFor="fp-3">What was your biggest takeaway?</label><textarea id="fp-3" rows={3} maxLength={1500} value={a.takeaway} onChange={(e) => setA({ ...a, takeaway: e.target.value })} /></div>
           <p className="err" role="alert">{error}</p>
           <div className="dlg-actions"><button className="btn" type="button" onClick={later}>Maybe later</button><button className="btn primary" type="button" disabled={pending} onClick={send}>{pending ? "Sending…" : "Submit"}</button></div>
+          <p style={{ margin: "14px 0 0", textAlign: "center" }}><button type="button" className="linkbtn" style={{ padding: 0 }} disabled={pending} onClick={never}>Don&apos;t ask me again for this call</button></p>
         </div>
       )}
     </dialog>
