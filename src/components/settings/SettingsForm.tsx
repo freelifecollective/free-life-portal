@@ -6,9 +6,9 @@ import { saveSettings, type SettingsState } from "@/app/(app)/settings/actions";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-export function SettingsForm({ first, last, username, email, instagram, facebook, isMember, rank, ranks, birthMonth, birthDay, callCloser }: {
+export function SettingsForm({ first, last, username, email, instagram, facebook, isMember, rank, ranks, birthMonth, birthDay, birthYear }: {
   first: string; last: string; username: string; email: string; instagram: string; facebook: string;
-  isMember: boolean; rank: number | null; ranks: { id: number; name: string }[]; birthMonth: number | null; birthDay: number | null; callCloser: boolean;
+  isMember: boolean; rank: number | null; ranks: { id: number; name: string }[]; birthMonth: number | null; birthDay: number | null; birthYear: number | null;
 }) {
   const [state, action, pending] = useActionState(saveSettings, { error: "" } as SettingsState);
   useEffect(() => { if (state.rankUp) celebrateRankUp(state.rankUp); }, [state]);
@@ -33,8 +33,9 @@ export function SettingsForm({ first, last, username, email, instagram, facebook
             <div className="field"><label htmlFor="s-bd">Day</label>
               <select id="s-bd" name="birth_day" defaultValue={birthDay ?? ""}><option value="">Not set</option>{Array.from({ length: 31 }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}</select></div>
           </div>
-          <p className="when" style={{ margin: "-4px 0 0" }}>Only the month and day show on your profile, never the year.</p>
-          <label className="check"><input type="checkbox" name="call_closer" defaultChecked={callCloser} /><span>I am a call closer (I take calls for other affiliates)</span></label>
+          <div className="field"><label htmlFor="s-by">Birth year (optional)</label>
+            <select id="s-by" name="birth_year" defaultValue={birthYear ?? ""}><option value="">I would rather not say</option>{Array.from({ length: 83 }, (_, i) => 2012 - i).map((y) => <option key={y} value={y}>{y}</option>)}</select></div>
+          <p className="when" style={{ margin: "-4px 0 0" }}>Your birthday shows on your profile. The year is optional and only shows if you choose one.</p>
           <div className="field">
             <label htmlFor="s-rank">Your rank</label>
             <select id="s-rank" name="rank" defaultValue={rank ?? ""}>
