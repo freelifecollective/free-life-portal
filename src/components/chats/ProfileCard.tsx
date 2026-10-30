@@ -24,7 +24,7 @@ function ageOf(y: number, m: number, d: number): number {
 function handleOf(v: string): string { return v.startsWith("https://") ? "View page" : "@" + v; }
 
 type Listing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number };
-type Closer = { calls_taken: number; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null };
+type Closer = { calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null };
 type View = "profile" | "services" | "closer";
 
 /**
@@ -197,20 +197,20 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
   useEffect(() => { void load(); }, [load]);
 
   function startEdit() {
-    setVals({ calls: String(d?.calls_taken ?? 0), since: d?.closer_since ? sinceText(d.closer_since) : "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
+    setVals({ calls: d?.calls_taken ?? "", since: d?.closer_since ? sinceText(d.closer_since) : "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
       perCall: d?.price_per_call_cents == null ? "" : String(d.price_per_call_cents / 100), perSale: d?.price_per_sale ?? "" });
     setMsg(""); setEdit(true);
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
     const num = (v: string) => { const n = Number(v.replace(/[$,%\s]/g, "")); return v.trim() === "" || Number.isNaN(n) ? null : n; };
-    const bad = [vals.calls, vals.rate, vals.perCall].some((v) => v.trim() !== "" && num(v) === null);
+    const bad = [vals.rate, vals.perCall].some((v) => v.trim() !== "" && num(v) === null);
     const since = vals.since.trim() ? parseSince(vals.since) : null;
     if (bad || (vals.since.trim() && !since)) { setMsg(!bad ? "Type the start as a month and year, like January 2024." : "Please type numbers only in the number boxes."); return; }
     const money2 = (v: string) => { const n = num(v); return n === null ? null : Math.round(n * 100); };
     const rate = num(vals.rate);
-    const row = { member_id: id, calls_taken: Math.max(0, Math.floor(num(vals.calls) ?? 0)), closer_since: since, close_rate: rate === null ? null : Math.min(100, Math.max(0, rate)),
-      price_per_call_cents: money2(vals.perCall), price_per_sale: vals.perSale.trim().slice(0, 120) || null, updated_at: new Date().toISOString() };
+    const row = { member_id: id, calls_taken: vals.calls.trim().slice(0, 40) || null, closer_since: since, close_rate: rate === null ? null : Math.min(100, Math.max(0, rate)),
+      price_per_call_cents: money2(vals.perCall), price_per_sale: vals.perSale.trim().slice(0, 400) || null, updated_at: new Date().toISOString() };
     const { error } = await createClient().from("call_closer_details").upsert(row, { onConflict: "member_id" });
     if (error) { setMsg("We could not save that. Check the numbers and try again."); return; }
     setEdit(false); await load();
@@ -220,11 +220,11 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
   if (edit) {
     return (
       <form className="pc-card pc-pad pc-form" onSubmit={(e) => void save(e)}>
-        <label>Calls taken<input type="text" inputMode="numeric" autoComplete="off" placeholder="e.g. 40" value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
+        <label>Calls taken<input type="text" autoComplete="off" maxLength={40} placeholder="e.g. 50+" value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
         <label>Taking calls since<input type="text" autoComplete="off" placeholder="e.g. January 2024" value={vals.since} onChange={(e) => setVals({ ...vals, since: e.target.value })} /></label>
         <label>Close rate (%)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 85" value={vals.rate} onChange={(e) => setVals({ ...vals, rate: e.target.value })} /></label>
         <label>Charge per call ($)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 50" value={vals.perCall} onChange={(e) => setVals({ ...vals, perCall: e.target.value })} /></label>
-        <label>Charge per product sale<input type="text" autoComplete="off" maxLength={120} placeholder="e.g. 20% of the sale, or $100" value={vals.perSale} onChange={(e) => setVals({ ...vals, perSale: e.target.value })} /></label>
+        <label>Charge per product sale (press Enter for a new line)<textarea rows={4} maxLength={400} placeholder={"1A-3A = $50\n4A+ = 8% of total sales commission"} value={vals.perSale} onChange={(e) => setVals({ ...vals, perSale: e.target.value })} /></label>
         {msg ? <p className="err" role="alert">{msg}</p> : null}
         <div className="dlg-actions"><button type="button" className="btn small" onClick={() => setEdit(false)}>Cancel</button><button type="submit" className="btn small primary">Save</button></div>
       </form>
@@ -234,11 +234,11 @@ function CloserView({ id, admin }: { id: string; admin: boolean }) {
   return (
     <>
       <div className="pc-card">
-        <div className="pc-row pc-plain"><div><small>calls taken</small><span>{d ? d.calls_taken.toLocaleString("en-US") : "Not set yet"}</span></div></div>
+        <div className="pc-row pc-plain"><div><small>calls taken</small><span>{d?.calls_taken || "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>taking calls for</small><span>{since ?? "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>close rate</small><span>{d?.close_rate != null ? `${d.close_rate}%` : "Not set yet"}</span></div></div>
         <div className="pc-row pc-plain"><div><small>charges per call</small><span>{money(d?.price_per_call_cents ?? null)}</span></div></div>
-        <div className="pc-row pc-plain"><div><small>charges per product sale</small><span>{d?.price_per_sale || "Not set"}</span></div></div>
+        <div className="pc-row pc-plain"><div><small>charges per product sale</small><span className="pc-multiline">{d?.price_per_sale || "Not set"}</span></div></div>
       </div>
       {admin ? <button type="button" className="btn small pc-edit" onClick={startEdit}>Edit these details</button> : null}
     </>
