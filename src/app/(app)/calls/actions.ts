@@ -26,7 +26,7 @@ export async function submitFeedback(callId: string, thoughts: string, favourite
   return { ok: true };
 }
 
-export type FeedbackRow = { first_name: string | null; last_name: string | null; avatar_url: string | null; thoughts: string; favourite: string; takeaway: string; created_at: string };
+export type FeedbackRow = { member_id?: string; first_name: string | null; last_name: string | null; avatar_url: string | null; thoughts: string; favourite: string; takeaway: string; created_at: string };
 export async function loadFeedback(callId: string): Promise<{ ok: boolean; rows: FeedbackRow[] }> {
   if (!/^[0-9a-f-]{36}$/i.test(callId)) return { ok: false, rows: [] };
   const { supabase } = await requireMember();

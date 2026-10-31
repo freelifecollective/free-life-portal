@@ -1,3 +1,4 @@
+import { PersonLink } from "@/components/people/ProfilePopup";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
@@ -24,7 +25,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[user
   return (
     <>
       <p style={{ margin: "0 0 8px" }}><Link className="linkbtn" href="/messages" style={{ padding: 0 }}>← All messages</Link></p>
-      <PageHeading>{fullName(other)}</PageHeading>
+      <PageHeading><PersonLink id={other.id} name={fullName(other)}>{fullName(other)}</PersonLink></PageHeading>
       <LiveRefresh tables={["direct_messages"]} />
       {unread ? <ReadMarker otherId={other.id} /> : null}
       {sp.notice === "close" ? <CloseAccountNotice /> : null}

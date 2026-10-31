@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonLink } from "@/components/people/ProfilePopup";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -16,7 +17,7 @@ function Card({ m, compact }: { m: MatchCard; compact: boolean }) {
   const [error, setError] = useState("");
   return (
     <article className="card-s bq-match">
-      <div className="who"><Avatar url={m.avatar_url} initials={nameOf(m).charAt(0).toUpperCase()} size={compact ? 40 : 56} /><span className="who-name"><strong>{nameOf(m)}</strong><span className="when">{m.score}% match</span></span></div>
+      <PersonLink id={m.member_id} name={nameOf(m)} className="who"><Avatar url={m.avatar_url} initials={nameOf(m).charAt(0).toUpperCase()} size={compact ? 40 : 56} /><span className="who-name"><strong>{nameOf(m)}</strong><span className="when">{m.score}% match</span></span></PersonLink>
       {!compact && m.reasons.length ? <ul className="bq-why">{m.reasons.map((r) => <li key={r}>{r}</li>)}</ul> : null}
       <div className="rs-actions" style={{ marginTop: 10 }}>
         <Link className="btn small primary" href={`/messages/${m.username}?draft=ab`} style={{ textDecoration: "none" }}>Say hello</Link>
@@ -29,7 +30,7 @@ function Card({ m, compact }: { m: MatchCard; compact: boolean }) {
 
 /** Your results, or where you stand if you are not in the pool. */
 export function BuddyHome({ status, top, others, buddy, rank }: {
-  status: string; top: MatchCard[]; others: MatchCard[]; buddy: Pick<MatchCard, "first_name" | "last_name" | "username" | "avatar_url"> | null; rank: string;
+  status: string; top: MatchCard[]; others: MatchCard[]; buddy: Pick<MatchCard, "member_id" | "first_name" | "last_name" | "username" | "avatar_url"> | null; rank: string;
 }) {
   const router = useRouter();
   const [more, setMore] = useState(false);
@@ -44,7 +45,7 @@ export function BuddyHome({ status, top, others, buddy, rank }: {
           {status === "matched" && buddy ? (
             <>
               <h2 className="qh" style={{ marginTop: 0 }}>Your accountability buddy</h2>
-              <div className="who"><Avatar url={buddy.avatar_url} initials={nameOf(buddy).charAt(0).toUpperCase()} size={56} /><strong>{nameOf(buddy)}</strong></div>
+              <PersonLink id={buddy.member_id} name={nameOf(buddy)} className="who"><Avatar url={buddy.avatar_url} initials={nameOf(buddy).charAt(0).toUpperCase()} size={56} /><strong>{nameOf(buddy)}</strong></PersonLink>
               <p style={{ margin: "12px 0 0" }}><Link className="btn small primary" href={`/messages/${buddy.username}`} style={{ textDecoration: "none" }}>Message {buddy.first_name}</Link></p>
             </>
           ) : <p style={{ margin: 0 }}>{status === "has_ab" ? "You told us you already have an accountability buddy." : "You are not looking for an accountability buddy right now."}</p>}

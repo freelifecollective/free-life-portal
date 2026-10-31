@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonLink } from "@/components/people/ProfilePopup";
 import { useRef } from "react";
 import { Avatar } from "@/components/Avatar";
 import type { RsvpSummary } from "@/lib/calls/types";
@@ -40,8 +41,8 @@ export function Attendees({ summary, past = false }: { summary: RsvpSummary; pas
               <ul className="att-list">
                 {people.map((p, i) => (
                   <li key={(p.username ?? "") + i}>
-                    <Avatar url={p.avatar_url} initials={(p.name || "?").charAt(0).toUpperCase()} size={32} label={p.name} />
-                    <span>{p.name || "Member"}</span>
+                    <PersonLink id={p.id} name={p.name || "Member"}><Avatar url={p.avatar_url} initials={(p.name || "?").charAt(0).toUpperCase()} size={32} label={p.name} />
+                    <span>{p.name || "Member"}</span></PersonLink>
                   </li>
                 ))}
               </ul>

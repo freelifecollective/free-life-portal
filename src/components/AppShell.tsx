@@ -15,6 +15,7 @@ import { LanguagePicker } from "./LanguagePicker";
 import { PresenceBeat } from "./PresenceBeat";
 import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
+import { ProfilePopupProvider } from "./people/ProfilePopup";
 
 type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string };
 
@@ -68,6 +69,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
   return (
     <MenuProvider>
+    <ProfilePopupProvider>
     <div className="app">
       <header className="app-top">
         <MenuButton />
@@ -104,6 +106,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
     <RankCelebration />
     {session.mode === "supabase" ? <PresenceBeat /> : null}
     {pendingFeedback.length ? <FeedbackPrompt calls={pendingFeedback} /> : null}
+    </ProfilePopupProvider>
     </MenuProvider>
   );
 }

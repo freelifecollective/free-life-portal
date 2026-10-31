@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonLink } from "@/components/people/ProfilePopup";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { deleteReview, saveReview, setHired } from "@/app/(app)/outsourcing/actions";
@@ -23,11 +24,11 @@ function Card({ p, hire, reviews, me, isAdmin }: { p: Provider; hire?: MyHire; r
 
   return (
     <article className="card-s provider">
-      <button type="button" className="provider-head" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <span className="who"><Avatar url={p.avatar_url} initials={fullName(p).charAt(0).toUpperCase()} size={48} />
-          <span className="who-name"><strong>{fullName(p)}</strong>{p.is_admin ? <small className="admin-tag">Admin</small> : null}</span></span>
-        <span className="when">{open ? "Hide details" : "Tap for rate and details"}</span>
-      </button>
+      <div className="provider-head">
+        <PersonLink id={p.member_id} name={fullName(p)} className="who"><Avatar url={p.avatar_url} initials={fullName(p).charAt(0).toUpperCase()} size={48} />
+          <span className="who-name"><strong>{fullName(p)}</strong>{p.is_admin ? <small className="admin-tag">Admin</small> : null}</span></PersonLink>
+        <button type="button" className="provider-toggle when" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Hide details" : "Tap for rate and details"}</button>
+      </div>
       <p className="offer-label">Offering</p>
       <ul className="tags">{p.tasks.map((t) => <li key={t}>{t}</li>)}</ul>
       {p.va_experience ? <p className="when" style={{ margin: "10px 0 0" }}>VA experience: <strong>{p.va_experience_length}</strong></p> : null}

@@ -1465,3 +1465,9 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .user-pop .um-lang.phone-only { display: grid !important; }
 @media (min-width: 769px) { .user-pop .um-lang { display: none !important; } }
 .ut-toggle { display:block; margin-top:4px; font-size:12px; opacity:.7; }
+
+/* Anyone's picture and name opens their profile */
+.person-link { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; border-radius: 10px; }
+.person-link:hover .who-name strong, .person-link:hover > strong { text-decoration: underline; }
+.person-link:focus-visible { outline: 2px solid var(--accent, #AB9080); outline-offset: 3px; }
+.provider-toggle { all: unset; cursor: pointer; text-align: right; font-size: 13px; }

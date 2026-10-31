@@ -27,7 +27,7 @@ export function speakersOf(call: Pick<Call, "call_speakers">): Speaker[] {
   return [...(call.call_speakers ?? [])].sort((a, b) => a.position - b.position).map(({ name, photo_url, member_id }) => ({ name, photo_url, member_id: member_id ?? null }));
 }
 
-export type Person = { name: string; username: string | null; avatar_url: string | null; mode: RsvpMode };
+export type Person = { id?: string; name: string; username: string | null; avatar_url: string | null; mode: RsvpMode };
 export type RsvpSummary = { live: number; recording: number; mine: RsvpMode | null; people: Person[] };
 
 export const KIND_LABEL: Record<CallKind, string> = { community: "Community call", masterclass: "Mastermind Call", other: "Call" };

@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonLink } from "@/components/people/ProfilePopup";
 import { useActionState, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { addComment, deleteComment, deletePost, pinPost, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
 import { Avatar } from "@/components/Avatar";
@@ -15,7 +16,7 @@ function When({ iso }: { iso: string }) {
 function Who({ a, size = 40 }: { a: Author; size?: number }) {
   const initials = a.name.charAt(0).toUpperCase() || "?";
   const inner = <><Avatar url={a.avatar_url} initials={initials} size={size} /><span className="who-name"><strong>{a.name}</strong>{a.is_admin ? <small className="admin-tag">Admin</small> : null}</span></>;
-  return <span className="who">{inner}</span>;
+  return <PersonLink id={a.id} name={a.name} className="who">{inner}</PersonLink>;
 }
 
 function CommentForm({ postId, slug }: { postId: string; slug: string }) {
