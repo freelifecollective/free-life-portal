@@ -1346,3 +1346,7 @@ a.pc-row:hover { background: var(--tint); }
 .bq .backbtn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; display: grid; place-items: center; color: var(--ink); padding: 0; }
 .bq .backbtn:hover:not(:disabled) { border-color: var(--accent); }
 .bq .backbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* arrows and "Start over" share one row under the progress line, right above the question */
+.bq-under { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; min-height: 44px; }
+.bq-under .bq-startover { margin-top: 0; }
