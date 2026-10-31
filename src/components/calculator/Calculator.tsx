@@ -17,8 +17,8 @@ const ROW_STARTS: Record<string, string[]> = {
 const countries = [...COMMISSIONS.countries].sort((a, b) => a.name.localeCompare(b.name));
 
 /** Pick a country and your points, then tap products (and use + / − for more than one) to add up your estimated commission. */
-export function Calculator() {
-  const [country, setCountry] = useState(COMMISSIONS.default);
+export function Calculator({ initialCountry }: { initialCountry?: string }) {
+  const [country, setCountry] = useState(COMMISSIONS.countries.some((x) => x.name === initialCountry) ? initialCountry! : COMMISSIONS.default);
   const [points, setPoints] = useState(1);
   const [qty, setQty] = useState<Record<string, number>>({});
   const c = COMMISSIONS.countries.find((x) => x.name === country) ?? COMMISSIONS.countries[0];
