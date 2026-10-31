@@ -1,3 +1,4 @@
+import { UserText } from "@/components/UserText";
 import Link from "next/link";
 import { AUDIENCE_LABEL, KIND_LABEL, speakersOf, type Call, type RsvpMode, type RsvpSummary } from "@/lib/calls/types";
 import { endsAt, formatInZone } from "@/lib/time";
@@ -44,13 +45,13 @@ export function CallCard({ call, summary, featured = false, now, review, attenda
         <span className={"tag" + (call.audience === "affiliates_only" ? " tag-dark" : "")}>{AUDIENCE_LABEL[call.audience]}</span>
         {live ? <LiveBadge>LIVE · Happening now</LiveBadge> : null}
       </div>
-      <h2 id={`call-${call.id}`} className="call-title">{call.title}</h2>
+      <h2 id={`call-${call.id}`} className="call-title"><UserText text={call.title} /></h2>
       <p className="call-time">
         {formatInZone(start)} · {callLength(call)}
         <LocalTime iso={call.starts_at} />
       </p>
       <SpeakerBubbles speakers={speakersOf(call)} profiles />
-      {call.description ? <p className="call-desc">{call.description}</p> : null}
+      {call.description ? <p className="call-desc"><UserText text={call.description} /></p> : null}
       {notOver && call.join_url ? <p><JoinButton callId={call.id} startsAt={call.starts_at} durationMinutes={call.duration_minutes} /></p> : null}
       {!notOver && attendance ? <Attendees summary={attendance} past /> : null}
       {!notOver && review ? <ReviewBlock review={review} call={call} /> : notOver ? <RsvpControls callId={call.id} mine={summary.mine} /> : null}

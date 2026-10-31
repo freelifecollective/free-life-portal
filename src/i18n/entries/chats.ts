@@ -30,4 +30,9 @@ export const chats: readonly Entry[] = [
   ["Welcome your leads here and congratulate your newest business partners on affiliating. Please do not ask any questions here. If you have a question, post it in our Affiliates Only chats.", "Da la bienvenida aquí a tus prospectos y felicita a tus nuevos socios de negocio por afiliarse. Por favor, no hagas preguntas aquí. Si tienes una pregunta, publícala en nuestros chats solo para afiliados.", "Souhaite ici la bienvenue à tes prospects et félicite tes nouveaux partenaires d'affaires pour leur affiliation. Merci de ne pas poser de questions ici. Si tu as une question, publie-la dans nos chats réservés aux affiliés.", "Accogli qui i tuoi potenziali clienti e congratulati con i tuoi nuovi partner commerciali per l'affiliazione. Per favore, non fare domande qui. Se hai domande, pubblicale nelle nostre chat riservate agli affiliati.", "Heiße hier deine Leads willkommen und gratuliere deinen neuesten Geschäftspartnern zur Anmeldung. Bitte stelle hier keine Fragen. Wenn du eine Frage hast, poste sie in unseren Nur-für-Affiliates-Chats."],
   ["Translated · Show original", "Traducido · Ver original", "Traduit · Voir l'original", "Tradotto · Mostra originale", "Übersetzt · Original anzeigen"],
   ["Show translation", "Ver traducción", "Voir la traduction", "Mostra traduzione", "Übersetzung anzeigen"],
+  ["1 hour", "1 hora", "1 heure", "1 ora", "1 Stunde"],
+  ["1-1.5 hours", "1-1,5 horas", "1-1,5 heure", "1-1,5 ore", "1-1,5 Stunden"],
+  ["1-2 hours", "1-2 horas", "1-2 heures", "1-2 ore", "1-2 Stunden"],
+  ["1.5-2 hours", "1,5-2 horas", "1,5-2 heures", "1,5-2 ore", "1,5-2 Stunden"],
+  ["{0} min", "{0} min", "{0} min", "{0} min", "{0} Min."],
 ];

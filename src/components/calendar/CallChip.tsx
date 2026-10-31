@@ -1,5 +1,6 @@
 "use client";
 
+import { UserText } from "@/components/UserText";
 import { useRef, type ReactNode } from "react";
 import { LiveDot } from "@/components/LiveBadge";
 
@@ -11,7 +12,7 @@ export function CallChip({ time, title, live, past, children }: { time: string; 
       <button type="button" className={"cal-chip" + (live ? " live" : "") + (past ? " past" : "")} onClick={() => dlg.current?.showModal()}>
         {live ? <LiveDot size={8} /> : null}
         <span className="cal-chip-time">{time}</span>
-        <span className="cal-chip-title">{title}</span>
+        <span className="cal-chip-title"><UserText text={title} /></span>
       </button>
       <dialog ref={dlg} className="rs-dialog cal-dialog" aria-label={title}>
         {children}
