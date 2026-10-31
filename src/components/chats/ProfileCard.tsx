@@ -328,7 +328,8 @@ function lengthSince(iso: string): string {
   return [yrs ? `${yrs} ${yrs === 1 ? "year" : "years"}` : "", mo ? `${mo} ${mo === 1 ? "month" : "months"}` : ""].filter(Boolean).join(", ");
 }
 
-type Review = { id: string; reviewer_id: string; rating: number; review: string | null; created_at: string };
+type Review = { id: string; reviewer_id: string | null; reviewer_name: string | null; rating: number; review: string | null; created_at: string };
+const OTHER = "__other__";
 type Reviewer = { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null };
 
 function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
@@ -341,7 +342,7 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
   const [busy, setBusy] = useState(false);
   /* admin only: add a review from an FLC member who worked with them before the portal had bookings */
   const [members, setMembers] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
-  const [past, setPast] = useState({ who: "", rating: 0, text: "", when: "" });
+  const [past, setPast] = useState({ who: "", name: "", rating: 0, text: "", when: "" });
   const [pastMsg, setPastMsg] = useState("");
 
   useEffect(() => {
@@ -354,11 +355,11 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
   const load = useCallback(async () => {
     const s = createClient();
     const [{ data: rows }, { data: st }] = await Promise.all([
-      s.from("closer_reviews").select("id, reviewer_id, rating, review, created_at").eq("closer_id", id).order("created_at", { ascending: false }).limit(50),
+      s.from("closer_reviews").select("id, reviewer_id, reviewer_name, rating, review, created_at").eq("closer_id", id).order("created_at", { ascending: false }).limit(50),
       s.rpc("closer_stats", { p_id: id }),
     ]);
     const reviews = (rows ?? []) as Review[];
-    const ids = [...new Set(reviews.map((r) => r.reviewer_id))];
+    const ids = [...new Set(reviews.flatMap((r) => (r.reviewer_id ? [r.reviewer_id] : [])))];
     const { data: cards } = ids.length ? await s.from("profile_cards").select("id, first_name, last_name, avatar_url").in("id", ids) : { data: [] };
     setPeople(Object.fromEntries(((cards ?? []) as Reviewer[]).map((c) => [c.id, c])));
     const mine = ((st as Stats[] | null) ?? [])[0] ?? null;
@@ -382,15 +383,17 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
   }
   async function addPast(e: React.FormEvent) {
     e.preventDefault();
-    if (!past.who) { setPastMsg("Choose the FLC member."); return; }
+    const typed = past.who === OTHER;
+    if (!past.who) { setPastMsg("Choose the FLC member, or choose to type a name."); return; }
+    if (typed && !past.name.trim()) { setPastMsg("Type their name."); return; }
     if (!past.rating) { setPastMsg("Choose a star rating."); return; }
     const when = past.when.trim() ? parseSince(past.when) : null;
     if (past.when.trim() && !when) { setPastMsg("Type the date as a month and year, like March 2024."); return; }
     setBusy(true); setPastMsg("");
-    const { error } = await createClient().from("closer_reviews").insert({ closer_id: id, reviewer_id: past.who, rating: past.rating, review: past.text.trim().slice(0, 1000) || null, imported: true, ...(when ? { created_at: `${when}T12:00:00Z` } : {}) });
+    const { error } = await createClient().from("closer_reviews").insert({ closer_id: id, reviewer_id: typed ? null : past.who, ...(typed ? { reviewer_name: past.name.trim().slice(0, 80) } : {}), rating: past.rating, review: past.text.trim().slice(0, 1000) || null, imported: true, ...(when ? { created_at: `${when}T12:00:00Z` } : {}) });
     setBusy(false);
     if (error) { setPastMsg(error.code === "23505" ? "That member already has a review here. Remove theirs first to replace it." : "We could not add that review. Please try again."); return; }
-    setPast({ who: "", rating: 0, text: "", when: "" });
+    setPast({ who: "", name: "", rating: 0, text: "", when: "" });
     await load();
   }
   async function removeReview(reviewId: string) {
@@ -412,10 +415,10 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
         {list.length === 0 ? <p className="pc-label" style={{ margin: 0 }}>Reviews from FLC members who booked them will show here.</p> : (
           <ul className="pc-review-list">
             {list.map((r) => {
-              const who = people[r.reviewer_id];
+              const who = r.reviewer_id ? people[r.reviewer_id] : undefined;
               return (
                 <li key={r.id}>
-                  <div className="pc-review-top"><strong>{who ? fullName(who) : "FLC member"}</strong><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
+                  <div className="pc-review-top"><strong>{who ? fullName(who) : r.reviewer_name ?? "FLC member"}</strong><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
                   {r.review ? <p className="pc-about">{r.review}</p> : null}
                   {admin ? <button type="button" className="linkbtn" style={{ padding: "2px 0", fontSize: 13, justifySelf: "start" }} onClick={() => void removeReview(r.id)}>Remove this review (admin)</button> : null}
                   <small className="pc-label">{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</small>
@@ -431,9 +434,11 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
           <label>FLC member who worked with them
             <select value={past.who} onChange={(e) => setPast({ ...past, who: e.target.value })}>
               <option value="">Choose an FLC member</option>
+              <option value={OTHER}>Someone not in the portal (type their name)</option>
               {members.map((m) => <option key={m.id} value={m.id}>{fullName(m)}</option>)}
             </select>
           </label>
+          {past.who === OTHER ? <label>Their name<input type="text" autoComplete="off" maxLength={80} placeholder="e.g. Jamie Carter" value={past.name} onChange={(e) => setPast({ ...past, name: e.target.value })} /></label> : null}
           <div className="pc-star-pick" role="radiogroup" aria-label="Their rating">
             {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={past.rating === n} aria-label={`${n} out of 5`} className={n <= past.rating ? "on" : ""} onClick={() => setPast({ ...past, rating: n })}>★</button>)}
           </div>

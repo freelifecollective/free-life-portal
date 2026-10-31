@@ -49,5 +49,14 @@ do $$ begin
   perform tests.eq('no new bookings since', (select members_counted from public.closer_stats('00000000-0000-0000-0000-0000000000a5')), 0);
   perform tests.eq('the imported review counts', (select review_count from public.closer_stats('00000000-0000-0000-0000-0000000000a5')), 1);
   perform tests.logout();
+  -- a review from someone who is not in the portal
+  perform tests.login('00000000-0000-0000-0000-0000000000a4');
+  insert into public.closer_reviews (closer_id, reviewer_id, reviewer_name, rating, review, imported) values ('00000000-0000-0000-0000-0000000000a5', null, 'Jamie Carter', 5, 'Great closer', true);
+  perform tests.eq('an admin can add a review under a typed name', (select count(*) from public.closer_reviews where reviewer_name = 'Jamie Carter'), 1::bigint);
+  perform tests.fails('a review needs a person or a typed name', $q$insert into public.closer_reviews (closer_id, reviewer_id, rating, imported) values ('00000000-0000-0000-0000-0000000000a5', null, 5, true)$q$, '23514');
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a1');
+  perform tests.fails('a member cannot add a typed-name review', $q$insert into public.closer_reviews (closer_id, reviewer_id, reviewer_name, rating, imported) values ('00000000-0000-0000-0000-0000000000a5', null, 'Fake Person', 5, true)$q$, '42501');
+  perform tests.logout();
 end $$;
 rollback;
