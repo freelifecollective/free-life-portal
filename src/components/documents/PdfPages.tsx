@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 /** Shows every page of a PDF one under the other, so people can scroll through it without downloading anything. Pages are drawn as they come into view. */
-export function PdfPages({ url, title }: { url: string; title: string }) {
+export function PdfPages({ url, title, onPage, goRef }: { url: string; title: string; /** told which page is showing, and how many there are */ onPage?: (page: number, pages: number) => void; /** filled with a function that scrolls to a page */ goRef?: MutableRefObject<((n: number) => void) | null> }) {
   const box = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<{ status: "loading" | "ready" | "error"; pages: number }>({ status: "loading", pages: 0 });
+  const report = useRef(onPage);
+  useEffect(() => { report.current = onPage; });
 
   useEffect(() => {
     const host = box.current;
@@ -13,6 +15,7 @@ export function PdfPages({ url, title }: { url: string; title: string }) {
     let cancelled = false;
     let doc: { destroy?: () => unknown } | null = null;
     let observer: IntersectionObserver | null = null;
+    let onScroll: (() => void) | null = null;
 
     (async () => {
       try {
@@ -63,14 +66,29 @@ export function PdfPages({ url, title }: { url: string; title: string }) {
           observer.observe(holder);
           if (cancelled) return;
         }
+        /* which page is showing: the first one whose bottom is still below the top of the window */
+        let current = 0;
+        const total = pdf.numPages;
+        const holders = () => Array.from(host.querySelectorAll<HTMLDivElement>(".pdf-page"));
+        const where = () => {
+          const top = host.scrollTop + 24;
+          const list = holders();
+          const idx = list.findIndex((h) => h.offsetTop + h.offsetHeight > top);
+          const n = (idx === -1 ? total : idx + 1);
+          if (n !== current) { current = n; report.current?.(n, total); }
+        };
+        onScroll = where;
+        host.addEventListener("scroll", where, { passive: true });
+        if (goRef) goRef.current = (n) => { const h = holders()[Math.min(Math.max(n, 1), total) - 1]; if (h) host.scrollTo({ top: h.offsetTop - 12, behavior: "smooth" }); };
+        where();
         setState({ status: "ready", pages: pdf.numPages });
       } catch {
         if (!cancelled) setState({ status: "error", pages: 0 });
       }
     })();
 
-    return () => { cancelled = true; observer?.disconnect(); void doc?.destroy?.(); };
-  }, [url]);
+    return () => { cancelled = true; observer?.disconnect(); if (onScroll) host.removeEventListener("scroll", onScroll); if (goRef) goRef.current = null; void doc?.destroy?.(); };
+  }, [url, goRef]);
 
   return (
     <div>
