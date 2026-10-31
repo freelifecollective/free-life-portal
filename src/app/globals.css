@@ -1447,3 +1447,26 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 
 .ff-preview { border-radius: 10px; overflow: hidden; background: var(--tint); min-height: 130px; max-width: 100%; }
 .ff-card.me { border-color: var(--accent); }
+
+/* language switcher */
+.lang-wrap { position: relative; }
+.lang-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; min-width: 180px; background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); padding: 6px; }
+.lang-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.lang-list button { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; padding: 10px 12px; border-radius: 8px; font-size: 15px; color: var(--ink); }
+.lang-list button:hover, .lang-list button:focus-visible { background: var(--tint); }
+.lang-list button.on { font-weight: 700; }
+.lang-inline { display: grid; gap: 4px; }
+.lang-inline .lang-label { font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 6px 12px 0; }
+.lang-inline .lang-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.lang-inline .lang-list button { width: auto; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px; }
+.lang-inline .lang-list button.on { background: var(--tint); border-color: var(--accent); }
+.login-lang { margin-top: 22px; display: flex; justify-content: center; }
+.user-pop .um-lang { padding: 6px 4px 4px; border-top: 1px solid var(--line); margin-top: 4px; }
+.user-pop .um-lang.phone-only { display: grid !important; }
+@media (min-width: 769px) { .user-pop .um-lang { display: none !important; } }
+
+/* hide the translation service's own bar and highlighting, so the portal looks the same in every language */
+.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame, .skiptranslate iframe { display: none !important; }
+body { top: 0 !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
+font[style] { background: none !important; box-shadow: none !important; }

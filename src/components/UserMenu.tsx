@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "./Avatar";
+import { LanguagePicker } from "./LanguagePicker";
 
 /** Your picture at the top right. Click it for your settings and to sign out. */
 export function UserMenu({ url, initials, preview, label, showSubscription, unread = 0, showNotifications = false }: { url: string | null; initials: string; preview: boolean; label: string; showSubscription: boolean; unread?: number; showNotifications?: boolean }) {
@@ -34,6 +35,7 @@ export function UserMenu({ url, initials, preview, label, showSubscription, unre
           {showSubscription ? <Link href="/settings/subscription" role="menuitem">My Subscription</Link> : null}
           {showNotifications ? <Link href="/notifications" role="menuitem" className="phone-only um-notif">Notifications{unread ? <span className="badge" aria-label={`${unread} unread`}>{unread > 99 ? "99+" : unread}</span> : null}</Link> : null}
           <Link href="/settings/app" role="menuitem">Get the App</Link>
+          <div className="phone-only um-lang"><LanguagePicker variant="list" /></div>
           <button type="button" role="menuitem" onClick={() => { setOpenAt(null); window.dispatchEvent(new Event("flc:tour")); }}>Take the tour</button>
           <button type="button" role="menuitem" onClick={() => { setOpenAt(null); logoutDialog.current?.showModal(); }}>Log out</button>
         </div>
