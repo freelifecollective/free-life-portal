@@ -5,6 +5,8 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { Map as LMap, Marker, CircleMarker } from "leaflet";
 import { Avatar } from "@/components/Avatar";
+import { ProfileCard, type MemberPerson } from "@/components/chats/ProfileCard";
+import { createClient } from "@/lib/supabase/client";
 import { searchPlace } from "@/app/(app)/water-map/actions";
 import { formatDistance, nearest } from "@/lib/water/geo";
 import { pinName, WATER_LABEL, type Place, type WaterPin } from "@/lib/water/types";
@@ -18,11 +20,25 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
   const map = useRef<LMap | null>(null);
   const markers = useRef(new Map<string, CircleMarker>());
   const target = useRef<Marker | CircleMarker | null>(null);
+  const profileDlg = useRef<HTMLDialogElement>(null);
+  const [person, setPerson] = useState<MemberPerson | null>(null);
+  const openRef = useRef<(id: string) => void>(() => {});
   const lib = useRef<typeof import("leaflet") | null>(null);
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
   const [found, setFound] = useState<Found | null>(null);
   const [pending, run] = useTransition();
+
+  /* clicking the picture or name in a dot's popup opens that person's profile, the same one as in Chats */
+  async function showProfile(id: string) {
+    const { data } = await createClient().rpc("speaker_profile", { p_id: id });
+    const r = ((data ?? []) as ({ found: boolean } & MemberPerson)[])[0];
+    if (!r?.found) return;
+    map.current?.closePopup();
+    setPerson(r);
+    profileDlg.current?.showModal();
+  }
+  useEffect(() => { openRef.current = (id) => { void showProfile(id); }; });
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +52,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       for (const p of pins) {
         const mine = p.member_id === myId;
         const c = L.circleMarker([p.lat, p.lng], { radius: mine ? 10 : 8, color: "#fff", weight: 2, fillColor: mine ? "#e5251b" : "#1e78b4", fillOpacity: 0.95 }).addTo(m);
-        c.bindPopup(popupFor(p, mine));
+        c.bindPopup(popupFor(p, mine, (id) => openRef.current(id)));
         /* clicking a dot zooms in to where that person is */
         c.on("click", () => m.flyTo([p.lat, p.lng], Math.max(m.getZoom(), 12), { duration: 0.8 }));
         markers.current.set(p.member_id, c);
@@ -103,16 +119,23 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
         ) : null}
       </div>
       <p className="when">{pins.length} {pins.length === 1 ? "affiliate is" : "affiliates are"} on the map. Drag to look around the world, pinch or scroll to zoom, and tap a dot to see who it is.</p>
+      <dialog ref={profileDlg} className="rs-dialog members-dialog" aria-label="Profile" onClose={() => setPerson(null)}
+        onClick={(e) => { if (e.target === profileDlg.current) profileDlg.current?.close(); }}>
+        {person ? <ProfileCard p={person} canMessage onClose={() => profileDlg.current?.close()} /> : null}
+      </dialog>
     </div>
   );
 }
 
 /** Built from plain elements, never HTML strings, so a name can never inject markup. */
-function popupFor(p: WaterPin, mine: boolean): HTMLElement {
+function popupFor(p: WaterPin, mine: boolean, onOpen: (id: string) => void): HTMLElement {
   const el = document.createElement("div");
   el.className = "ws-pop";
-  const head = document.createElement("div");
-  head.className = "ws-pop-head";
+  const head = document.createElement("button");
+  head.type = "button";
+  head.className = "ws-pop-head ws-pop-open";
+  head.title = "See their profile";
+  head.addEventListener("click", () => onOpen(p.member_id));
   const size = "56px";
   if (p.avatar_url) {
     const img = document.createElement("img");
