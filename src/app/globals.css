@@ -1461,9 +1461,6 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .lang-inline .lang-list button { width: auto; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px; }
 .lang-inline .lang-list button.on { background: var(--tint); border-color: var(--accent); }
 .login-lang { margin-top: 22px; display: flex; justify-content: center; }
-.user-pop .um-lang { padding: 6px 4px 4px; border-top: 1px solid var(--line); margin-top: 4px; }
-.user-pop .um-lang.phone-only { display: grid !important; }
-@media (min-width: 769px) { .user-pop .um-lang { display: none !important; } }
 .ut-toggle { display:block; margin-top:4px; font-size:12px; opacity:.7; }
 
 /* Anyone's picture and name opens their profile */

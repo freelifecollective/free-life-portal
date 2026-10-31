@@ -1,5 +1,6 @@
 "use server";
 
+import { isCountryCode } from "@/lib/countries";
 import { getSession } from "@/lib/auth/session";
 import { SUPABASE_URL } from "@/lib/env";
 import { cleanHandle, handleState } from "@/lib/handles";
@@ -32,7 +33,7 @@ export async function suggestUsernameAction(first: string, last: string): Promis
 }
 
 export type SaveInput = {
-  first: string; last: string; username: string; instagram: string; facebook: string; birthMonth?: string; birthDay?: string; birthYear?: string;
+  first: string; last: string; username: string; instagram: string; facebook: string; birthMonth?: string; birthDay?: string; birthYear?: string; country?: string;
   avatarKind: AvatarKind; avatarUrl: string | null;
 };
 export type SaveResult = { ok: true } | { ok: false; error: string; field?: "username" | "name" | "instagram" | "facebook" | "avatar" };
@@ -62,6 +63,8 @@ export async function saveProfileAction(input: SaveInput): Promise<SaveResult> {
     || (by && (!bm || !Number.isInteger(by) || by < 1900 || by > 2100))) return { ok: false, error: "Check your birthday." };
   const birthday = bm ? { birth_month: bm, birth_day: bd, birth_year: by || null } : {};
 
+  const country = isCountryCode(input.country) ? { country: input.country } : {};
+
   if (!AVATAR_KINDS.includes(input.avatarKind)) return { ok: false, error: "Choose a profile picture.", field: "avatar" };
   const done = new Date().toISOString();
 
@@ -77,7 +80,7 @@ export async function saveProfileAction(input: SaveInput): Promise<SaveResult> {
 
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({
-    first_name: first, last_name: last, username, instagram, facebook, ...birthday,
+    first_name: first, last_name: last, username, instagram, facebook, ...birthday, ...country,
     avatar_url: input.avatarUrl, avatar_kind: input.avatarKind, onboarded_at: done,
   }).eq("id", session.user.id);
 
