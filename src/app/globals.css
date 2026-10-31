@@ -1444,3 +1444,6 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .ff-bar i { display: block; height: 100%; background: linear-gradient(to right, var(--accent), var(--accent-deep)); border-radius: 99px; transition: width .4s; }
 .ff-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .ff-actions a.btn { text-decoration: none; }
+
+.ff-preview { border-radius: 10px; overflow: hidden; background: var(--tint); min-height: 130px; max-width: 100%; }
+.ff-card.me { border-color: var(--accent); }
