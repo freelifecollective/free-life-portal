@@ -37,7 +37,7 @@ function lastSeen(iso: string): { text: string; online: boolean } {
 type Listing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number };
 type Closer = { calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null };
 type View = "profile" | "services" | "closer" | "reviews";
-type Stats = { calls_counted: number; members_booked: number; review_count: number; avg_rating: number | null; viewer_booked: boolean; my_rating: number | null; my_review: string | null };
+type Stats = { calls_counted: number; members_booked: number; review_count: number; avg_rating: number | null; viewer_booked: boolean; my_rating: number | null; my_review: string | null; members_counted: number; members_base: string | null };
 
 /** "40+" plus 3 new calls becomes "43+"; a figure that is not a number is shown as typed with the new calls noted. */
 function totalCalls(base: string | null, counted: number): string | null {
@@ -60,6 +60,7 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
   const [closerOn, setCloserOn] = useState(p.call_closer);
   const [presence, setPresence] = useState<{ text: string; online: boolean } | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [statsTick, setStatsTick] = useState(0);
 
   /* the call closer numbers shown at the top of the call closer view */
   useEffect(() => {
@@ -67,7 +68,7 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
     let live = true;
     void createClient().rpc("closer_stats", { p_id: p.id }).then(({ data }) => { if (live) setStats(((data as Stats[] | null) ?? [])[0] ?? null); });
     return () => { live = false; };
-  }, [guest, p.id, closerOn, view]);
+  }, [guest, p.id, closerOn, view, statsTick]);
 
   /* "online" or "last seen ...", refreshed while the popup is open (affiliates only; others get nothing back) */
   useEffect(() => {
@@ -205,18 +206,18 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
         <>
           <div className="pc-stats">
             <div className="pc-stat">
-              <strong>{stats ? stats.members_booked.toLocaleString("en-US") : "…"}</strong>
-              <span>FLC {stats?.members_booked === 1 ? "member has" : "members have"} booked {p.first_name ?? "this closer"}</span>
+              <strong>{stats ? (totalCalls(stats.members_base, stats.members_counted) ?? "0") : "…"}</strong>
+              <span>FLC {stats && totalCalls(stats.members_base, stats.members_counted) === "1" ? "member has" : "members have"} booked {p.first_name ?? "this closer"}</span>
             </div>
             <button type="button" className="pc-stat pc-stat-btn" onClick={() => setView("reviews")}>
               <strong><span className="pc-stars" aria-hidden="true">{stats?.avg_rating ? "★" : "☆"}</span> {stats?.avg_rating ?? "–"}</strong>
               <span>Reviews{stats ? ` (${stats.review_count})` : ""}</span>
             </button>
           </div>
-          <CloserView id={p.id} admin={admin} stats={stats} />
+          <CloserView id={p.id} admin={admin} stats={stats} onSaved={() => setStatsTick((n) => n + 1)} />
         </>
       ) : null}
-      {view === "reviews" ? <ReviewsView id={p.id} /> : null}
+      {view === "reviews" ? <ReviewsView id={p.id} admin={admin} /> : null}
     </div>
   );
 }
@@ -243,19 +244,20 @@ function ServicesView({ id }: { id: string }) {
   );
 }
 
-function CloserView({ id, admin, stats }: { id: string; admin: boolean; stats: Stats | null }) {
+function CloserView({ id, admin, stats, onSaved }: { id: string; admin: boolean; stats: Stats | null; onSaved: () => void }) {
   const [d, setD] = useState<Closer | null | undefined>(undefined);
   const [edit, setEdit] = useState(false);
-  const [vals, setVals] = useState({ calls: "", since: "", rate: "", perCall: "", perSale: "" });
+  const [vals, setVals] = useState({ calls: "", members: "", since: "", rate: "", perCall: "", perSale: "" });
   const [msg, setMsg] = useState("");
 
   const load = useCallback(() => createClient().from("call_closer_details").select("calls_taken, closer_since, close_rate, price_per_call_cents, price_per_sale").eq("member_id", id).maybeSingle()
     .then(({ data }) => setD((data as Closer | null) ?? null)), [id]);
   useEffect(() => { void load(); }, [load]);
   const shownCalls = totalCalls(d?.calls_taken ?? null, stats?.calls_counted ?? 0);
+  const shownMembers = stats ? totalCalls(stats.members_base, stats.members_counted) : null;
 
   function startEdit() {
-    setVals({ calls: shownCalls ?? "", since: d?.closer_since ? sinceText(d.closer_since) : "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
+    setVals({ calls: shownCalls ?? "", members: shownMembers ?? "", since: d?.closer_since ? sinceText(d.closer_since) : "", rate: d?.close_rate === null || d?.close_rate === undefined ? "" : String(d.close_rate),
       perCall: d?.price_per_call_cents == null ? "" : String(d.price_per_call_cents / 100), perSale: d?.price_per_sale ?? "" });
     setMsg(""); setEdit(true);
   }
@@ -269,11 +271,12 @@ function CloserView({ id, admin, stats }: { id: string; admin: boolean; stats: S
     const rate = num(vals.rate);
     /* if the calls figure was changed by hand, it becomes the new starting point and the automatic count starts again from now */
     const callsChanged = vals.calls.trim() !== (shownCalls ?? "");
-    const row = { member_id: id, ...(callsChanged ? { calls_taken: vals.calls.trim().slice(0, 40) || null, counted_from: new Date().toISOString() } : {}), closer_since: since, close_rate: rate === null ? null : Math.min(100, Math.max(0, rate)),
+    const membersChanged = vals.members.trim() !== (shownMembers ?? "");
+    const row = { member_id: id, ...(callsChanged ? { calls_taken: vals.calls.trim().slice(0, 40) || null, counted_from: new Date().toISOString() } : {}), ...(membersChanged ? { members_booked: vals.members.trim().slice(0, 40) || null, members_counted_from: new Date().toISOString() } : {}), closer_since: since, close_rate: rate === null ? null : Math.min(100, Math.max(0, rate)),
       price_per_call_cents: money2(vals.perCall), price_per_sale: vals.perSale.trim().slice(0, 400) || null, updated_at: new Date().toISOString() };
     const { error } = await createClient().from("call_closer_details").upsert(row, { onConflict: "member_id" });
     if (error) { setMsg("We could not save that. Check the numbers and try again."); return; }
-    setEdit(false); await load();
+    setEdit(false); await load(); onSaved();
   }
 
   if (d === undefined) return <p className="pc-empty">Loading…</p>;
@@ -281,6 +284,7 @@ function CloserView({ id, admin, stats }: { id: string; admin: boolean; stats: S
     return (
       <form className="pc-card pc-pad pc-form" onSubmit={(e) => void save(e)}>
         <label>Calls taken (counts up by itself after each call)<input type="text" autoComplete="off" maxLength={40} placeholder="e.g. 50+" value={vals.calls} onChange={(e) => setVals({ ...vals, calls: e.target.value })} /></label>
+        <label>FLC members who have booked (counts up by itself after each new booking)<input type="text" autoComplete="off" maxLength={40} placeholder="e.g. 20+" value={vals.members} onChange={(e) => setVals({ ...vals, members: e.target.value })} /></label>
         <label>Taking calls since<input type="text" autoComplete="off" placeholder="e.g. January 2024" value={vals.since} onChange={(e) => setVals({ ...vals, since: e.target.value })} /></label>
         <label>Close rate (%)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 85" value={vals.rate} onChange={(e) => setVals({ ...vals, rate: e.target.value })} /></label>
         <label>Charge per call (USD)<input type="text" inputMode="decimal" autoComplete="off" placeholder="e.g. 50" value={vals.perCall} onChange={(e) => setVals({ ...vals, perCall: e.target.value })} /></label>
@@ -338,7 +342,7 @@ function lengthSince(iso: string): string {
 type Review = { id: string; reviewer_id: string; rating: number; review: string | null; created_at: string };
 type Reviewer = { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null };
 
-function ReviewsView({ id }: { id: string }) {
+function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
   const [list, setList] = useState<Review[] | null>(null);
   const [people, setPeople] = useState<Record<string, Reviewer>>({});
   const [stats, setStats] = useState<Stats | null>(null);
@@ -346,6 +350,17 @@ function ReviewsView({ id }: { id: string }) {
   const [text, setText] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  /* admin only: add a review from an FLC member who worked with them before the portal had bookings */
+  const [members, setMembers] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
+  const [past, setPast] = useState({ who: "", rating: 0, text: "", when: "" });
+  const [pastMsg, setPastMsg] = useState("");
+
+  useEffect(() => {
+    if (!admin) return;
+    let live = true;
+    void createClient().rpc("member_directory", { p_kind: "affiliates" }).then(({ data }) => { if (live) setMembers(((data ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).filter((m) => m.id !== id)); });
+    return () => { live = false; };
+  }, [admin, id]);
 
   const load = useCallback(async () => {
     const s = createClient();
@@ -376,6 +391,23 @@ function ReviewsView({ id }: { id: string }) {
     if (error) { setMsg("We could not save your review. Please try again."); return; }
     await load();
   }
+  async function addPast(e: React.FormEvent) {
+    e.preventDefault();
+    if (!past.who) { setPastMsg("Choose the FLC member."); return; }
+    if (!past.rating) { setPastMsg("Choose a star rating."); return; }
+    const when = past.when.trim() ? parseSince(past.when) : null;
+    if (past.when.trim() && !when) { setPastMsg("Type the date as a month and year, like March 2024."); return; }
+    setBusy(true); setPastMsg("");
+    const { error } = await createClient().from("closer_reviews").insert({ closer_id: id, reviewer_id: past.who, rating: past.rating, review: past.text.trim().slice(0, 1000) || null, imported: true, ...(when ? { created_at: `${when}T12:00:00Z` } : {}) });
+    setBusy(false);
+    if (error) { setPastMsg(error.code === "23505" ? "That member already has a review here. Remove theirs first to replace it." : "We could not add that review. Please try again."); return; }
+    setPast({ who: "", rating: 0, text: "", when: "" });
+    await load();
+  }
+  async function removeReview(reviewId: string) {
+    await createClient().from("closer_reviews").delete().eq("id", reviewId);
+    await load();
+  }
   async function removeMine() {
     const s = createClient();
     const { data: u } = await s.auth.getUser();
@@ -396,6 +428,7 @@ function ReviewsView({ id }: { id: string }) {
                 <li key={r.id}>
                   <div className="pc-review-top"><strong>{who ? fullName(who) : "FLC member"}</strong><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
                   {r.review ? <p className="pc-about">{r.review}</p> : null}
+                  {admin ? <button type="button" className="linkbtn" style={{ padding: "2px 0", fontSize: 13, justifySelf: "start" }} onClick={() => void removeReview(r.id)}>Remove this review (admin)</button> : null}
                   <small className="pc-label">{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</small>
                 </li>
               );
@@ -403,6 +436,24 @@ function ReviewsView({ id }: { id: string }) {
           </ul>
         )}
       </div>
+      {admin ? (
+        <form className="pc-card pc-pad pc-form" onSubmit={(e) => void addPast(e)}>
+          <strong>Add a past review (admin only)</strong>
+          <label>FLC member who worked with them
+            <select value={past.who} onChange={(e) => setPast({ ...past, who: e.target.value })}>
+              <option value="">Choose an FLC member</option>
+              {members.map((m) => <option key={m.id} value={m.id}>{fullName(m)}</option>)}
+            </select>
+          </label>
+          <div className="pc-star-pick" role="radiogroup" aria-label="Their rating">
+            {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={past.rating === n} aria-label={`${n} out of 5`} className={n <= past.rating ? "on" : ""} onClick={() => setPast({ ...past, rating: n })}>★</button>)}
+          </div>
+          <label>What they said (optional)<textarea rows={3} maxLength={1000} value={past.text} onChange={(e) => setPast({ ...past, text: e.target.value })} /></label>
+          <label>When (optional, month and year)<input type="text" autoComplete="off" placeholder="e.g. March 2024" value={past.when} onChange={(e) => setPast({ ...past, when: e.target.value })} /></label>
+          {pastMsg ? <p className="err" role="alert">{pastMsg}</p> : null}
+          <div className="dlg-actions"><button type="submit" className="btn small primary" disabled={busy}>{busy ? "Adding…" : "Add review"}</button></div>
+        </form>
+      ) : null}
       {stats?.viewer_booked ? (
         <form className="pc-card pc-pad pc-form" onSubmit={(e) => void save(e)}>
           <strong>{stats.my_rating ? "Your review" : "Leave a review"}</strong>
