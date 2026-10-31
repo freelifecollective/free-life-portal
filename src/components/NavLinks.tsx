@@ -62,8 +62,14 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
   };
 
   return (
-    <ul>
-      {items.map((n) => (n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} />))}
-    </ul>
+    <>
+      <ul>
+        {items.map((n) => (n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} />))}
+      </ul>
+      {/* never shown: it holds every name, folded away or not, so the menu is always wide enough for all of them in this language */}
+      <ul className="nav-sizer" aria-hidden="true">
+        {items.map((n) => <li key={n.label}><span className={n.heading ? "sz-h" : n.group ? "sz-sub" : undefined}>{n.label}</span></li>)}
+      </ul>
+    </>
   );
 }

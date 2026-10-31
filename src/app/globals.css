@@ -1468,3 +1468,9 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .person-link:hover .who-name strong, .person-link:hover > strong { text-decoration: underline; }
 .person-link:focus-visible { outline: 2px solid var(--accent, #AB9080); outline-offset: 3px; }
 .provider-toggle { all: unset; cursor: pointer; text-align: right; font-size: 13px; }
+
+/* The hidden list that makes the left menu as wide as its longest name (in the language showing), whichever sections are open */
+.nav > ul.nav-sizer { position: static; height: 0; max-height: 0; overflow: hidden; visibility: hidden; margin: 0; padding: 0; pointer-events: none; }
+.nav-sizer li > span { display: block; white-space: nowrap; padding: 0 96px 0 14px; font-family: var(--font-label); font-weight: 600; font-size: 14px; letter-spacing: 0.04em; }
+.nav-sizer li > span.sz-sub { padding-left: 34px; }
+.nav-sizer li > span.sz-h { padding-right: 70px; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
