@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireMember } from "@/lib/auth/guards";
-import { isViewable, MAX_FILE_BYTES } from "@/lib/documents/types";
+import { isPreviewable, isViewable, MAX_FILE_BYTES } from "@/lib/documents/types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Result = { ok: boolean; error?: string };
@@ -111,7 +111,7 @@ export async function getFileLinks(id: string): Promise<{ ok: boolean; error?: s
   if (!f) return { ok: false, error: "That document is not available." };
   const bucket = supabase.storage.from("documents");
   const [view, dl] = await Promise.all([
-    isViewable(f.mime) ? bucket.createSignedUrl(f.storage_path, 300) : Promise.resolve({ data: null }),
+    isPreviewable(f.mime) ? bucket.createSignedUrl(f.storage_path, 300) : Promise.resolve({ data: null }),
     f.downloadable ? bucket.createSignedUrl(f.storage_path, 120, { download: f.name }) : Promise.resolve({ data: null }),
   ]);
   return { ok: true, view: view.data?.signedUrl, download: dl.data?.signedUrl, mime: f.mime, name: f.name };

@@ -7,7 +7,9 @@ import { deleteItem, ensureFolder, getFileLinks, getSourceLink, moveItem, regist
 import { createClient } from "@/lib/supabase/client";
 import { BulkDialog, type Picked } from "./BulkDialog";
 import { makeThumb } from "@/lib/documents/thumbs";
-import { MAX_FILE_BYTES, MAX_UPLOAD_MB, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
+import { MAX_FILE_BYTES, MAX_UPLOAD_MB, isOfficeDoc, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
+import { PdfPages } from "./PdfPages";
+import { TextPreview } from "./TextPreview";
 import type { Role } from "@/lib/roles";
 
 type Item = { kind: "folder"; f: DocFolder } | { kind: "file"; f: DocFile };
@@ -346,15 +348,21 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
       <dialog ref={viewer} className="rs-dialog doc-viewer" aria-labelledby="dv-title" onClose={() => setView(null)}>
         <h2 id="dv-title" className="qh" style={{ marginTop: 0, overflowWrap: "anywhere" }}>{view?.name}</h2>
         {view?.error ? <p className="err">{view.error}</p> : !view?.view && !view?.download ? <p className="when">Loading…</p> : null}
-        {view?.view && view.mime === "application/pdf" ? <iframe className="doc-frame" src={view.download || view.view} title={view.name} /> : null}
+        {view?.view && view.mime === "application/pdf" ? <PdfPages url={view.view} title={view.name} /> : null}
         {view?.view && view.mime.startsWith("image/") ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="doc-img" src={view.view} alt={view.name} />
         ) : null}
         {view?.view && view.mime.startsWith("video/") ? <video className="doc-img" src={view.view} controls controlsList={view.download ? undefined : "nodownload"} /> : null}
         {view?.view && view.mime.startsWith("audio/") ? <audio src={view.view} controls controlsList={view.download ? undefined : "nodownload"} style={{ width: "100%" }} /> : null}
-        {view?.view && view.mime === "text/plain" ? <iframe className="doc-frame" src={view.view} title={view.name} /> : null}
-        {view && !view.view && view.download ? <p className="when">There is no preview for this type of file. Download it to open it.</p> : null}
+        {view?.view && (view.mime === "text/plain" || view.mime === "text/csv") ? <TextPreview url={view.view} /> : null}
+        {view?.view && isOfficeDoc(view.mime) ? (
+          <>
+            <iframe className="doc-frame" src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(view.view)}`} title={view.name} />
+            <p className="when" style={{ margin: "6px 0 0" }}>Shown with Microsoft&rsquo;s free viewer. The layout can differ a little from the original, and very large files may not load. Download it to open it fully.</p>
+          </>
+        ) : null}
+        {view && !view.view && view.download ? <p className="when">This type of file cannot be previewed here. Use the Download button to open it on your device.</p> : null}
         <div className="dlg-actions">
           {!view?.download && view?.view ? <span className="when" style={{ marginRight: "auto" }}>View only</span> : null}
           <button className="btn" type="button" onClick={() => viewer.current?.close()}>Close</button>
