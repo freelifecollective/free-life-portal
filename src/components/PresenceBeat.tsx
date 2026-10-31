@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 export function PresenceBeat() {
   useEffect(() => {
     const supabase = createClient();
-    const beat = () => { if (document.visibilityState === "visible") void supabase.rpc("touch_presence"); };
+    const beat = () => { if (document.visibilityState === "visible") void supabase.rpc("touch_presence").then(({ error }) => { if (error) console.warn("Presence check-in failed:", error.message); }); };
     beat();
     const timer = window.setInterval(beat, 60_000);
     document.addEventListener("visibilitychange", beat);
