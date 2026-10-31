@@ -31,7 +31,8 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       if (cancelled || !box.current) return;
       lib.current = L;
       const m = L.map(box.current, { worldCopyJump: true, minZoom: 2, zoomControl: true }).setView([25, 0], 2);
-      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap contributors" }).addTo(m);
+      /* CARTO's Voyager map writes place names in English worldwide (the plain OpenStreetMap tiles use each country's own language) */
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 19, attribution: "© OpenStreetMap contributors © CARTO" }).addTo(m);
       for (const p of pins) {
         const mine = p.member_id === myId;
         const c = L.circleMarker([p.lat, p.lng], { radius: mine ? 10 : 8, color: "#fff", weight: 2, fillColor: mine ? "#e5251b" : "#1e78b4", fillOpacity: 0.95 }).addTo(m);
