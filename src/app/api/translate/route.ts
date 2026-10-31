@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const LANGS = new Set(["es", "fr", "it", "de"]);
+const LANGS = new Set(["en", "es", "fr", "it", "de"]);
 const cache = new Map<string, { text: string; same: boolean }>();
 
 /** Translates what members write (posts, replies, messages) with Google Translate. Only signed-in people can use it. */

@@ -13,7 +13,7 @@ export function UserText({ text }: { text: string }) {
   const [got, setGot] = useState<{ key: string; text: string; same: boolean } | null>(null);
   const [orig, setOrig] = useState(false);
   useEffect(() => {
-    if (lang === "en" || !/\p{L}/u.test(text)) return;
+    if (!/\p{L}/u.test(text)) return;
     const hit = done.get(key);
     if (hit) { Promise.resolve().then(() => setGot({ key, ...hit })); return; }
     let live = true;

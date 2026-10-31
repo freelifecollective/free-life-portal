@@ -58,6 +58,12 @@ const EN_MONTH_LONG = ["January", "February", "March", "April", "May", "June", "
 export function translateDates(text: string, lang: Lang): string | null {
   const monthRe = "(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)";
   const weekRe = "(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun)";
+  /* a lone weekday ("Sun") or a month with its year ("November 2026"), like the headings of the calendar */
+  const lone = text.trim();
+  const li = EN_WEEK_LONG.indexOf(lone), si = EN_WEEK.indexOf(lone);
+  if (li >= 0 || si >= 0) return text.replace(lone, li >= 0 ? WEEK_LONG[lang][li] : WEEK[lang][si]);
+  const my = lone.match(/^([A-Z][a-z]+) (\d{4})$/);
+  if (my && EN_MONTH_LONG.includes(my[1])) return text.replace(lone, `${MONTH_LONG[lang][EN_MONTH_LONG.indexOf(my[1])]}${lang === "es" ? " de" : ""} ${my[2]}`);
   const monthDay = new RegExp(`\\b${monthRe}\\.? (\\d{1,2})(?!\\d)`, "g");
   const looksLikeDate = monthDay.test(text) || new RegExp(`\\b${weekRe},? ${monthRe}\\b`).test(text) || new RegExp(`\\b${weekRe}\\b.*\\d{1,2}:\\d{2}`).test(text);
   if (!looksLikeDate) return null;

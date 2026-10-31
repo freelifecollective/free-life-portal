@@ -1,3 +1,4 @@
+import { UserText } from "@/components/UserText";
 import Link from "next/link";
 import { LiveBadge } from "@/components/LiveBadge";
 import { Attendees } from "@/components/calendar/Attendees";
@@ -31,7 +32,7 @@ export function NextCallCard({ call, summary, now, inviteUsername }: { call: Cal
         <span className="hc-label">{NEXT_LABEL[call.kind]}</span>
         {live ? <LiveBadge>LIVE</LiveBadge> : call.audience === "leads_open" ? <span className="hc-open"><span className="hc-dot" />Registration open</span> : null}
       </div>
-      <h2 className="hc-title">{call.title}</h2>
+      <h2 className="hc-title"><UserText text={call.title} /></h2>
       <p className="hc-meta">{formatInZone(start)} · {callLength(call)}</p>
       <SpeakerBubbles speakers={speakersOf(call)} profiles />
       <LocalTime iso={call.starts_at} />
