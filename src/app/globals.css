@@ -1350,3 +1350,6 @@ a.pc-row:hover { background: var(--tint); }
 /* arrows and "Start over" share one row under the progress line, right above the question */
 .bq-under { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; min-height: 44px; }
 .bq-under .bq-startover { margin-top: 0; }
+
+/* "Start over from beginning" first, with the two arrows right beside it */
+.bq-under { justify-content: flex-start; gap: 18px; }
