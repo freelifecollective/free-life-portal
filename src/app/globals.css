@@ -1404,3 +1404,8 @@ a.pc-row:hover { background: var(--tint); }
 .members-list .ml-online i { width: 8px; height: 8px; border-radius: 50%; background: #2F9E6B; animation: online-pulse-green 1.6s ease-out infinite; }
 @keyframes online-pulse-green { 0% { box-shadow: 0 0 0 0 rgba(47,158,107,.6); } 70% { box-shadow: 0 0 0 7px rgba(47,158,107,0); } 100% { box-shadow: 0 0 0 0 rgba(47,158,107,0); } }
 @media (prefers-reduced-motion: reduce) { .pc-online-pill i, .members-list .ml-online i { animation: none; } }
+
+.pc-photo-pick { display: flex; align-items: center; gap: 12px; width: 100%; }
+.pc-photo-btn { cursor: pointer; }
+.pc-review-who { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.pc-form .pc-photo-btn { width: auto; flex-direction: row; color: var(--ink); font-size: 12px; }

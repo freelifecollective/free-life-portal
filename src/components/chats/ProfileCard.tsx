@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { openDockChat } from "@/components/messages/MessageDock";
 import { facebookUrl, instagramUrl } from "@/lib/landing/types";
+import { squareJpeg } from "@/lib/image/square";
 import { lastSeen } from "@/lib/presence";
 import { createClient } from "@/lib/supabase/client";
 
@@ -328,7 +329,7 @@ function lengthSince(iso: string): string {
   return [yrs ? `${yrs} ${yrs === 1 ? "year" : "years"}` : "", mo ? `${mo} ${mo === 1 ? "month" : "months"}` : ""].filter(Boolean).join(", ");
 }
 
-type Review = { id: string; reviewer_id: string | null; reviewer_name: string | null; rating: number; review: string | null; created_at: string };
+type Review = { id: string; reviewer_id: string | null; reviewer_name: string | null; reviewer_photo_url: string | null; rating: number; review: string | null; created_at: string };
 const OTHER = "__other__";
 type Reviewer = { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null };
 
@@ -342,7 +343,8 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
   const [busy, setBusy] = useState(false);
   /* admin only: add a review from an FLC member who worked with them before the portal had bookings */
   const [members, setMembers] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
-  const [past, setPast] = useState({ who: "", name: "", rating: 0, text: "", when: "" });
+  const [past, setPast] = useState({ who: "", name: "", photo: "", rating: 0, text: "", when: "" });
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [pastMsg, setPastMsg] = useState("");
 
   useEffect(() => {
@@ -355,7 +357,7 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
   const load = useCallback(async () => {
     const s = createClient();
     const [{ data: rows }, { data: st }] = await Promise.all([
-      s.from("closer_reviews").select("id, reviewer_id, reviewer_name, rating, review, created_at").eq("closer_id", id).order("created_at", { ascending: false }).limit(50),
+      s.from("closer_reviews").select("id, reviewer_id, reviewer_name, reviewer_photo_url, rating, review, created_at").eq("closer_id", id).order("created_at", { ascending: false }).limit(50),
       s.rpc("closer_stats", { p_id: id }),
     ]);
     const reviews = (rows ?? []) as Review[];
@@ -381,6 +383,20 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
     if (error) { setMsg("We could not save your review. Please try again."); return; }
     await load();
   }
+  async function uploadPhoto(file: File | undefined) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { setPastMsg("That file is not a picture. Try a JPG or PNG."); return; }
+    setPhotoBusy(true); setPastMsg("");
+    try {
+      const path = `reviewers/${crypto.randomUUID()}.jpg`;
+      const s = createClient();
+      const { error } = await s.storage.from("speakers").upload(path, await squareJpeg(file), { contentType: "image/jpeg", cacheControl: "31536000" });
+      if (error) throw error;
+      setPast((cur) => ({ ...cur, photo: s.storage.from("speakers").getPublicUrl(path).data.publicUrl }));
+    } catch { setPastMsg("We could not upload that picture. Please try another."); }
+    setPhotoBusy(false);
+  }
+
   async function addPast(e: React.FormEvent) {
     e.preventDefault();
     const typed = past.who === OTHER;
@@ -390,10 +406,10 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
     const when = past.when.trim() ? parseSince(past.when) : null;
     if (past.when.trim() && !when) { setPastMsg("Type the date as a month and year, like March 2024."); return; }
     setBusy(true); setPastMsg("");
-    const { error } = await createClient().from("closer_reviews").insert({ closer_id: id, reviewer_id: typed ? null : past.who, ...(typed ? { reviewer_name: past.name.trim().slice(0, 80) } : {}), rating: past.rating, review: past.text.trim().slice(0, 1000) || null, imported: true, ...(when ? { created_at: `${when}T12:00:00Z` } : {}) });
+    const { error } = await createClient().from("closer_reviews").insert({ closer_id: id, reviewer_id: typed ? null : past.who, ...(typed ? { reviewer_name: past.name.trim().slice(0, 80), reviewer_photo_url: past.photo || null } : {}), rating: past.rating, review: past.text.trim().slice(0, 1000) || null, imported: true, ...(when ? { created_at: `${when}T12:00:00Z` } : {}) });
     setBusy(false);
     if (error) { setPastMsg(error.code === "23505" ? "That member already has a review here. Remove theirs first to replace it." : "We could not add that review. Please try again."); return; }
-    setPast({ who: "", name: "", rating: 0, text: "", when: "" });
+    setPast({ who: "", name: "", photo: "", rating: 0, text: "", when: "" });
     await load();
   }
   async function removeReview(reviewId: string) {
@@ -418,7 +434,7 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
               const who = r.reviewer_id ? people[r.reviewer_id] : undefined;
               return (
                 <li key={r.id}>
-                  <div className="pc-review-top"><strong>{who ? fullName(who) : r.reviewer_name ?? "FLC member"}</strong><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
+                  <div className="pc-review-top"><span className="pc-review-who"><Avatar url={who?.avatar_url ?? r.reviewer_photo_url} initials={who ? initialsOf(who) : (r.reviewer_name ?? "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?"} size={36} /><strong>{who ? fullName(who) : r.reviewer_name ?? "FLC member"}</strong></span><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
                   {r.review ? <p className="pc-about">{r.review}</p> : null}
                   {admin ? <button type="button" className="linkbtn" style={{ padding: "2px 0", fontSize: 13, justifySelf: "start" }} onClick={() => void removeReview(r.id)}>Remove this review (admin)</button> : null}
                   <small className="pc-label">{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</small>
@@ -438,7 +454,15 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
               {members.map((m) => <option key={m.id} value={m.id}>{fullName(m)}</option>)}
             </select>
           </label>
-          {past.who === OTHER ? <label>Their name<input type="text" autoComplete="off" maxLength={80} placeholder="e.g. Jamie Carter" value={past.name} onChange={(e) => setPast({ ...past, name: e.target.value })} /></label> : null}
+          {past.who === OTHER ? (
+            <>
+              <label>Their name<input type="text" autoComplete="off" maxLength={80} placeholder="e.g. Jamie Carter" value={past.name} onChange={(e) => setPast({ ...past, name: e.target.value })} /></label>
+              <div className="pc-photo-pick">
+                <Avatar url={past.photo || null} initials={past.name.trim() ? past.name.trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") : "?"} size={56} />
+                <label className="btn small pc-photo-btn">{photoBusy ? "Uploading…" : past.photo ? "Change picture" : "Add a picture (optional)"}<input type="file" accept="image/*" hidden disabled={photoBusy} onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void uploadPhoto(f); }} /></label>
+              </div>
+            </>
+          ) : null}
           <div className="pc-star-pick" role="radiogroup" aria-label="Their rating">
             {[1, 2, 3, 4, 5].map((n) => <button key={n} type="button" role="radio" aria-checked={past.rating === n} aria-label={`${n} out of 5`} className={n <= past.rating ? "on" : ""} onClick={() => setPast({ ...past, rating: n })}>★</button>)}
           </div>
