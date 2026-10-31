@@ -11,6 +11,7 @@ import { canSee, type Role } from "@/lib/roles";
 import type { AppSession } from "@/lib/profile/types";
 import { SearchIcon } from "./SearchIcon";
 import { MessageDock } from "./messages/MessageDock";
+import { PresenceBeat } from "./PresenceBeat";
 import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
 
@@ -99,6 +100,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
     {buddyRemind ? <BuddyReminder rank={buddyRemind} /> : null}
     {waterPrompt ? <WaterPrompt /> : null}
     <RankCelebration />
+    {session.mode === "supabase" ? <PresenceBeat /> : null}
     {pendingFeedback.length ? <FeedbackPrompt calls={pendingFeedback} /> : null}
     </MenuProvider>
   );

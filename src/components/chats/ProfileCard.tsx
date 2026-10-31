@@ -21,7 +21,18 @@ function ageOf(y: number, m: number, d: number): number {
   if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) a -= 1;
   return a;
 }
-function handleOf(v: string): string { return v.startsWith("https://") ? "View page" : "@" + v; }
+/** Telegram-style: "online", "last seen 5 minutes ago", "last seen today at 7:45 PM", "last seen yesterday at ...", "last seen Oct 12". */
+function lastSeen(iso: string): { text: string; online: boolean } {
+  const then = new Date(iso), now = new Date();
+  const mins = Math.floor((now.getTime() - then.getTime()) / 60000);
+  if (mins < 2) return { text: "online", online: true };
+  if (mins < 60) return { text: `last seen ${mins} minutes ago`, online: false };
+  const clock = then.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const days = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - new Date(then.getFullYear(), then.getMonth(), then.getDate()).getTime()) / 86400000);
+  if (days <= 0) return { text: `last seen today at ${clock}`, online: false };
+  if (days === 1) return { text: `last seen yesterday at ${clock}`, online: false };
+  return { text: `last seen ${then.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`, online: false };
+}
 
 type Listing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number };
 type Closer = { calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null };
@@ -47,6 +58,18 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
   const [copied, setCopied] = useState(false);
   const [admin, setAdmin] = useState(false);
   const [closerOn, setCloserOn] = useState(p.call_closer);
+  const [presence, setPresence] = useState<{ text: string; online: boolean } | null>(null);
+
+  /* "online" or "last seen ...", refreshed while the popup is open (affiliates only; others get nothing back) */
+  useEffect(() => {
+    if (guest || !p.id) return;
+    let live = true;
+    const supabase = createClient();
+    const refresh = () => { void supabase.rpc("presence_of", { p_id: p.id }).then(({ data }) => { if (live) setPresence(typeof data === "string" ? lastSeen(data) : null); }); };
+    refresh();
+    const timer = window.setInterval(refresh, 30_000);
+    return () => { live = false; window.clearInterval(timer); };
+  }, [guest, p.id]);
 
   /* admins get a switch for "call closer" and can fill in a closer's numbers */
   useEffect(() => {
@@ -68,8 +91,8 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
     );
   }
 
-  const hasDetails = !guest && (p.username || p.instagram || p.facebook || (p.birth_month && p.birth_day));
-  const tiles = (canMessage && !guest && p.username ? 1 : 0) + (!guest && p.offers_services ? 1 : 0) + (!guest && closerOn ? 1 : 0);
+  const hasDetails = !guest && (p.username || (p.birth_month && p.birth_day));
+  const tiles = (canMessage && !guest && p.username ? 1 : 0) + (!guest && p.offers_services ? 1 : 0) + (!guest && closerOn ? 1 : 0) + (!guest && p.instagram ? 1 : 0) + (!guest && p.facebook ? 1 : 0);
 
   async function toggleCloser() {
     const next = !closerOn;
@@ -93,13 +116,13 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
           </button>
         ) : <Avatar url={null} initials={initialsOf(p)} size={120} />}
         <h2 className="pc-name">{fullName(p)}</h2>
-        <p className="pc-sub">{guest ? "Guest Speaker" : view === "services" ? "Offers services" : view === "closer" ? "Call closer" : view === "reviews" ? "Call closer reviews" : p.is_admin ? "Admin" : "FLC member"}</p>
+        <p className={"pc-sub" + (view === "profile" && presence?.online ? " pc-online" : "")}>{guest ? "Guest Speaker" : view === "services" ? "Offers services" : view === "closer" ? "Call closer" : view === "reviews" ? "Call closer reviews" : presence ? (p.is_admin ? "Admin · " : "") + presence.text : p.is_admin ? "Admin" : "FLC member"}</p>
       </div>
 
       {view === "profile" ? (
         <>
           {tiles > 0 ? (
-            <div className="pc-tiles" style={{ gridTemplateColumns: `repeat(${tiles}, minmax(0, 1fr))` }}>
+            <div className="pc-tiles">
               {canMessage && !guest && p.username ? (
                 <button type="button" className="pc-tile" onClick={() => { openDockChat(p.id); onClose(); }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6L4.8 21l4-1.8c.9.2 2 .3 3.2.3 5.5 0 10-3.6 10-8S17.5 3 12 3z" /></svg>
@@ -118,6 +141,27 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
                   <span>Call closer</span>
                 </button>
               ) : null}
+              {!guest && p.instagram ? (
+                <a className="pc-tile pc-social" href={instagramUrl(p.instagram)} target="_blank" rel="noopener noreferrer" aria-label={`Instagram: @${p.instagram}`}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+                    <defs><radialGradient id="ig-grad" cx="30%" cy="107%" r="150%"><stop offset="0" stopColor="#FED576" /><stop offset=".26" stopColor="#F47133" /><stop offset=".61" stopColor="#BC3081" /><stop offset="1" stopColor="#4C63D2" /></radialGradient></defs>
+                    <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#ig-grad)" />
+                    <rect x="5.4" y="5.4" width="13.2" height="13.2" rx="4" fill="none" stroke="#fff" strokeWidth="1.8" />
+                    <circle cx="12" cy="12" r="3.1" fill="none" stroke="#fff" strokeWidth="1.8" />
+                    <circle cx="16.4" cy="7.6" r="1" fill="#fff" />
+                  </svg>
+                  <span>Instagram</span>
+                </a>
+              ) : null}
+              {!guest && p.facebook ? (
+                <a className="pc-tile pc-social" href={facebookUrl(p.facebook)} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                  <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="11" fill="#1877F2" />
+                    <path fill="#fff" d="M13.4 22v-7.6h2.5l.4-3h-2.9V9.5c0-.9.3-1.5 1.5-1.5h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.4H8v3h2.5V22z" />
+                  </svg>
+                  <span>Facebook</span>
+                </a>
+              ) : null}
             </div>
           ) : null}
 
@@ -131,27 +175,6 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
                     {copied ? <span className="pc-copied">Copied</span> : <svg width="22" height="22" viewBox="0 0 24 24" {...svg}><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h8" /></svg>}
                   </button>
                 </div>
-              ) : null}
-              {p.instagram ? (
-                <a className="pc-row" href={instagramUrl(p.instagram)} target="_blank" rel="noopener noreferrer">
-                  <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-                    <defs><radialGradient id="ig-grad" cx="30%" cy="107%" r="150%"><stop offset="0" stopColor="#FED576" /><stop offset=".26" stopColor="#F47133" /><stop offset=".61" stopColor="#BC3081" /><stop offset="1" stopColor="#4C63D2" /></radialGradient></defs>
-                    <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#ig-grad)" />
-                    <rect x="5.4" y="5.4" width="13.2" height="13.2" rx="4" fill="none" stroke="#fff" strokeWidth="1.8" />
-                    <circle cx="12" cy="12" r="3.1" fill="none" stroke="#fff" strokeWidth="1.8" />
-                    <circle cx="16.4" cy="7.6" r="1" fill="#fff" />
-                  </svg>
-                  <div><small>instagram</small><span className="pc-link">{handleOf(p.instagram)}</span></div>
-                </a>
-              ) : null}
-              {p.facebook ? (
-                <a className="pc-row" href={facebookUrl(p.facebook)} target="_blank" rel="noopener noreferrer">
-                  <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="11" fill="#1877F2" />
-                    <path fill="#fff" d="M13.4 22v-7.6h2.5l.4-3h-2.9V9.5c0-.9.3-1.5 1.5-1.5h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.4H8v3h2.5V22z" />
-                  </svg>
-                  <div><small>facebook</small><span className="pc-link">{handleOf(p.facebook)}</span></div>
-                </a>
               ) : null}
               {p.birth_month && p.birth_day ? (
                 <div className="pc-row">
