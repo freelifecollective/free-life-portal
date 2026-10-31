@@ -1384,6 +1384,15 @@ a.pc-row:hover { background: var(--tint); }
 .set-top .set-quote .qs-opt small { font-size: 12px; }
 @media (max-width: 700px) { .account .settings .set-top { grid-template-columns: minmax(0, 1fr); } .set-top .set-who .set-head { flex-direction: row; text-align: left; } }
 
+/* page arrows beside Close and Download */
+.pdf-pager { display: flex; align-items: center; gap: 8px; margin-right: auto; }
+.pdf-arrow { all: unset; box-sizing: border-box; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; color: var(--ink); }
+.pdf-arrow:hover:not(:disabled) { border-color: var(--accent); background: var(--tint); }
+.pdf-arrow:disabled { opacity: .35; cursor: default; }
+.pdf-arrow:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pdf-pager .when { min-width: 92px; text-align: center; }
+.pdf-pages { position: relative; }
+
 /* online: a green pill with a little pulsing white ball in the profile; green text with a pulsing dot in the lists */
 .pc-online-pill { display: inline-flex; align-items: center; gap: 8px; padding: 3px 14px 3px 10px; border-radius: 999px; background: #2F9E6B; color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
 .pc-online-pill i { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: online-pulse-white 1.6s ease-out infinite; }

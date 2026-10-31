@@ -44,6 +44,8 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   const [pending, start] = useTransition();
   const viewer = useRef<HTMLDialogElement>(null);
   const editor = useRef<HTMLDialogElement>(null);
+  const pdfGo = useRef<((n: number) => void) | null>(null);
+  const [pager, setPager] = useState<{ page: number; pages: number } | null>(null);
   const [view, setView] = useState<{ name: string; mime: string; view?: string; download?: string; error?: string } | null>(null);
   const [edit, setEdit] = useState<Item | null>(null);
   const [msg, setMsg] = useState("");
@@ -123,6 +125,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   const zipInput = useRef<HTMLInputElement>(null);
 
   async function open(f: DocFile) {
+    setPager(null);
     setView({ name: f.name, mime: f.mime });
     viewer.current?.showModal();
     const r = await getFileLinks(f.id);
@@ -345,10 +348,11 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
       {box ? <div className="doc-marquee" style={{ left: box.x, top: box.y, width: box.w, height: box.h }} aria-hidden="true" /> : null}
       {role === "lead" ? <p className="when" style={{ marginTop: 18 }}>More documents unlock when you join the Free Life Collective as an affiliate.</p> : null}
 
-      <dialog ref={viewer} className="rs-dialog doc-viewer" aria-labelledby="dv-title" onClose={() => setView(null)}>
+      <dialog ref={viewer} className="rs-dialog doc-viewer" aria-labelledby="dv-title" onClose={() => { setView(null); setPager(null); }}
+        onKeyDown={(e) => { if (view?.mime !== "application/pdf" || !pager) return; if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); pdfGo.current?.(pager.page + 1); } else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); pdfGo.current?.(pager.page - 1); } }}>
         <h2 id="dv-title" className="qh" style={{ marginTop: 0, overflowWrap: "anywhere" }}>{view?.name}</h2>
         {view?.error ? <p className="err">{view.error}</p> : !view?.view && !view?.download ? <p className="when">Loading…</p> : null}
-        {view?.view && view.mime === "application/pdf" ? <PdfPages url={view.view} title={view.name} /> : null}
+        {view?.view && view.mime === "application/pdf" ? <PdfPages url={view.view} title={view.name} goRef={pdfGo} onPage={(page, pages) => setPager({ page, pages })} /> : null}
         {view?.view && view.mime.startsWith("image/") ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="doc-img" src={view.view} alt={view.name} />
@@ -364,6 +368,13 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         ) : null}
         {view && !view.view && view.download ? <p className="when">This type of file cannot be previewed here. Use the Download button to open it on your device.</p> : null}
         <div className="dlg-actions">
+          {view?.mime === "application/pdf" && pager && pager.pages > 1 ? (
+            <div className="pdf-pager" role="group" aria-label="Pages">
+              <button type="button" className="pdf-arrow" aria-label="Previous page" disabled={pager.page <= 1} onClick={() => pdfGo.current?.(pager.page - 1)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></button>
+              <span className="when" aria-live="polite">Page {pager.page} of {pager.pages}</span>
+              <button type="button" className="pdf-arrow" aria-label="Next page" disabled={pager.page >= pager.pages} onClick={() => pdfGo.current?.(pager.page + 1)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></button>
+            </div>
+          ) : null}
           {!view?.download && view?.view ? <span className="when" style={{ marginRight: "auto" }}>View only</span> : null}
           <button className="btn" type="button" onClick={() => viewer.current?.close()}>Close</button>
           {view?.download ? <a className="btn primary" href={view.download} style={{ textDecoration: "none" }}>Download</a> : null}
