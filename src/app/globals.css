@@ -1427,3 +1427,20 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .ws-pop-open { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 10px; padding: 2px; margin-bottom: 4px; width: 100%; }
 .ws-pop-open:hover .ws-pop-text strong { color: var(--accent-deep); text-decoration: underline; text-underline-offset: 3px; }
 .ws-pop-open:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+
+/* Facebook Follows */
+.ff { display: grid; gap: 16px; max-width: 900px; }
+.ff-mine { display: grid; gap: 12px; }
+.ff-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ff-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 14px; }
+.ff-card { display: grid; gap: 12px; align-content: start; }
+.ff-who { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 10px; }
+.ff-who span { display: grid; line-height: 1.25; }
+.ff-who small { color: var(--muted); font-size: 13px; }
+.ff-who:hover strong { color: var(--accent-deep); text-decoration: underline; text-underline-offset: 3px; }
+.ff-who:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 3px; }
+.ff-progress { display: grid; gap: 6px; }
+.ff-bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.ff-bar i { display: block; height: 100%; background: linear-gradient(to right, var(--accent), var(--accent-deep)); border-radius: 99px; transition: width .4s; }
+.ff-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ff-actions a.btn { text-decoration: none; }

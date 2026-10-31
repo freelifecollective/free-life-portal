@@ -36,7 +36,7 @@ const NAV: NavItem[] = [
   { label: "Tasks", href: "/tasks", min: "member" },
   { label: "Water Share Map", href: "/water-map", min: "member" },
   { label: "Call Closers for Hire", min: "member", group: "Placing Sales" },
-  { label: "Facebook Follows", min: "member", group: "Onboarding" },
+  { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
   { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
   { label: "Admin only", min: "admin", admin: true, heading: true, group: "Admin only" },
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Admin only" },
