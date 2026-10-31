@@ -62,6 +62,8 @@ export function translateDates(text: string, lang: Lang): string | null {
   const lone = text.trim();
   const li = EN_WEEK_LONG.indexOf(lone), si = EN_WEEK.indexOf(lone);
   if (li >= 0 || si >= 0) return text.replace(lone, li >= 0 ? WEEK_LONG[lang][li] : WEEK[lang][si]);
+  const mi = EN_MONTH_LONG.indexOf(lone);
+  if (mi >= 0) return text.replace(lone, MONTH_LONG[lang][mi]);
   const my = lone.match(/^([A-Z][a-z]+) (\d{4})$/);
   if (my && EN_MONTH_LONG.includes(my[1])) return text.replace(lone, `${MONTH_LONG[lang][EN_MONTH_LONG.indexOf(my[1])]}${lang === "es" ? " de" : ""} ${my[2]}`);
   const monthDay = new RegExp(`\\b${monthRe}\\.? (\\d{1,2})(?!\\d)`, "g");
@@ -97,7 +99,7 @@ export function translateText(text: string, dict: Dict): string | null {
   for (const p of dict.patterns) {
     const m = core.match(p.re);
     if (!m) continue;
-    const args = m.slice(1).map((a) => dict.exact.get(norm(a)) ?? a);
+    const args = m.slice(1).map((a) => dict.exact.get(norm(a)) ?? translateDates(norm(a), dict.lang) ?? a);
     return lead + p.to.replace(/\{(\d)\}/g, (_x, n: string) => args[Number(n)] ?? "") + trail;
   }
   const d = translateDates(core, dict.lang);

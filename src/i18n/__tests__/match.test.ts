@@ -23,6 +23,7 @@ describe("translateDates", () => {
   it("German long date", () => expect(translateDates("September 6, 1991", "de")).toBe("6. September, 1991"));
   it("Spanish long date", () => expect(translateDates("September 6, 1991", "es")).toBe("6 de septiembre, 1991"));
   it("French", () => expect(translateDates("last seen Oct 12", "fr")).toBe("last seen 12 oct."));
+  it("a lone month name (dropdown)", () => { expect(translateDates("September", "it")).toBe("settembre"); expect(translateDates("September", "de")).toBe("September"); expect(translateDates("May", "es")).toBe("mayo"); });
   it("plain sentences are left alone", () => expect(translateDates("You may go", "es")).toBeNull());
 });
 

@@ -32,6 +32,7 @@ export const screens2: readonly Entry[] = [
   ["username", "nombre de usuario", "nom d'utilisateur", "nome utente", "Benutzername"],
   ["Copy username", "Copiar nombre de usuario", "Copier le nom d'utilisateur", "Copia nome utente", "Benutzernamen kopieren"],
   ["birthday", "cumpleaños", "anniversaire", "compleanno", "Geburtstag"],
+  ["{0} ({1} years old)", "{0} ({1} años)", "{0} ({1} ans)", "{0} ({1} anni)", "{0} ({1} Jahre alt)"],
   [", {0} ({1} years old)", ", {0} ({1} años)", ", {0} ({1} ans)", ", {0} ({1} anni)", ", {0} ({1} Jahre alt)"],
   ["(admin only)", "(solo administradores)", "(admins uniquement)", "(solo amministratori)", "(nur Admins)"],
   ["member has", "miembro ha", "membre a", "membro ha", "Mitglied hat"],
