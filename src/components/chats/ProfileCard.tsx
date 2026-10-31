@@ -59,6 +59,15 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
   const [admin, setAdmin] = useState(false);
   const [closerOn, setCloserOn] = useState(p.call_closer);
   const [presence, setPresence] = useState<{ text: string; online: boolean } | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  /* the call closer numbers shown at the top of the call closer view */
+  useEffect(() => {
+    if (guest || !p.id || !closerOn || view !== "closer") return;
+    let live = true;
+    void createClient().rpc("closer_stats", { p_id: p.id }).then(({ data }) => { if (live) setStats(((data as Stats[] | null) ?? [])[0] ?? null); });
+    return () => { live = false; };
+  }, [guest, p.id, closerOn, view]);
 
   /* "online" or "last seen ...", refreshed while the popup is open (affiliates only; others get nothing back) */
   useEffect(() => {
@@ -116,7 +125,8 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
           </button>
         ) : <Avatar url={null} initials={initialsOf(p)} size={120} />}
         <h2 className="pc-name">{fullName(p)}</h2>
-        <p className={"pc-sub" + (view === "profile" && presence?.online ? " pc-online" : "")}>{guest ? "Guest Speaker" : view === "services" ? "Offers services" : view === "closer" ? "Call closer" : view === "reviews" ? "Call closer reviews" : presence ? (p.is_admin ? "Admin · " : "") + presence.text : p.is_admin ? "Admin" : "FLC member"}</p>
+        <p className="pc-sub">{guest ? "Guest Speaker" : [p.is_admin ? "Admin" : null, view === "services" ? "Offers services" : view === "closer" ? "Call closer" : view === "reviews" ? "Call closer reviews" : p.is_admin ? null : "FLC member"].filter(Boolean).join(" · ")}</p>
+        {!guest && presence ? <p className={"pc-presence" + (presence.online ? " pc-online" : "")}>{presence.text}</p> : null}
       </div>
 
       {view === "profile" ? (
@@ -191,7 +201,21 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
       ) : null}
 
       {view === "services" ? <ServicesView id={p.id} /> : null}
-      {view === "closer" ? <CloserView id={p.id} admin={admin} onReviews={() => setView("reviews")} /> : null}
+      {view === "closer" ? (
+        <>
+          <div className="pc-stats">
+            <div className="pc-stat">
+              <strong>{stats ? stats.members_booked.toLocaleString("en-US") : "…"}</strong>
+              <span>FLC {stats?.members_booked === 1 ? "member has" : "members have"} booked {p.first_name ?? "this closer"}</span>
+            </div>
+            <button type="button" className="pc-stat pc-stat-btn" onClick={() => setView("reviews")}>
+              <strong><span className="pc-stars" aria-hidden="true">{stats?.avg_rating ? "★" : "☆"}</span> {stats?.avg_rating ?? "–"}</strong>
+              <span>Reviews{stats ? ` (${stats.review_count})` : ""}</span>
+            </button>
+          </div>
+          <CloserView id={p.id} admin={admin} stats={stats} />
+        </>
+      ) : null}
       {view === "reviews" ? <ReviewsView id={p.id} /> : null}
     </div>
   );
@@ -219,21 +243,15 @@ function ServicesView({ id }: { id: string }) {
   );
 }
 
-function CloserView({ id, admin, onReviews }: { id: string; admin: boolean; onReviews: () => void }) {
+function CloserView({ id, admin, stats }: { id: string; admin: boolean; stats: Stats | null }) {
   const [d, setD] = useState<Closer | null | undefined>(undefined);
   const [edit, setEdit] = useState(false);
   const [vals, setVals] = useState({ calls: "", since: "", rate: "", perCall: "", perSale: "" });
   const [msg, setMsg] = useState("");
-  const [stats, setStats] = useState<Stats | null>(null);
 
   const load = useCallback(() => createClient().from("call_closer_details").select("calls_taken, closer_since, close_rate, price_per_call_cents, price_per_sale").eq("member_id", id).maybeSingle()
     .then(({ data }) => setD((data as Closer | null) ?? null)), [id]);
   useEffect(() => { void load(); }, [load]);
-  useEffect(() => {
-    let live = true;
-    void createClient().rpc("closer_stats", { p_id: id }).then(({ data }) => { if (live) setStats(((data as Stats[] | null) ?? [])[0] ?? null); });
-    return () => { live = false; };
-  }, [id]);
   const shownCalls = totalCalls(d?.calls_taken ?? null, stats?.calls_counted ?? 0);
 
   function startEdit() {
@@ -282,13 +300,6 @@ function CloserView({ id, admin, onReviews }: { id: string; admin: boolean; onRe
         <div className="pc-row pc-plain"><div><small>charges per call (USD)</small><span>{money(d?.price_per_call_cents ?? null)}</span></div></div>
         <div className="pc-row pc-plain"><div><small>charges per product sale (USD)</small><span className="pc-multiline">{d?.price_per_sale || "Not set"}</span></div></div>
       </div>
-      <div className="pc-card">
-        <div className="pc-row pc-plain"><div><small>FLC members who have booked them</small><span>{stats ? stats.members_booked.toLocaleString("en-US") : "…"}</span></div></div>
-      </div>
-      <button type="button" className="pc-tile pc-reviews-btn" onClick={onReviews}>
-        <span className="pc-stars" aria-hidden="true">{"★".repeat(Math.round(stats?.avg_rating ?? 0)).padEnd(5, "☆")}</span>
-        <span>Reviews{stats ? ` (${stats.review_count})` : ""}{stats?.avg_rating ? ` · ${stats.avg_rating} out of 5` : ""}</span>
-      </button>
       {admin ? <button type="button" className="btn small pc-edit" onClick={startEdit}>Edit these details</button> : null}
     </>
   );
