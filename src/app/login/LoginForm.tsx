@@ -47,7 +47,7 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
   );
 }
 
-/** After the email is sent: look for the link, or (in the app, or if you like) type the 6-digit code. */
+/** After the email is sent: look for the link, or (in the app, or if you like) type the code. */
 function Sent({ email, next }: { email: string; next: string }) {
   const app = useSyncExternalStore(watchDisplay, inApp, () => false);
   const [wantsCode, setWantsCode] = useState(false);
@@ -58,9 +58,9 @@ function Sent({ email, next }: { email: string; next: string }) {
       <p className="splash-tag" role="status">{app ? "Check your email for your code" : "Check your email for your login link"}</p>
       {showCode ? (
         <form className="login-form" action={action} noValidate>
-          <p className="login-note" style={{ margin: 0, textAlign: "center" }}>Type the 6-digit code from the email{app ? "" : ", or just click the link"}. {app ? "In the app, the link would open your browser instead." : ""}</p>
-          <label className="sr-only" htmlFor="code">6-digit code</label>
-          <input id="code" name="code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={8} required autoFocus placeholder="123456" style={{ letterSpacing: "0.3em", fontSize: 22 }} />
+          <p className="login-note" style={{ margin: 0, textAlign: "center" }}>Type the code from the email{app ? "" : ", or just click the link"}. {app ? "In the app, the link would open your browser instead." : ""}</p>
+          <label className="sr-only" htmlFor="code">Login code</label>
+          <input id="code" name="code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={12} required autoFocus placeholder="Your code" style={{ letterSpacing: "0.3em", fontSize: 22 }} />
           <p className="status bad" role="alert" style={{ margin: 0, minHeight: 22 }}>{state.error}</p>
           <button className="btn primary" type="submit" disabled={pending}>{pending ? "Checking…" : "Login"}</button>
         </form>
