@@ -1464,3 +1464,4 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .user-pop .um-lang { padding: 6px 4px 4px; border-top: 1px solid var(--line); margin-top: 4px; }
 .user-pop .um-lang.phone-only { display: grid !important; }
 @media (min-width: 769px) { .user-pop .um-lang { display: none !important; } }
+.ut-toggle { display:block; margin-top:4px; font-size:12px; opacity:.7; }
