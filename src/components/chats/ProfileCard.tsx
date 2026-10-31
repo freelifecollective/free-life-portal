@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonLink } from "@/components/people/ProfilePopup";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
@@ -434,7 +435,7 @@ function ReviewsView({ id, admin }: { id: string; admin: boolean }) {
               const who = r.reviewer_id ? people[r.reviewer_id] : undefined;
               return (
                 <li key={r.id}>
-                  <div className="pc-review-top"><span className="pc-review-who"><Avatar url={who?.avatar_url ?? r.reviewer_photo_url} initials={who ? initialsOf(who) : (r.reviewer_name ?? "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?"} size={36} /><strong>{who ? fullName(who) : r.reviewer_name ?? "FLC member"}</strong></span><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
+                  <div className="pc-review-top"><span className="pc-review-who"><PersonLink id={r.reviewer_id} name={who ? fullName(who) : r.reviewer_name ?? "FLC member"}><Avatar url={who?.avatar_url ?? r.reviewer_photo_url} initials={who ? initialsOf(who) : (r.reviewer_name ?? "?").trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?"} size={36} /><strong>{who ? fullName(who) : r.reviewer_name ?? "FLC member"}</strong></PersonLink></span><span className="pc-stars" aria-label={`${r.rating} out of 5`}>{"★".repeat(r.rating).padEnd(5, "☆")}</span></div>
                   {r.review ? <p className="pc-about">{r.review}</p> : null}
                   {admin ? <button type="button" className="linkbtn" style={{ padding: "2px 0", fontSize: 13, justifySelf: "start" }} onClick={() => void removeReview(r.id)}>Remove this review (admin)</button> : null}
                   <small className="pc-label">{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</small>

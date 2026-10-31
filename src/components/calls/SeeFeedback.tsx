@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonLink } from "@/components/people/ProfilePopup";
 import { useRef, useState } from "react";
 import { loadFeedback, type FeedbackRow } from "@/app/(app)/calls/actions";
 import { Avatar } from "@/components/Avatar";
@@ -22,7 +23,7 @@ export function SeeFeedback({ callId }: { callId: string }) {
           <ul className="fb-list">
             {rows.map((r, i) => (
               <li key={i}>
-                <div className="who"><Avatar url={r.avatar_url} initials={(r.first_name ?? "?").charAt(0).toUpperCase()} size={32} /><strong>{[r.first_name, r.last_name].filter(Boolean).join(" ")}</strong><span className="when">{formatInZone(new Date(r.created_at))}</span></div>
+                <div className="who"><PersonLink id={r.member_id} name={[r.first_name, r.last_name].filter(Boolean).join(" ")}><Avatar url={r.avatar_url} initials={(r.first_name ?? "?").charAt(0).toUpperCase()} size={32} /><strong>{[r.first_name, r.last_name].filter(Boolean).join(" ")}</strong></PersonLink><span className="when">{formatInZone(new Date(r.created_at))}</span></div>
                 <p><b>What I thought:</b> {r.thoughts}</p>
                 <p><b>Favourite part:</b> {r.favourite}</p>
                 <p><b>Biggest takeaway:</b> {r.takeaway}</p>
