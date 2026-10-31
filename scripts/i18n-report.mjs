@@ -14,7 +14,7 @@ const arg = process.argv[2] ?? "";
 const ENT = "src/i18n/entries";
 const DATA = [/lib\/quotes\/data/, /lib\/buddy\/questions/, /lib\/badges\/defs/, /lib\/recordings\/topics/, /lib\/tour/, /lib\/calls\/types/, /lib\/chats\/emoji/ , /lib\/calculator\/data/, /components\/landing\/content/, /lib\/tasks\/schedule/];
 const KEYS = new Set(["error", "message", "label", "title", "description", "placeholder", "lede", "hint", "text", "note", "heading", "empty", "subtitle", "body", "cta", "sub", "q", "h", "ph", "o", "sec", "name"]);
-const ATTR = new Set(["placeholder", "title", "aria-label", "alt", "label", "aria-description"]);
+const ATTR = new Set(["placeholder", "title", "aria-label", "alt", "label", "aria-description", "lede", "description", "hint", "subtitle"]);
 const ENTITIES = { "&rsquo;": "’", "&lsquo;": "‘", "&ldquo;": "“", "&rdquo;": "”", "&amp;": "&", "&quot;": '"', "&apos;": "'", "&nbsp;": " ", "&mdash;": "—", "&ndash;": "–", "&middot;": "·", "&hellip;": "…", "&lt;": "<", "&gt;": ">" };
 const dec = (s) => s.replace(/&[a-z]+;/g, (m) => ENTITIES[m] ?? m);
 const norm = (s) => s.replace(/[‘’ʼ]/g, "'").replace(/[“”]/g, '"').replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
