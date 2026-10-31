@@ -1,5 +1,6 @@
 "use client";
 
+import { UserText } from "@/components/UserText";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Avatar } from "@/components/Avatar";
@@ -282,7 +283,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
                     ) : null}
                     <div className={"dock-msg " + (mine ? "mine" : "theirs") + (m.image_url ? " pic" : "")}>
                       {m.image_url ? <DmPicture src={m.image_url} onLoad={() => end.current?.scrollIntoView({ block: "end" })} /> : null}
-                      {m.body ? <p>{m.body}</p> : null}
+                      {m.body ? <p><UserText text={m.body} /></p> : null}
                     </div>
                   </div>
                 </div>
