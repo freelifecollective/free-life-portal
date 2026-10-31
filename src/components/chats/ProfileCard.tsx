@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Avatar } from "@/components/Avatar";
 import { openDockChat } from "@/components/messages/MessageDock";
 import { facebookUrl, instagramUrl } from "@/lib/landing/types";
+import { lastSeen } from "@/lib/presence";
 import { createClient } from "@/lib/supabase/client";
 
 export type MemberPerson = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; instagram: string | null; facebook: string | null; is_admin: boolean; birth_month: number | null; birth_day: number | null; birth_year: number | null; call_closer: boolean; offers_services: boolean };
@@ -20,18 +21,6 @@ function ageOf(y: number, m: number, d: number): number {
   let a = now.getFullYear() - y;
   if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) a -= 1;
   return a;
-}
-/** Telegram-style: "online", "last seen 5 minutes ago", "last seen today at 7:45 PM", "last seen yesterday at ...", "last seen Oct 12". */
-function lastSeen(iso: string): { text: string; online: boolean } {
-  const then = new Date(iso), now = new Date();
-  const mins = Math.floor((now.getTime() - then.getTime()) / 60000);
-  if (mins < 2) return { text: "online", online: true };
-  if (mins < 60) return { text: `last seen ${mins} minutes ago`, online: false };
-  const clock = then.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  const days = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - new Date(then.getFullYear(), then.getMonth(), then.getDate()).getTime()) / 86400000);
-  if (days <= 0) return { text: `last seen today at ${clock}`, online: false };
-  if (days === 1) return { text: `last seen yesterday at ${clock}`, online: false };
-  return { text: `last seen ${then.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`, online: false };
 }
 
 type Listing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number };
@@ -127,7 +116,7 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
         ) : <Avatar url={null} initials={initialsOf(p)} size={120} />}
         <h2 className="pc-name">{fullName(p)}</h2>
         <p className="pc-sub">{guest ? "Guest Speaker" : [p.is_admin ? "Admin" : null, view === "services" ? "Offers services" : view === "closer" ? "Call closer" : view === "reviews" ? "Call closer reviews" : p.is_admin ? null : "FLC member"].filter(Boolean).join(" · ")}</p>
-        {!guest && presence ? <p className={"pc-presence" + (presence.online ? " pc-online" : "")}>{presence.text}</p> : null}
+        {!guest && presence ? (presence.online ? <p className="pc-presence"><span className="pc-online-pill"><i aria-hidden="true" />online</span></p> : <p className="pc-presence">{presence.text}</p>) : null}
       </div>
 
       {view === "profile" ? (
