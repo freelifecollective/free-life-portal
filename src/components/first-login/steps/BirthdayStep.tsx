@@ -14,11 +14,11 @@ export function BirthdayStep({ f, set, go }: StepProps) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!ready) return;
-    go("picture");
+    go("country");
   }
   function skip() {
     set({ bMonth: "", bDay: "", bYear: "" });
-    go("picture");
+    go("country");
   }
 
   return (

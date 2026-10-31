@@ -43,6 +43,7 @@ const NAV: NavItem[] = [
   { label: "Admin only", min: "admin", admin: true, heading: true, group: "Admin only" },
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Admin only" },
   { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Admin only" },
+  { label: "Members by country", href: "/admin/countries", min: "admin", admin: true, group: "Admin only" },
   { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Admin only" },
   { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Admin only" },
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Admin only" },
@@ -83,7 +84,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
         </div>
         <div className="top-right">
           <SearchIcon />
-          <span className="desk-only"><LanguagePicker /></span>
+          <LanguagePicker />
 {session.mode === "supabase" ? <MessageDock me={session.user.id} unread={badges["/messages"] ?? 0} /> : (
             <Link href="/messages" className="hdr-btn" data-tour="messages" aria-label="Messages">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>

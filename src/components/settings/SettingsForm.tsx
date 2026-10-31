@@ -1,14 +1,15 @@
 "use client";
 
+import { CountrySelect } from "@/components/CountrySelect";
 import { useActionState, useEffect } from "react";
 import { celebrateRankUp } from "@/lib/celebrate";
 import { saveSettings, type SettingsState } from "@/app/(app)/settings/actions";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-export function SettingsForm({ first, last, username, email, instagram, facebook, isMember, rank, ranks, birthMonth, birthDay, birthYear }: {
+export function SettingsForm({ first, last, username, email, instagram, facebook, isMember, rank, ranks, birthMonth, birthDay, birthYear, country }: {
   first: string; last: string; username: string; email: string; instagram: string; facebook: string;
-  isMember: boolean; rank: number | null; ranks: { id: number; name: string }[]; birthMonth: number | null; birthDay: number | null; birthYear: number | null;
+  isMember: boolean; rank: number | null; ranks: { id: number; name: string }[]; birthMonth: number | null; birthDay: number | null; birthYear: number | null; country: string;
 }) {
   const [state, action, pending] = useActionState(saveSettings, { error: "" } as SettingsState);
   useEffect(() => { if (state.rankUp) celebrateRankUp(state.rankUp); }, [state]);
@@ -21,6 +22,8 @@ export function SettingsForm({ first, last, username, email, instagram, facebook
       <div className="field"><label htmlFor="s-user">Username</label><input id="s-user" name="username" type="text" required minLength={3} maxLength={30} defaultValue={username} autoCapitalize="none" /></div>
       <p className="when" style={{ margin: "-4px 0 0" }}>Your username is also the address of your landing page. Changing it changes that address.</p>
       <div className="field"><label htmlFor="s-email">Email</label><input id="s-email" type="email" value={email} disabled readOnly /></div>
+      <div className="field"><label htmlFor="s-country">Where do you live?</label><CountrySelect id="s-country" name="country" defaultValue={country} placeholder="Not set" /></div>
+      <p className="when" style={{ margin: "-4px 0 0" }}>This will be used to customize certain settings in your account. It fills in by itself when you add yourself to the Water Share Map.</p>
       {isMember ? (
         <>
           <div className="row">

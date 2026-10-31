@@ -2,11 +2,11 @@ import type { Spec, StyleChoice } from "@/lib/avatar/palettes";
 import type { RenderContext } from "@/lib/avatar/render";
 import type { AvatarKind } from "@/lib/profile/types";
 
-export type StepId = "name" | "username" | "instagram" | "birthday" | "picture" | "frame" | "style" | "gen" | "touch" | "adjust" | "good" | "done";
+export type StepId = "name" | "username" | "instagram" | "birthday" | "country" | "picture" | "frame" | "style" | "gen" | "touch" | "adjust" | "good" | "done";
 
 /** Which of the four progress dots a step belongs to (4 = all done). */
 export const DOT_OF: Record<StepId, number> = {
-  name: 0, username: 1, instagram: 2, birthday: 2, picture: 3, frame: 3, style: 3, gen: 3, touch: 3, adjust: 3, good: 3, done: 4,
+  name: 0, username: 1, instagram: 2, birthday: 2, country: 2, picture: 3, frame: 3, style: 3, gen: 3, touch: 3, adjust: 3, good: 3, done: 4,
 };
 
 export type PhotoMode = "own" | "gen" | "avatar" | "";
@@ -17,7 +17,7 @@ export type Pic = { url: string; canvas: HTMLCanvasElement };
 
 export type Flow = {
   first: string; last: string; username: string; /** the name the username was suggested for */ usernameFor: string; ig: string; fb: string; fbSame: boolean; igTouched: boolean;
-  /** optional birthday, as the strings in the dropdowns */ bMonth: string; bDay: string; bYear: string;
+  /** optional birthday, as the strings in the dropdowns */ bMonth: string; bDay: string; bYear: string; /** where they live, a country code */ country: string;
   mode: PhotoMode;
   photo: Photo | null;
   crop: Crop;
@@ -39,7 +39,7 @@ export type Flow = {
 
 export function freshFlow(): Flow {
   return {
-    first: "", last: "", username: "", usernameFor: "", ig: "", fb: "", fbSame: false, igTouched: false, bMonth: "", bDay: "", bYear: "",
+    first: "", last: "", username: "", usernameFor: "", ig: "", fb: "", fbSame: false, igTouched: false, bMonth: "", bDay: "", bYear: "", country: "",
     mode: "", photo: null, crop: { z: 1, zmin: 1, ox: 0, oy: 0 }, src: null, person: null, alpha: null, alpha0: null,
     useCut: true, styleNote: "", style: { outline: null, bg: null }, batches: [], bi: 0, chosen: null, pic: null, saveError: "",
   };

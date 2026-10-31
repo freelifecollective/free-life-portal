@@ -1,5 +1,6 @@
 "use server";
 
+import { countryCodeFromPlace } from "@/lib/countries";
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { geocode, suggest } from "@/lib/water/geocode";
@@ -49,7 +50,11 @@ export async function saveWaterShare(input: { address: string; chosen?: Place | 
     : await supabase.from("water_share").insert({ member_id: me, ...where!, prefilter: input.prefilter, water_type: input.waterType });
   if (error) return { ok: false, error: "We could not save that. Please try again." };
   await supabase.from("water_share_asked").upsert({ member_id: me }, { onConflict: "member_id", ignoreDuplicates: true });
+  /* the map knows where they really are, so it fills in their country */
+  const code = countryCodeFromPlace(where?.place);
+  if (code) await supabase.from("profiles").update({ country: code }).eq("id", me);
   revalidatePath("/water-map");
+  revalidatePath("/settings");
   return { ok: true };
 }
 

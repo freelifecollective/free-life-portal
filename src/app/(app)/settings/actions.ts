@@ -1,5 +1,6 @@
 "use server";
 
+import { isCountryCode } from "@/lib/countries";
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { SUPABASE_URL } from "@/lib/env";
@@ -17,6 +18,8 @@ export async function saveSettings(_prev: SettingsState, form: FormData): Promis
   const username = String(form.get("username") ?? "").trim().toLowerCase();
   const igRaw = String(form.get("instagram") ?? ""), fbRaw = String(form.get("facebook") ?? "");
   const rankRaw = String(form.get("rank") ?? "");
+  const countryRaw = String(form.get("country") ?? "");
+  if (countryRaw && !isCountryCode(countryRaw)) return { error: "Choose a country from the list." };
   const bm = Number(form.get("birth_month") ?? 0), bd = Number(form.get("birth_day") ?? 0), by = Number(form.get("birth_year") ?? 0);
   if (by && (!bm || !Number.isInteger(by) || by < 1900 || by > 2100)) return { error: "Check your birthday year." };
   if ((bm === 0) !== (bd === 0)) return { error: "Choose both the month and the day of your birthday, or leave both empty." };
@@ -31,7 +34,7 @@ export async function saveSettings(_prev: SettingsState, form: FormData): Promis
   if (!supabase) return { error: "Settings need the database, which preview mode does not have." };
   const isMember = session.profile.role !== "lead";
   let rankChange: string | undefined;
-  const patch: Record<string, unknown> = { first_name: first, last_name: last, username };
+  const patch: Record<string, unknown> = { first_name: first, last_name: last, username, country: countryRaw || null };
   if (isMember) {
     patch.instagram = igRaw.trim() ? cleanHandle(igRaw, "instagram") : null;
     patch.facebook = fbRaw.trim() ? cleanHandle(fbRaw, "facebook") : null;

@@ -1,27 +1,24 @@
-const EUROPE = [
-  "Albania", "Andorra", "Austria", "Belgium", "Bosnia and Herzegovina", "Bulgaria", "Croatia", "Cyprus", "Czechia", "Czech Republic", "Denmark", "Estonia",
-  "Finland", "France", "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Kosovo", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg",
-  "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", "Norway", "Poland", "Portugal", "Romania", "San Marino", "Serbia",
-  "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "United Kingdom", "Ukraine", "Vatican City",
-];
-const OTHER: Record<string, string> = {
-  "united states": "United States", "united states of america": "United States", usa: "United States", canada: "Canada",
-  mexico: "Mexico", "méxico": "Mexico", australia: "Australia", "new zealand": "New Zealand",
-};
+import { countryCodeFromPlace } from "@/lib/countries";
 
-/** The country on the end of a saved water map place ("Bowmanville, Ontario, Canada"), as the Earnings Estimator names it. */
+const EUROPE = new Set("AL AD AT BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT XK LV LI LT LU MT MD MC ME NL MK NO PL PT RO SM RS SK SI ES SE CH GB UA VA".split(" "));
+const OTHER: Record<string, string> = { US: "United States", CA: "Canada", MX: "Mexico", AU: "Australia", NZ: "New Zealand" };
+
+/** The Earnings Estimator's name for a country code ("ES" becomes "Europe"), or null when the estimator has nothing for it. */
+export function calcCountryOf(code: string | null | undefined): string | null {
+  if (!code) return null;
+  return OTHER[code] ?? (EUROPE.has(code) ? "Europe" : null);
+}
+
+/** Kept for the old way of reading a Water Share Map place. */
 export function countryFromPlace(place: string | null | undefined): string | null {
-  const last = (place ?? "").split(",").pop()?.trim() ?? "";
-  if (!last) return null;
-  if (OTHER[last.toLowerCase()]) return OTHER[last.toLowerCase()];
-  return EUROPE.some((c) => c.toLowerCase() === last.toLowerCase()) ? "Europe" : null;
+  return calcCountryOf(countryCodeFromPlace(place));
 }
 
 /**
- * Which country the Earnings Estimator starts on: the country they put themselves on the Water Share Map in,
+ * Which country the Earnings Estimator starts on: where the member said they live (or put themselves on the Water Share Map),
  * otherwise Europe for Spanish, French, Italian and German readers, otherwise the United States.
  * They can always change it on the page.
  */
-export function defaultCalcCountry(place: string | null | undefined, lang: string | null | undefined, fallback = "United States"): string {
-  return countryFromPlace(place) ?? (lang === "es" || lang === "fr" || lang === "it" || lang === "de" ? "Europe" : fallback);
+export function defaultCalcCountry(placeOrCode: string | null | undefined, lang: string | null | undefined, fallback = "United States", code?: string | null): string {
+  return calcCountryOf(code) ?? countryFromPlace(placeOrCode) ?? (lang === "es" || lang === "fr" || lang === "it" || lang === "de" ? "Europe" : fallback);
 }
