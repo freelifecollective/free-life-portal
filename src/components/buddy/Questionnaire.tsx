@@ -189,11 +189,11 @@ export function Questionnaire({ initial, onFinished }: { initial: Answers; onFin
     <div className="bq">
       <div className="bq-top">
         <button type="button" className="backbtn" aria-label="Go back" onClick={goBack} disabled={view === "q" && idx === 0 && !fromReview} style={{ visibility: view === "q" && idx === 0 && !fromReview ? "hidden" : "visible" }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
-        <button type="button" className="linkbtn" disabled={busy} onClick={startOver}>Start over from beginning</button>
       </div>
       <div className="bq-prog">
         <div className="bq-prog-top"><span>{view === "q" ? q.sec : "Review"}</span><span>{view === "q" ? `Question ${idx + 1} of ${N}` : `${done} of ${N} answered`}</span></div>
         <div className="bq-bar" role="progressbar" aria-valuemin={0} aria-valuemax={N} aria-valuenow={view === "q" ? idx : N}><i style={{ width: `${pct}%` }} /></div>
+        <div className="bq-startover"><button type="button" className="linkbtn" disabled={busy} onClick={startOver}>Start over from beginning</button></div>
       </div>
 
       {view === "q" ? (
