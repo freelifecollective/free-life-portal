@@ -62,19 +62,19 @@ export default async function SettingsPage() {
         ) : null}
         </div>
 
-        <section className="card-s">
-          <h2 className="qh" style={{ marginTop: 0 }}>Your profile</h2>
-          {supabase
-            ? <SettingsForm first={p.first_name ?? ""} last={p.last_name ?? ""} username={p.username ?? ""} email={session.user.email ?? ""} instagram={p.instagram ?? ""} facebook={p.facebook ?? ""} isMember={isMember} rank={rank} ranks={ranks} birthMonth={extra?.birth_month ?? null} birthDay={extra?.birth_day ?? null} birthYear={extra?.birth_year ?? null} />
-            : <p style={{ margin: 0 }}>Editing needs the database, which preview mode does not have.</p>}
-        </section>
-
         {badges ? (
           <section className="card-s">
             <h2 className="qh" style={{ marginTop: 0 }}>My badges</h2>
             <ProfileBadges state={badges} />
           </section>
         ) : null}
+
+        <section className="card-s">
+          <h2 className="qh" style={{ marginTop: 0 }}>Your profile</h2>
+          {supabase
+            ? <SettingsForm first={p.first_name ?? ""} last={p.last_name ?? ""} username={p.username ?? ""} email={session.user.email ?? ""} instagram={p.instagram ?? ""} facebook={p.facebook ?? ""} isMember={isMember} rank={rank} ranks={ranks} birthMonth={extra?.birth_month ?? null} birthDay={extra?.birth_day ?? null} birthYear={extra?.birth_year ?? null} />
+            : <p style={{ margin: 0 }}>Editing needs the database, which preview mode does not have.</p>}
+        </section>
       </div>
     </div>
   );
