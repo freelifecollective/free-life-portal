@@ -79,6 +79,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
           <img className="brand-logo" src="/icons/icon-192.png" alt="" width={34} height={34} />
           Free Life Collective
         </Link>
+        <div className="top-main">
         <div className="search" role="search">
           <input type="search" disabled placeholder="Search (coming soon)" aria-label="Search the portal (coming soon)" />
         </div>
@@ -92,6 +93,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
           )}
           {session.mode === "supabase" ? <span className="desk-only"><NotificationBell count={unread} userId={session.user.id} /></span> : null}
           <UserMenu unread={unread} showNotifications={session.mode === "supabase"} url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
+        </div>
         </div>
       </header>
       <div className="app-body">
