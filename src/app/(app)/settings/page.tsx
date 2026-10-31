@@ -43,15 +43,24 @@ export default async function SettingsPage() {
     <div className="account">
       <PageHeading>Profile</PageHeading>
       <div className="settings">
-        <section className="card-s">
+        <div className="set-top">
+        <section className="card-s set-who">
           <div className="who set-head">
             <Link href="/settings/picture" className="avatar-edit" aria-label="Edit your picture">
-              <Avatar url={p.avatar_url} initials={initials} size={96} preview={session.mode === "preview"} label="Your profile picture" />
+              <Avatar url={p.avatar_url} initials={initials} size={80} preview={session.mode === "preview"} label="Your profile picture" />
               <span className="avatar-edit-btn" aria-hidden="true">Edit</span>
             </Link>
-            <span className="who-name"><strong style={{ fontSize: 20 }}>{[p.first_name, p.last_name].filter(Boolean).join(" ")}</strong>{p.role === "admin" ? <small className="admin-tag">Admin</small> : null}</span>
+            <span className="who-name"><strong style={{ fontSize: 18 }}>{[p.first_name, p.last_name].filter(Boolean).join(" ")}</strong>{p.role === "admin" ? <small className="admin-tag">Admin</small> : null}</span>
           </div>
         </section>
+        {supabase ? (
+          <section className="card-s set-quote">
+            <h2 className="qh" style={{ marginTop: 0, fontSize: 18 }}>Daily quote</h2>
+            <p className="when" style={{ margin: "0 0 10px" }}>A new quote appears under your welcome on Home every day. Choose the kind you would like.</p>
+            <QuoteStyle current={quoteStyle} />
+          </section>
+        ) : null}
+        </div>
 
         <section className="card-s">
           <h2 className="qh" style={{ marginTop: 0 }}>Your profile</h2>
@@ -64,14 +73,6 @@ export default async function SettingsPage() {
           <section className="card-s">
             <h2 className="qh" style={{ marginTop: 0 }}>My badges</h2>
             <ProfileBadges state={badges} />
-          </section>
-        ) : null}
-
-        {supabase ? (
-          <section className="card-s">
-            <h2 className="qh" style={{ marginTop: 0 }}>Daily quote</h2>
-            <p className="when" style={{ margin: "0 0 12px" }}>A new quote appears under your welcome on Home every day. Choose the kind you would like.</p>
-            <QuoteStyle current={quoteStyle} />
           </section>
         ) : null}
       </div>
