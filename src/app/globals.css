@@ -1464,9 +1464,3 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .user-pop .um-lang { padding: 6px 4px 4px; border-top: 1px solid var(--line); margin-top: 4px; }
 .user-pop .um-lang.phone-only { display: grid !important; }
 @media (min-width: 769px) { .user-pop .um-lang { display: none !important; } }
-
-/* hide the translation service's own bar and highlighting, so the portal looks the same in every language */
-.goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame, .skiptranslate iframe { display: none !important; }
-body { top: 0 !important; }
-.goog-text-highlight { background: none !important; box-shadow: none !important; }
-font[style] { background: none !important; box-shadow: none !important; }

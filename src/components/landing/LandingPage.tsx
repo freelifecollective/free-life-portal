@@ -10,6 +10,7 @@ import { LandingRegister } from "./LandingRegister";
 import { OwnerTools } from "./OwnerTools";
 import { SocialButtons } from "./SocialButtons";
 import { LANDING as T } from "./content";
+import { LanguagePicker } from "@/components/LanguagePicker";
 
 type Owner = { userId: string; hasPagePhoto: boolean } | null;
 
@@ -93,7 +94,7 @@ export function LandingPage({ page, call, owner }: { page: PublicLanding; call: 
         </div>
       </section>
 
-      <footer className="lp-foot"><div className="lp-wrap"><p>{T.disclaimer}</p><p>&copy; Free Life Collective</p></div></footer>
+      <footer className="lp-foot"><div className="lp-wrap"><div className="login-lang"><LanguagePicker variant="list" /></div><p>{T.disclaimer}</p><p>&copy; Free Life Collective</p></div></footer>
     </div>
   );
 }
