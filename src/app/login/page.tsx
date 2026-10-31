@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { SplashMark } from "@/components/SplashMark";
 import { getSession } from "@/lib/auth/session";
 import { previewMode, supabaseConfigured } from "@/lib/env";
+import { LanguagePicker } from "@/components/LanguagePicker";
 import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Log in" };
@@ -13,6 +14,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <main className="splash login-splash">
       <SplashMark />
       {children}
+      <div className="login-lang"><LanguagePicker variant="list" /></div>
     </main>
   );
 }

@@ -117,7 +117,7 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
         ) : <Avatar url={null} initials={initialsOf(p)} size={120} />}
         <h2 className="pc-name">{fullName(p)}</h2>
         <p className="pc-sub">{guest ? "Guest Speaker" : [p.is_admin ? "Admin" : null, view === "services" ? "Offers services" : view === "closer" ? "Call closer" : view === "reviews" ? "Call closer reviews" : p.is_admin ? null : "FLC member"].filter(Boolean).join(" · ")}</p>
-        {!guest && presence ? (presence.online ? <p className="pc-presence"><span className="pc-online-pill"><i aria-hidden="true" />online</span></p> : <p className="pc-presence">{presence.text}</p>) : null}
+        {!guest && presence ? (presence.online ? <p translate="no" className="pc-presence"><span className="pc-online-pill"><i aria-hidden="true" />online</span></p> : <p translate="no" className="pc-presence">{presence.text}</p>) : null}
       </div>
 
       {view === "profile" ? (
