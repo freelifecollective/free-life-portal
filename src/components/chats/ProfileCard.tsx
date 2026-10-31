@@ -179,7 +179,7 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: {
               ) : null}
               {p.birth_month && p.birth_day ? (
                 <div className="pc-row">
-                  <div><small>birthday</small><span>{MONTHS[p.birth_month - 1]} {p.birth_day}{p.birth_year ? `, ${p.birth_year} (${ageOf(p.birth_year, p.birth_month, p.birth_day)} years old)` : ""}</span></div>
+                  <div><small>birthday</small><span>{`${MONTHS[p.birth_month - 1]} ${p.birth_day}${p.birth_year ? `, ${p.birth_year} (${ageOf(p.birth_year, p.birth_month, p.birth_day)} years old)` : ""}`}</span></div>
                 </div>
               ) : null}
             </div>
