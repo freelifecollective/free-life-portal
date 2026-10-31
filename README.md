@@ -71,3 +71,7 @@ production (it only exists to run `npm run e2e:live`).
 
 Vercel only starts a build for a commit made by the account owner. Changes pushed by anyone else (or by a tool) are
 merged by the owner on GitHub (open a pull request and press Merge); the merge commit then starts the build.
+
+The free plan allows 100 deployments a day. If it is hit, builds that were refused are not retried by themselves: make a new
+merge into `main` (even a tiny one) and Vercel builds everything fresh. Setting "Ignored Build Step" in Vercel to
+`if [ "$VERCEL_GIT_COMMIT_REF" = "main" ]; then exit 1; else exit 0; fi` stops branch pushes from using up the limit.
