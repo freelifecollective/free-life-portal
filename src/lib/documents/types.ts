@@ -16,5 +16,9 @@ const MIME: Record<string, string> = {
 export const mimeFor = (name: string): string => MIME[name.split(".").pop()?.toLowerCase() ?? ""] ?? "application/octet-stream";
 /** Can a browser show this itself? Only these can be made view-only. */
 export const isViewable = (mime: string): boolean => /^(application\/pdf|image\/|video\/|audio\/|text\/plain)/.test(mime);
+/** Word, Excel and PowerPoint files: not shown by the browser itself, but Microsoft's free viewer can show them. */
+export const isOfficeDoc = (mime: string): boolean => /^application\/(msword|vnd\.ms-(excel|powerpoint)|vnd\.openxmlformats-officedocument\.)/.test(mime);
+/** Everything that can be previewed inside the portal (view-only can still only be switched on for the first kind, isViewable). */
+export const isPreviewable = (mime: string): boolean => isViewable(mime) || isOfficeDoc(mime) || mime === "text/csv";
 export const sizeLabel = (n: number): string => (n < 1024 ? `${n} B` : n < 1048576 ? `${Math.round(n / 1024)} KB` : `${(n / 1048576).toFixed(1)} MB`);
 export const safeName = (name: string): string => name.replace(/[^A-Za-z0-9._-]+/g, "_").slice(-100) || "file";

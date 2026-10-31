@@ -1353,3 +1353,10 @@ a.pc-row:hover { background: var(--tint); }
 
 /* "Start over from beginning" first, with the two arrows right beside it */
 .bq-under { justify-content: flex-start; gap: 18px; }
+
+/* document viewer: every page of a PDF, text files, and wider room for the viewer */
+.doc-viewer { width: min(960px, calc(100vw - 24px)); }
+.pdf-pages { max-height: 72vh; overflow-y: auto; background: var(--tint); border-radius: 10px; padding: 12px; display: grid; gap: 12px; align-content: start; overscroll-behavior: contain; }
+.pdf-page { width: 100%; background: #fff; box-shadow: 0 1px 6px rgba(43, 37, 34, 0.18); border-radius: 2px; }
+.doc-text { max-height: 70vh; overflow: auto; margin: 0; padding: 14px; background: var(--tint); border-radius: 10px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.doc-frame { height: min(72vh, 700px); }
