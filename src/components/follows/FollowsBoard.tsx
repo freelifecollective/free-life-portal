@@ -10,6 +10,15 @@ import { createClient } from "@/lib/supabase/client";
 export type Listing = { member_id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; page_url: string; follows: number; i_followed: boolean; created_at: string; completed_at: string | null; is_me: boolean };
 const GOAL = 50;
 const nameOf = (l: Pick<Listing, "first_name" | "last_name">) => [l.first_name, l.last_name].filter(Boolean).join(" ") || "Member";
+/** Facebook's own "page plugin": shows the page's name, picture, cover photo and follower count. It only works for public Facebook Pages, not personal profiles. */
+function PagePreview({ url, name }: { url: string; name: string }) {
+  const src = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(url)}&tabs&width=340&height=130&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false`;
+  return (
+    <div className="ff-preview">
+      <iframe src={src} title={`${name}'s Facebook page`} width="340" height="130" loading="lazy" style={{ border: 0, overflow: "hidden", maxWidth: "100%" }} scrolling="no" allow="encrypted-media" />
+    </div>
+  );
+}
 const initialsOf = (l: Pick<Listing, "first_name" | "last_name">) => ((l.first_name ?? "").charAt(0) + (l.last_name ?? "").charAt(0)).toUpperCase() || "?";
 
 function Progress({ n }: { n: number }) {
@@ -31,7 +40,8 @@ export function FollowsBoard({ listings, isAdmin, canList, suggested }: { listin
   const [person, setPerson] = useState<MemberPerson | null>(null);
   const dlg = useRef<HTMLDialogElement>(null);
   const mine = listings.find((l) => l.is_me) ?? null;
-  const others = listings.filter((l) => !l.is_me);
+  /* every page that still needs follows, mine first (the database already puts it first) */
+  const shown = listings.filter((l) => !l.completed_at);
 
   const act = (fn: () => Promise<{ ok: boolean; error?: string }>) => { setError(""); run(async () => { const r = await fn(); if (!r.ok) setError(r.error ?? "That did not work."); router.refresh(); }); };
 
@@ -71,26 +81,27 @@ export function FollowsBoard({ listings, isAdmin, canList, suggested }: { listin
 
       <p className="err" role="alert" style={{ margin: 0 }}>{error}</p>
 
-      <h2 className="qh" style={{ margin: "6px 0 0" }}>Pages that need follows{others.length ? ` · ${others.length}` : ""}</h2>
-      {others.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>Nobody needs follows right now. New pages will show up here.</p></section> : (
+      <h2 className="qh" style={{ margin: "6px 0 0" }}>Pages that need follows{shown.length ? ` · ${shown.length}` : ""}</h2>
+      {shown.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>Nobody needs follows right now. New pages will show up here.</p></section> : (
         <ul className="ff-list">
-          {others.map((l) => (
-            <li key={l.member_id} className="card-s ff-card">
+          {shown.map((l) => (
+            <li key={l.member_id} className={"card-s ff-card" + (l.is_me ? " me" : "")}>
               <button type="button" className="ff-who" onClick={() => void openProfile(l.member_id)} aria-label={`See ${nameOf(l)}'s profile`}>
                 <Avatar url={l.avatar_url} initials={initialsOf(l)} size={52} />
-                <span><strong>{nameOf(l)}</strong>{l.username ? <small>@{l.username}</small> : null}</span>
+                <span><strong>{nameOf(l)}{l.is_me ? " (you)" : ""}</strong>{l.username ? <small>@{l.username}</small> : null}</span>
               </button>
+              <PagePreview url={l.page_url} name={nameOf(l)} />
               <Progress n={l.follows} />
               <div className="ff-actions">
                 <a className="btn small" href={l.page_url} target="_blank" rel="noopener noreferrer">Open their page</a>
-                <button type="button" className={"btn small" + (l.i_followed ? " primary" : "")} aria-pressed={l.i_followed} disabled={pending} onClick={() => act(() => setFollow(l.member_id, !l.i_followed))}>{l.i_followed ? "✓ I followed" : "I followed"}</button>
-                {isAdmin ? <button type="button" className="linkbtn" disabled={pending} onClick={() => { if (window.confirm(`Take ${nameOf(l)}'s page off the list?`)) act(() => removePage(l.member_id)); }}>Remove (admin)</button> : null}
+                {l.is_me ? <span className="when">This is your page</span> : <button type="button" className={"btn small" + (l.i_followed ? " primary" : "")} aria-pressed={l.i_followed} disabled={pending} onClick={() => act(() => setFollow(l.member_id, !l.i_followed))}>{l.i_followed ? "✓ I followed" : "I followed"}</button>}
+                {isAdmin && !l.is_me ? <button type="button" className="linkbtn" disabled={pending} onClick={() => { if (window.confirm(`Take ${nameOf(l)}'s page off the list?`)) act(() => removePage(l.member_id)); }}>Remove (admin)</button> : null}
               </div>
             </li>
           ))}
         </ul>
       )}
-      <p className="when">Facebook doesn&rsquo;t tell us who followed, so the count is the follows people confirm here. Please only tap &ldquo;I followed&rdquo; after you have followed their page.</p>
+      <p className="when">Facebook doesn&rsquo;t tell us who followed, so the count is the follows people confirm here. Please only tap &ldquo;I followed&rdquo; after you have followed their page. The page previews come straight from Facebook (name, picture, cover and followers) and only show for public Facebook Pages, not personal profiles.</p>
 
       <dialog ref={dlg} className="rs-dialog members-dialog" aria-label="Profile" onClose={() => setPerson(null)} onClick={(e) => { if (e.target === dlg.current) dlg.current?.close(); }}>
         {person ? <ProfileCard p={person} canMessage onClose={() => dlg.current?.close()} /> : null}
