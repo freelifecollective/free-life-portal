@@ -1340,3 +1340,9 @@ a.pc-row:hover { background: var(--tint); }
 /* "Start over from beginning" sits under the progress line, on the right */
 .bq-startover { display: flex; justify-content: flex-end; margin-top: 2px; }
 .bq-startover .linkbtn { padding: 8px 2px; font-size: 14px; }
+
+/* back and forward arrows on the questionnaire, side by side */
+.bq-nav { display: flex; align-items: center; gap: 8px; }
+.bq .backbtn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); cursor: pointer; display: grid; place-items: center; color: var(--ink); padding: 0; }
+.bq .backbtn:hover:not(:disabled) { border-color: var(--accent); }
+.bq .backbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
