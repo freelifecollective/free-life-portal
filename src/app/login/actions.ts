@@ -41,11 +41,11 @@ export async function sendMagicLink(_prev: LoginState, form: FormData): Promise<
 
 export type CodeState = { error: string };
 
-/** Signs in with the 6-digit code from the email. This is how the installed app gets in, because a link in an email opens the browser instead. */
+/** Signs in with the code from the email (6 to 10 digits, whatever length the email is set to send). This is how the installed app gets in, because a link in an email opens the browser instead. */
 export async function verifyCode(email: string, next: string, _prev: CodeState, form: FormData): Promise<CodeState> {
   const token = String(form.get("code") ?? "").replace(/\D/g, "");
   if (!EMAIL.test(email)) return { error: "Please start again and request a new email." };
-  if (token.length !== 6) return { error: "Enter the 6-digit code from the email." };
+  if (token.length < 6 || token.length > 10) return { error: "Enter the code from the email. It is all numbers." };
   if (!supabaseConfigured) return { error: "Sign-in is not configured yet." };
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
