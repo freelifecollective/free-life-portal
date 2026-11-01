@@ -24,7 +24,7 @@ export default async function BookPage() {
       {!isLead ? (
         <section className="card-s" style={{ maxWidth: 640 }}>
           <p style={{ margin: "0 0 12px" }}>This is where the leads you bring in book a coaching call with you. Set when you are open, and they pick a free time.</p>
-          <Link className="btn small primary" href="/settings/availability" style={{ textDecoration: "none" }}>Set my open hours</Link>
+          <Link className="btn small primary" href="/settings/availability" style={{ textDecoration: "none" }}>Set my availability</Link>
         </section>
       ) : !info ? (
         <section className="card-s" style={{ maxWidth: 640 }}><p style={{ margin: 0 }}>You can book a call once someone from the community has invited you. Ask whoever sent you here for their link.</p></section>

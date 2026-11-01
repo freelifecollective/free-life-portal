@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteComment, deletePost, sendMessage } from "@/app/(app)/chats/actions";
+import { deleteComment, deletePost, editMessage, pinPost, searchMessages, sendMessage, type Hit } from "@/app/(app)/chats/actions";
 import { deleteGroupMessage, sendGroupMessage } from "@/app/(app)/groups/actions";
 import { Avatar } from "@/components/Avatar";
 import { PersonLink } from "@/components/people/ProfilePopup";
@@ -18,8 +18,8 @@ const snippet = (s: string) => (s.length > 90 ? s.slice(0, 88) + "…" : s);
  * A conversation like Telegram: oldest at the top, newest at the bottom, your messages on the right, a box at the bottom to write in,
  * replies that quote the message they answer, and the view stays at the bottom as new messages come in.
  */
-export function ConversationView({ messages, kind, targetId, slug = "", canPost, placeholder, moreHref, nowIso, readOnlyText }: {
-  messages: Msg[]; kind: "chat" | "group"; targetId: string; slug?: string; canPost: boolean; placeholder: string; moreHref?: string; nowIso: string; readOnlyText?: string;
+export function ConversationView({ messages, kind, targetId, slug = "", canPost, placeholder, moreHref, nowIso, readOnlyText, jumpTo, canPin = false, basePath }: {
+  messages: Msg[]; kind: "chat" | "group"; targetId: string; slug?: string; canPost: boolean; placeholder: string; moreHref?: string; nowIso: string; readOnlyText?: string; jumpTo?: string; canPin?: boolean; basePath: string;
 }) {
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
@@ -33,6 +33,11 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
   const [gifQ, setGifQ] = useState("");
   const [gifs, setGifs] = useState<{ enabled: boolean; results: { id: string; url: string; preview: string }[] } | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; m: Msg } | null>(null);
+  const [editing, setEditing] = useState<Msg | null>(null);
+  const [find, setFind] = useState<{ open: boolean; q: string; hits: Hit[] | null }>({ open: false, q: "", hits: null });
+  const [pinAt, setPinAt] = useState(0);
+  const pinned = messages.filter((m) => m.pinned);
+  const shownPin = pinned.length ? pinned[pinAt % pinned.length] : null;
   const rows = toRows(messages, nowIso);
   const lastId = messages[messages.length - 1]?.id;
 
@@ -41,6 +46,11 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
     const el = box.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [lastId, messages.length]);
+  useEffect(() => {
+    if (!jumpTo) return;
+    const el = document.getElementById(`m-${jumpTo}`);
+    if (el) { stick.current = false; el.scrollIntoView({ block: "center" }); el.classList.add("flash"); const t = setTimeout(() => el.classList.remove("flash"), 1800); return () => clearTimeout(t); }
+  }, [jumpTo]);
   const onScroll = () => { const el = box.current; if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 140; };
 
   /* the menu for a message closes when you click anywhere else */
@@ -66,6 +76,18 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
     const body = text.trim();
     if ((!body && !image) || pending) return;
     setTray(null);
+    if (editing) {
+      const target = editing;
+      start(async () => {
+        setError("");
+        const r = await editMessage(kind, target.id, body);
+        if (!r.ok) { setError(r.error ?? "That did not work."); return; }
+        setText(""); setEditing(null);
+        if (area.current) area.current.style.height = "";
+        router.refresh();
+      });
+      return;
+    }
     start(async () => {
       setError("");
       const r = kind === "chat" ? await sendMessage(targetId, slug, body, replyTo?.legacy ? null : replyTo?.id ?? null, image) : await sendGroupMessage(targetId, body, replyTo?.id ?? null, image);
@@ -83,10 +105,36 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
       if (!r.ok) setError(r.error ?? "That did not work."); else router.refresh();
     });
   };
-  const jump = (id: string) => { const el = document.getElementById(`m-${id}`); if (el) { stick.current = false; el.scrollIntoView({ block: "center", behavior: "smooth" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1400); } };
+  const runFind = (q: string) => {
+    setFind((f) => ({ ...f, q }));
+    if (q.trim().length < 2) { setFind((f) => ({ ...f, hits: null })); return; }
+    void searchMessages(kind, targetId, q).then((hits) => setFind((f) => (f.q === q ? { ...f, hits } : f)));
+  };
+  const jump = (id: string) => { const el = document.getElementById(`m-${id}`); if (!el) { router.push(`${basePath}?limit=300&jump=${id}`); return; } if (el) { stick.current = false; el.scrollIntoView({ block: "center", behavior: "smooth" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1400); } };
 
   return (
     <div className="cv">
+      <button type="button" className={"cv-find-btn" + (find.open ? " on" : "")} aria-label="Search this chat" title="Search this chat" aria-expanded={find.open} onClick={() => setFind((f) => ({ open: !f.open, q: "", hits: null }))}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+      </button>
+      {find.open ? (
+        <div className="cv-find">
+          <input type="search" autoFocus placeholder="Search this chat" aria-label="Search this chat" value={find.q} onChange={(e) => runFind(e.target.value)} />
+          {find.hits ? (
+            <ul className="cv-hits">
+              {find.hits.length === 0 ? <li className="when">Nothing found.</li> : null}
+              {find.hits.map((h) => (
+                <li key={h.id}><button type="button" onClick={() => { setFind({ open: false, q: "", hits: null }); jump(h.id); }}><b translate="no">{h.name}</b><span translate="no">{snippet(h.body)}</span><small>{dayLabel(h.created_at, nowIso)} {timeET(h.created_at)}</small></button></li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+      {shownPin ? (
+        <button type="button" className="cv-pinbar" onClick={() => { jump(shownPin.id); setPinAt((i) => i + 1); }}>
+          <span aria-hidden="true">📌</span><span className="cv-pin-txt"><b>{pinned.length > 1 ? `Pinned message ${(pinAt % pinned.length) + 1} of ${pinned.length}` : "Pinned message"}</b><span translate="no">{snippet(shownPin.image_url && shownPin.body === "GIF" ? "GIF" : shownPin.body)}</span></span>
+        </button>
+      ) : null}
       <div className="cv-scroll" ref={box} onScroll={onScroll} role="log" aria-live="polite" aria-label="Messages">
         {moreHref ? <p className="cv-more"><Link className="btn small" href={moreHref} scroll={false}>Show earlier messages</Link></p> : null}
         {rows.length === 0 ? <p className="cv-empty">No messages yet. Say hello!</p> : null}
@@ -107,7 +155,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
                     <img className="cv-gif" src={m.image_url} alt="GIF" loading="lazy" onLoad={() => { if (stick.current && box.current) box.current.scrollTop = box.current.scrollHeight; }} />
                   ) : null}
                   {m.image_url && m.body === "GIF" ? null : <p className="cv-text"><UserText text={m.body} /></p>}
-                  <span className="cv-meta"><time dateTime={m.created_at}>{timeET(m.created_at)}</time>{m.mine && !m.legacy ? <span className={"cv-tick" + (m.readers?.length ? " seen" : "")} aria-label={m.readers?.length ? "Seen" : "Sent"}>{m.readers?.length ? "✓✓" : "✓"}</span> : null}</span>
+                  <span className="cv-meta">{m.pinned ? <span className="cv-pinmark" aria-label="Pinned">📌</span> : null}{m.edited_at ? <span className="cv-edited">edited</span> : null}<time dateTime={m.edited_at ?? m.created_at}>{timeET(m.edited_at ?? m.created_at)}</time>{m.mine && !m.legacy ? <span className={"cv-tick" + (m.readers?.length ? " seen" : "")} aria-label={m.readers?.length ? "Seen" : "Sent"}>{m.readers?.length ? "✓✓" : "✓"}</span> : null}</span>
                 </div>
                 <div className="cv-tools">
                   {canPost ? <button type="button" className="cv-tool" onClick={() => { setReplyTo(m); area.current?.focus(); }}>Reply</button> : null}
@@ -121,6 +169,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
       </div>
       {canPost ? (
         <div className="cv-composer">
+          {editing ? <div className="cv-replying"><span><b>Editing message</b> <span translate="no">{snippet(editing.body)}</span></span><button type="button" className="linkbtn" onClick={() => { setEditing(null); setText(""); }} aria-label="Cancel edit">✕</button></div> : null}
           {replyTo ? <div className="cv-replying"><span><b translate="no">{replyTo.author.name}</b> <span translate="no">{snippet(replyTo.body)}</span></span><button type="button" className="linkbtn" onClick={() => setReplyTo(null)} aria-label="Cancel reply">✕</button></div> : null}
           {tray === "emoji" ? <div className="dock-tray emoji" role="group" aria-label="Emoji">{EMOJI.map((em) => <button key={em} type="button" onClick={() => addEmoji(em)}>{em}</button>)}</div> : null}
           {tray === "gif" ? (
@@ -152,6 +201,8 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
       {menu ? (
         <div className="mute-menu cv-menu" role="menu" style={{ left: menu.x, top: menu.y }} onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
           {canPost ? <button type="button" role="menuitem" onClick={() => { setReplyTo(menu.m); setMenu(null); area.current?.focus(); }}>Reply</button> : null}
+          {menu.m.mine && !menu.m.legacy && !menu.m.image_url ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); setReplyTo(null); setEditing(m); setText(m.body); window.setTimeout(() => area.current?.focus(), 0); }}>Edit</button> : null}
+          {canPin && kind === "chat" && !menu.m.legacy ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); start(async () => { const r = await pinPost(m.id, slug, !m.pinned); if (!r.ok) setError(r.error ?? "That did not work."); else router.refresh(); }); }}>{menu.m.pinned ? "Unpin" : "Pin to top"}</button> : null}
           {menu.m.canDelete ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); remove(m); }}>Delete</button> : null}
           {menu.m.mine && !menu.m.legacy ? (
             <>

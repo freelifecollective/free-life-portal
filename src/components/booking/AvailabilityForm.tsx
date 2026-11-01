@@ -9,6 +9,16 @@ export function AvailabilityForm({ hours, minutes, tz, zones }: { hours: Hours[]
   const [state, action, pending] = useActionState(saveHours, { error: "" } as HoursState);
   const by = new Map(hours.map((h) => [h.weekday, h]));
   const [on, setOn] = useState<boolean[]>(DAYS.map((_, d) => by.has(d)));
+  const [times, setTimes] = useState<{ from: string; to: string }[]>(DAYS.map((_, d) => { const h = by.get(d); return { from: hhmm(h?.start_min ?? 540), to: h ? (h.end_min === 1440 ? "24:00" : hhmm(h.end_min)) : "17:00" }; }));
+  /* "Copy these hours to…": which day is open for copying, and which days are ticked */
+  const [copying, setCopying] = useState<number | null>(null);
+  const [targets, setTargets] = useState<boolean[]>(DAYS.map(() => false));
+  const copy = () => {
+    if (copying === null) return;
+    setTimes((cur) => cur.map((t, i) => (targets[i] ? cur[copying] : t)));
+    setOn((cur) => cur.map((v, i) => v || targets[i]));
+    setCopying(null); setTargets(DAYS.map(() => false));
+  };
   return (
     <form action={action} className="set-form">
       <div className="row">
@@ -20,18 +30,27 @@ export function AvailabilityForm({ hours, minutes, tz, zones }: { hours: Hours[]
       <fieldset className="av-days">
         <legend className="when">Tick the days you are open and choose your hours</legend>
         {DAYS.map((name, d) => {
-          const h = by.get(d);
           return (
             <div key={name} className={"av-row" + (on[d] ? " on" : "")}>
               <label className="av-day"><input type="checkbox" name={`on_${d}`} checked={on[d]} onChange={(e) => setOn((cur) => cur.map((v, i) => (i === d ? e.target.checked : v)))} /> {name}</label>
-              <select name={`from_${d}`} defaultValue={hhmm(h?.start_min ?? 540)} disabled={!on[d]} aria-label={`${name} from`}>{HALF_HOURS.filter((m) => m < 1440).map((m) => <option key={m} value={hhmm(m)}>{hhmm(m)}</option>)}</select>
+              <select name={`from_${d}`} value={times[d].from} onChange={(e) => setTimes((cur) => cur.map((t, i) => (i === d ? { ...t, from: e.target.value } : t)))} disabled={!on[d]} aria-label={`${name} from`}>{HALF_HOURS.filter((m) => m < 1440).map((m) => <option key={m} value={hhmm(m)}>{hhmm(m)}</option>)}</select>
               <span aria-hidden="true">–</span>
-              <select name={`to_${d}`} defaultValue={h ? (h.end_min === 1440 ? "24:00" : hhmm(h.end_min)) : "17:00"} disabled={!on[d]} aria-label={`${name} to`}>{HALF_HOURS.filter((m) => m > 0).map((m) => <option key={m} value={m === 1440 ? "24:00" : hhmm(m)}>{m === 1440 ? "24:00" : hhmm(m)}</option>)}</select>
+              <select name={`to_${d}`} value={times[d].to} onChange={(e) => setTimes((cur) => cur.map((t, i) => (i === d ? { ...t, to: e.target.value } : t)))} disabled={!on[d]} aria-label={`${name} to`}>{HALF_HOURS.filter((m) => m > 0).map((m) => <option key={m} value={m === 1440 ? "24:00" : hhmm(m)}>{m === 1440 ? "24:00" : hhmm(m)}</option>)}</select>
+              <button type="button" className="linkbtn av-copy" disabled={!on[d]} onClick={() => { setCopying(copying === d ? null : d); setTargets(DAYS.map(() => false)); }}>Copy to other days</button>
+              {copying === d ? (
+                <div className="av-copybox" role="group" aria-label={`Copy ${name} hours to`}>
+                  <span className="when">Copy these hours to:</span>
+                  {DAYS.map((n, i) => i === d ? null : (
+                    <label key={n}><input type="checkbox" checked={targets[i]} onChange={(e) => setTargets((cur) => cur.map((v, j) => (j === i ? e.target.checked : v)))} /> {n}</label>
+                  ))}
+                  <span className="av-copyact"><button type="button" className="btn small" onClick={() => setCopying(null)}>Cancel</button><button type="button" className="btn small primary" disabled={!targets.some(Boolean)} onClick={copy}>Copy</button></span>
+                </div>
+              ) : null}
             </div>
           );
         })}
       </fieldset>
-      <div className="set-actions"><button className="btn primary" type="submit" disabled={pending}>{pending ? "Saving…" : "Save my open hours"}</button><span role="status" className="when">{state.saved ? "Saved." : ""}</span></div>
+      <div className="set-actions"><button className="btn primary" type="submit" disabled={pending}>{pending ? "Saving…" : "Save my availability"}</button><span role="status" className="when">{state.saved ? "Saved." : ""}</span></div>
       <p className="err" role="alert">{state.error}</p>
     </form>
   );
