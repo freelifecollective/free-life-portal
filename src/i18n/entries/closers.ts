@@ -2,7 +2,7 @@ import type { Entry } from "../match";
 
 /** Call Closers for Hire and the application to become one. */
 export const closers: readonly Entry[] = [
-  ["Call Closers for Hire", "Cerradores de llamadas disponibles", "Closers d'appels à engager", "Call closer su richiesta", "Call-Closer zum Buchen"],
+  ["Call Closers for Hire", "Cerradores a contratar", "Closers à engager", "Call closer su richiesta", "Call-Closer zum Buchen"],
   ["No call closers are listed yet.", "Aún no hay cerradores de llamadas en la lista.", "Aucun closer d'appels n'est encore dans la liste.", "Non c'è ancora nessun call closer in elenco.", "Es sind noch keine Call-Closer gelistet."],
   ["FLC members booked", "Miembros de FLC que lo reservaron", "Membres FLC qui l'ont réservé", "Membri FLC che l'hanno prenotato", "FLC-Mitglieder, die gebucht haben"],
   ["Price per call (USD)", "Precio por llamada (USD)", "Prix par appel (USD)", "Prezzo per chiamata (USD)", "Preis pro Call (USD)"],
@@ -44,7 +44,7 @@ export const closers: readonly Entry[] = [
   ["Applications are for affiliates.", "Las solicitudes son para afiliados.", "Les candidatures sont réservées aux affiliés.", "Le candidature sono per gli affiliati.", "Bewerbungen sind für Affiliates."],
   ["You already have an application waiting.", "Ya tienes una solicitud en espera.", "Tu as déjà une candidature en attente.", "Hai già una candidatura in attesa.", "Du hast schon eine Bewerbung in Bearbeitung."],
   ["We could not send your application. Please try again.", "No pudimos enviar tu solicitud. Inténtalo de nuevo.", "On n'a pas pu envoyer ta candidature. Réessaie.", "Non siamo riusciti a inviare la tua candidatura. Riprova.", "Wir konnten deine Bewerbung nicht senden. Versuch es noch einmal."],
-  ["Call closer applications", "Solicitudes de cerradores de llamadas", "Candidatures de closers d'appels", "Candidature da call closer", "Call-Closer-Bewerbungen"],
+  ["Call closer applications", "Solicitudes de cerradores", "Candidatures de closers", "Candidature call closer", "Call-Closer-Bewerbungen"],
   ["Members who want to become a call closer. Approving adds them to Call Closers for Hire with the price they gave, and tells them.", "Miembros que quieren ser cerradores de llamadas. Al aprobar, se añaden a Cerradores de llamadas disponibles con el precio que dieron, y se les avisa.", "Membres qui veulent devenir closers d'appels. Approuver les ajoute à Closers d'appels à engager avec le prix indiqué, et les prévient.", "Membri che vogliono diventare call closer. Approvare li aggiunge a Call closer su richiesta con il prezzo indicato e li avvisa.", "Mitglieder, die Call-Closer werden möchten. Beim Genehmigen kommen sie mit ihrem Preis zu Call-Closer zum Buchen und werden benachrichtigt."],
   ["Waiting", "En espera", "En attente", "In attesa", "Wartend"],
   ["Answered", "Respondidas", "Traitées", "Risposte", "Beantwortet"],

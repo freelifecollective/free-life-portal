@@ -14,7 +14,7 @@ export const menu: readonly Entry[] = [
   ["Financing Options", "Opciones de financiamiento", "Options de financement", "Opzioni di finanziamento", "Finanzierungsoptionen"],
   ["Verbiage + Objections", "Frases + Objeciones", "Formulations + Objections", "Frasi + Obiezioni", "Formulierungen + Einwände"],
   ["Earnings Estimator", "Estimador de ganancias", "Estimateur de gains", "Stima dei guadagni", "Verdienstrechner"],
-  ["Call Closers for Hire", "Cerradores de llamadas disponibles", "Closers d'appels à engager", "Call closer su richiesta", "Call-Closer zum Buchen"],
+  ["Call Closers for Hire", "Cerradores a contratar", "Closers à engager", "Call closer su richiesta", "Call-Closer zum Buchen"],
   ["Documents", "Documentos", "Documents", "Documenti", "Dokumente"],
   ["Outsourcing", "Outsourcing", "Externalisation", "Outsourcing", "Outsourcing"],
   ["Classroom", "Aula", "Salle de classe", "Aula", "Klassenzimmer"],

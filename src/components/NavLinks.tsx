@@ -68,7 +68,11 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
       </ul>
       {/* never shown: it holds every name, folded away or not, so the menu is always wide enough for all of them in this language */}
       <ul className="nav-sizer" aria-hidden="true">
-        {items.map((n) => <li key={n.label}><span className={n.heading ? "sz-h" : n.group ? "sz-sub" : undefined}>{n.label}</span></li>)}
+        {items.map((n) => {
+          /* what could sit beside the name: the "Soon" tag, a number badge, or a section arrow */
+          const extra = n.heading ? "sz-h" : !n.href ? "sz-soon" : n.href === "/messages" || n.href.startsWith("/admin/") ? "sz-badge" : "";
+          return <li key={n.label}><span className={[extra, n.group && !n.heading ? "sz-sub" : ""].join(" ").trim() || undefined}>{n.label}</span></li>;
+        })}
       </ul>
     </>
   );
