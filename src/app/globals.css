@@ -1566,7 +1566,7 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .ft-share input { flex: 1 1 260px; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
 .ft-scroll { overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 8px; max-width: 100%; }
 .ft-svg { display: block; margin: 0 auto; max-width: none; }
-.ft-bubble:hover circle:not([stroke-dasharray]) { stroke-width: 4; }
+.ft-bubble:hover .ft-box { stroke-width: 3.5; }
 .ft-bubble:focus-visible, .ft-plus:focus-visible { outline: none; }
 .ft-bubble:focus-visible circle { stroke: var(--accent-deep); stroke-width: 4; }
 .ft-more { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }

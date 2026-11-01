@@ -4,7 +4,7 @@ import type { TreeNode } from "./layout";
 export const TREE_RANKS = ["1A", "2A", "3A", "4A", "5A", "6A", "6A2", "6A2-2", "6A2-3+"] as const;
 
 export type Swatch = { key: string; label: string; fill: string; stroke: string };
-export const OWNED: Swatch = { key: "owned", label: "My accounts", fill: "#FFE9A8", stroke: "#C99700" };
+export const OWNED: Swatch = { key: "owned", label: "My accounts", fill: "#AB9080", stroke: "#8D7364" };
 const NONE: Swatch = { key: "none", label: "No rank", fill: "#F1EFE9", stroke: "#B9A797" };
 export const RANK_SWATCHES: Swatch[] = [
   { key: "1-3", label: "1A-3A", fill: "#DCEEDF", stroke: "#6FA77F" },
