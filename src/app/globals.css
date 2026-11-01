@@ -1945,3 +1945,23 @@ html, body { max-width: 100%; overflow-x: clip; }
 }
 .vn small { white-space: nowrap; }
 .ft-svg { -webkit-user-select: none; user-select: none; }
+
+/* Your Organization: charts, the small balance note inside the chart, and the tools under it */
+.ft-charts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ft-charts a { text-decoration: none; color: var(--muted); font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.ft-charts a:hover { background: var(--tint); }
+.ft-charts a.on { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
+.ft-newchart { all: unset; cursor: pointer; font-size: 14px; padding: 6px 12px; color: var(--accent-deep); border-radius: 999px; }
+.ft-newchart:hover { background: var(--tint); }
+.ft-newform { max-width: 520px; }
+.ft-chartbox { position: relative; }
+.ft-mini { position: absolute; top: 10px; right: 14px; z-index: 3; margin: 0; display: grid; gap: 1px; text-align: right; font-size: 11.5px; line-height: 1.25; padding: 5px 10px; border-radius: 10px; background: rgba(255,255,255,.92); border: 1px solid var(--line); border-left: 3px solid #5E9C76; color: var(--ink); max-width: 210px; cursor: default; }
+.ft-mini b { font-weight: 700; }
+.ft-mini span { color: var(--muted); }
+.ft-mini.lopsided { border-left-color: #D9962B; background: #FFF8EA; }
+.ft-copy { display: grid; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--tint); font-size: 14px; }
+.ft-copy select { font: inherit; font-size: 13.5px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
+.ft-keypos form input { font: inherit; font-size: 13px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 8px; }
+.ft-keypos .danger { color: #b42318; }
+.ft-confirm { font-size: 12.5px; display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+@media print { .ft-mini, .ft-charts, .ft-newform { display: none; } }
