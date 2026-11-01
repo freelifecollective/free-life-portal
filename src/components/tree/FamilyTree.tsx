@@ -12,9 +12,10 @@ function find(b: Built, id: string): Built | null {
   return (b.left && find(b.left, id)) || (b.right && find(b.right, id)) || null;
 }
 
-/** The family tree: add, change and remove bubbles, see how even the two sides are, share a read-only link, and download or print it. */
-export function FamilyTree({ initial, ownerName, ownerRank, token }: { initial: TreeNode[]; ownerName: string; ownerRank: string | null; token: string | null }) {
+/** Your Organization (the family tree): add, change and remove bubbles, see how even the two sides are, share a read-only link, and download or print it. */
+export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }: { initial: TreeNode[]; ownerName: string; ownerRank: string | null; token: string | null; rootEdited: boolean }) {
   const [nodes, setNodes] = useState<TreeNode[]>(initial);
+  const [top, setTop] = useState({ name: ownerName, rank: ownerRank ?? "" });
   const [target, setTarget] = useState<DialogTarget | null>(null);
   const [tok, setTok] = useState<string | null>(token);
   const [copied, setCopied] = useState(false);
@@ -38,7 +39,7 @@ export function FamilyTree({ initial, ownerName, ownerRank, token }: { initial: 
   const download = async () => {
     if (!svg.current) return;
     setMsg("");
-    try { await downloadSvgAsPng(svg.current, "family-tree.png"); } catch { setMsg("We could not make the picture. Try Print instead."); }
+    try { await downloadSvgAsPng(svg.current, "your-organization.png"); } catch { setMsg("We could not make the picture. Try Print instead."); }
   };
   const share = (on: boolean) => start(async () => {
     const r = await setSharing(on);
@@ -76,15 +77,16 @@ export function FamilyTree({ initial, ownerName, ownerRank, token }: { initial: 
       {msg ? <p className="err" role="alert" style={{ minHeight: 0 }}>{msg}</p> : null}
 
       <div className="ft-print">
-        <h2 className="ft-print-title">{`${ownerName}'s family tree`}</h2>
+        <h2 className="ft-print-title">{`${top.name}'s organization`}</h2>
         <div className="ft-scroll">
-          <TreeChart ref={svg} nodes={nodes} ownerName={ownerName} ownerRank={ownerRank} youLabel="YOU" leftLabel="Left" rightLabel="Right"
-            onPick={openEdit} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
+          <TreeChart ref={svg} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} youLabel="YOU" leftLabel="Left" rightLabel="Right"
+            onPick={openEdit} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
         </div>
       </div>
-      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side.</p>
+      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side. Tap the top bubble to change your own name or rank.</p>
 
       <NodeDialog target={target} onClose={() => setTarget(null)}
+        onRootSaved={(label, rank) => { setTop({ name: label || ownerName, rank: rank || (label ? "" : ownerRank ?? "") }); setTarget(null); }}
         onSaved={(n) => { setNodes((cur) => (cur.some((x) => x.id === n.id) ? cur.map((x) => (x.id === n.id ? n : x)) : [...cur, n])); setTarget(null); }}
         onRemoved={(id) => { gone(id); setTarget(null); }}
         onAddSide={(parentId, side: Side) => setTarget({ mode: "add", parentId, side })} />
