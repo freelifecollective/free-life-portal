@@ -1593,3 +1593,12 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .bk-slots { display: flex; flex-wrap: wrap; gap: 8px; }
 .bk-slot { font: inherit; font-weight: 600; padding: 9px 14px; border-radius: 999px; border: 1.5px solid var(--accent-deep); background: #fff; color: var(--accent-deep); cursor: pointer; }
 .bk-slot:hover, .bk-slot[aria-pressed="true"] { background: var(--accent-deep); color: #fff; }
+
+/* ---- On a computer the whole menu column is pinned right under the top bar, so it cannot drift while the page scrolls ---- */
+@media (min-width: 769px) {
+  :root { --top-h: 69px; }
+  .app-top { height: var(--top-h); box-sizing: border-box; }
+  .app-top .brand, .top-main { padding-top: 0; padding-bottom: 0; align-items: center; }
+  .app-body > .nav { position: sticky; top: var(--top-h); align-self: start; height: calc(100dvh - var(--top-h)); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; }
+  .app-body > .nav > ul:not(.nav-sizer) { position: static; max-height: none; overflow: visible; }
+}
