@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { CloserHub, type Person, type Stats } from "@/components/closer-hub/CloserHub";
 import { HireRequests, type Request } from "@/components/closers/HireRequests";
-import { totalCalls } from "@/components/chats/ProfileCard";
+import { totalCalls } from "@/lib/closer/total";
 import { OpenHoursCard } from "@/components/booking/OpenHoursCard";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
