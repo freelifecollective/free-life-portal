@@ -19,7 +19,7 @@ function remember(value: string) {
 }
 
 function Item({ n, path }: { n: NavEntry; path: string }) {
-  if (!n.href) return <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}><span>{n.label}<span className="soon">Soon</span></span></li>;
+  if (!n.href) return <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}><span title="Coming soon">{n.label}</span></li>;
   const active = n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/");
   return (
     <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}>
@@ -29,7 +29,7 @@ function Item({ n, path }: { n: NavEntry; path: string }) {
 }
 
 /**
- * The left-hand menu. The page you are on is highlighted; pages that do not exist yet say "Soon".
+ * The left-hand menu. The page you are on is highlighted; pages that do not exist yet are greyed out.
  * Every section heading folds its tabs away. Only one section is open at a time, and the choice is remembered on this device.
  */
 export function NavLinks({ items }: { items: NavEntry[] }) {
@@ -69,8 +69,8 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
       {/* never shown: it holds every name, folded away or not, so the menu is always wide enough for all of them in this language */}
       <ul className="nav-sizer" aria-hidden="true">
         {items.map((n) => {
-          /* what could sit beside the name: the "Soon" tag, a number badge, or a section arrow */
-          const extra = n.heading ? "sz-h" : !n.href ? "sz-soon" : n.href === "/messages" || n.href.startsWith("/admin/") ? "sz-badge" : "";
+          /* what could sit beside the name: a number badge, or a section arrow */
+          const extra = n.heading ? "sz-h" : n.href === "/messages" || !!n.href?.startsWith("/admin/") ? "sz-badge" : "";
           return <li key={n.label}><span className={[extra, n.group && !n.heading ? "sz-sub" : ""].join(" ").trim() || undefined}>{n.label}</span></li>;
         })}
       </ul>
