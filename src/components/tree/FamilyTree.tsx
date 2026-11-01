@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { setSharing } from "@/app/(app)/family-tree/actions";
+import { moveNode, setSharing } from "@/app/(app)/family-tree/actions";
 import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
@@ -40,6 +40,17 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
     let grew = true;
     while (grew) { grew = false; for (const n of nodes) if (n.parent_id && dead.has(n.parent_id) && !dead.has(n.id)) { dead.add(n.id); grew = true; } }
     setNodes(nodes.filter((n) => !dead.has(n.id)));
+  };
+  const onMove = (id: string, parentId: string | null, side: Side) => {
+    const cur = nodes.find((n) => n.id === id);
+    if (!cur || (cur.parent_id === parentId && cur.side === side)) return;
+    const before = nodes;
+    setNodes([...nodes.filter((n) => n.id !== id), { ...cur, parent_id: parentId, side }]);   /* it joins the end of its new side */
+    setMsg("");
+    start(async () => {
+      const r = await moveNode(id, parentId, side);
+      if (!r.ok) { setNodes(before); setMsg(r.error); }
+    });
   };
   const download = async () => {
     if (!svg.current) return;
@@ -89,10 +100,10 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
         </div>
         <div className="ft-scroll" ref={box}>
           <TreeChart ref={svg} keyPos={keyPos} availW={Math.max(0, boxW - 18)} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
-            onPick={openEdit} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
+            onPick={openEdit} onMove={onMove} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
         </div>
       </div>
-      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side. Tap the top bubble to change your own name or rank.</p>
+      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side. Tap the top bubble to change your own name or rank. To move a bubble (and everything under it), drag it onto another bubble, the top bubble or a +. On a phone, press and hold first.</p>
 
       <NodeDialog target={target} onClose={() => setTarget(null)}
         onRootSaved={(label, rank) => { setTop({ name: label || ownerName, rank: rank || (label ? "" : ownerRank ?? "") }); setTarget(null); }}

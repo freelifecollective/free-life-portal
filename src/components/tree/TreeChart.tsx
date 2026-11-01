@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useMemo } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { LEGEND, OWNED, swatchOf } from "@/lib/tree/colors";
 import { buildTree, layoutTree, type Side, type TreeNode } from "@/lib/tree/layout";
 import type { KeyPos } from "./useKeyPos";
@@ -27,7 +27,9 @@ function lines(label: string, max: number): string[] {
 export const TreeChart = forwardRef<SVGSVGElement, {
   nodes: TreeNode[]; ownerName: string; ownerRank?: string | null; keyPos?: KeyPos; availW?: number; leftLabel: string; rightLabel: string;
   onPick?: (id: string) => void; onPickRoot?: () => void; onAdd?: (parentId: string | null, side: Side) => void;
-}>(function TreeChart({ nodes, ownerName, ownerRank, keyPos = "left", availW = 0, leftLabel, rightLabel, onPick, onPickRoot, onAdd }, ref) {
+  /** Drag an account (and everything under it) onto another account, the top box, or a "+" spot. */
+  onMove?: (id: string, parentId: string | null, side: Side) => void;
+}>(function TreeChart({ nodes, ownerName, ownerRank, keyPos = "left", availW = 0, leftLabel, rightLabel, onPick, onPickRoot, onAdd, onMove }, ref) {
   const laid = useMemo(() => layoutTree(buildTree(nodes)), [nodes]);
   const R = laid.r;
   const pos = new Map(laid.placed.map((p) => [p.key, p]));
@@ -38,6 +40,12 @@ export const TreeChart = forwardRef<SVGSVGElement, {
     return p && p.parentKey === "root" ? p.side : null;
   };
   const editable = !!onPick;
+  const gRef = useRef<SVGGElement>(null);
+  type Hit = { parentId: string | null; side: Side; x: number; y: number; w: number; h: number };
+  const [drag, setDrag] = useState<{ id: string; x: number; y: number; over: Hit | null } | null>(null);
+  const cleanup = useRef<(() => void) | null>(null);
+  const justDragged = useRef(false);
+  useEffect(() => () => cleanup.current?.(), []);
   /* the colour key: a column down the left or right, or one line along the top or bottom */
   const itemW = (label: string) => 26 + label.length * 5.8;
   const keyItems = LEGEND.map((sw) => ({ sw, label: sw === OWNED ? "My accounts" : sw.label }));
@@ -59,6 +67,70 @@ export const TreeChart = forwardRef<SVGSVGElement, {
   const keyX = keyPos === "left" ? 18 : keyPos === "right" ? W - colW - 18 : 28;
   const keyY = keyPos === "bottom" ? chartH + 10 : keyPos === "top" ? 12 : 28;
   const bw = R * 2.7, bh = R * 1.5;
+  /* everything inside a dragged account moves with it, so none of it can be a place to drop */
+  const below = (id: string) => {
+    const out = new Set<string>([id]);
+    for (const p of laid.placed) { let q: typeof p | undefined = p; while (q) { if (q.key === id) { out.add(p.key); break; } q = q.parentKey ? pos.get(q.parentKey) : undefined; } }
+    return out;
+  };
+  const hitAt = (x: number, y: number, skip: Set<string>): Hit | null => {
+    const slack = 6;
+    for (const p of laid.placed) {
+      if (skip.has(p.key)) continue;
+      if (x >= p.x - bw / 2 - slack && x <= p.x + bw / 2 + slack && y >= p.y - bh / 2 - slack && y <= p.y + bh / 2 + slack) {
+        return { parentId: p.node?.id ?? null, side: x < p.x ? "left" : "right", x: p.x - bw / 2, y: p.y - bh / 2, w: bw, h: bh };
+      }
+    }
+    const pw = bw * 0.62, phh = bh * 0.8;
+    for (const ph of laid.phantoms) {
+      if (skip.has(ph.parentKey)) continue;
+      if (x >= ph.x - pw / 2 - slack && x <= ph.x + pw / 2 + slack && y >= ph.y - phh / 2 - slack && y <= ph.y + phh / 2 + slack) return { parentId: ph.parentId, side: ph.side, x: ph.x - pw / 2, y: ph.y - phh / 2, w: pw, h: phh };
+    }
+    return null;
+  };
+  /** Press on an account: a mouse starts dragging after a few pixels, a finger after a short hold (so scrolling still works). */
+  const startDrag = (e: React.PointerEvent, id: string) => {
+    if (!onMove || e.button > 0 || !gRef.current) return;
+    const g = gRef.current;
+    const toLocal = (cx: number, cy: number) => { const m = g.getScreenCTM(); if (!m) return { x: 0, y: 0 }; const pt = new DOMPoint(cx, cy).matrixTransform(m.inverse()); return { x: pt.x, y: pt.y }; };
+    const skip = below(id);
+    const sx = e.clientX, sy = e.clientY, touch = e.pointerType === "touch";
+    let active = false, dead = false;
+    const begin = (cx: number, cy: number) => { active = true; const l = toLocal(cx, cy); setDrag({ id, x: l.x, y: l.y, over: hitAt(l.x, l.y, skip) }); };
+    const timer = touch ? window.setTimeout(() => { if (!dead) begin(sx, sy); }, 350) : undefined;
+    const move = (ev: PointerEvent) => {
+      const moved = Math.hypot(ev.clientX - sx, ev.clientY - sy);
+      if (!active) {
+        if (touch) { if (moved > 8) { dead = true; end(false); } return; }   /* a finger that moves first is scrolling */
+        if (moved < 6) return;
+        begin(ev.clientX, ev.clientY);
+      }
+      ev.preventDefault();
+      const l = toLocal(ev.clientX, ev.clientY);
+      setDrag({ id, x: l.x, y: l.y, over: hitAt(l.x, l.y, skip) });
+    };
+    const block = (ev: TouchEvent) => { if (active) ev.preventDefault(); };
+    const up = (ev: PointerEvent) => {
+      if (active) {
+        const l = toLocal(ev.clientX, ev.clientY);
+        const hit = hitAt(l.x, l.y, skip);
+        justDragged.current = true; window.setTimeout(() => { justDragged.current = false; }, 80);
+        end(true, hit);
+      } else end(false);
+    };
+    const end = (finish: boolean, hit?: Hit | null) => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("touchmove", block);
+      cleanup.current = null;
+      setDrag(null);
+      if (finish && hit) onMove(id, hit.parentId, hit.side);
+    };
+    const cancel = () => end(false);
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", cancel);
+    window.addEventListener("touchmove", block, { passive: false });
+    cleanup.current = () => end(false);
+  };
   const fs = Math.max(11, R * 0.3), maxChars = Math.max(9, Math.round(bw / (fs * 0.62)));
   const key = (e: React.KeyboardEvent, fn: () => void) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } };
   /* straight lines with square corners: down from the parent, across, down into the child */
@@ -77,7 +149,7 @@ export const TreeChart = forwardRef<SVGSVGElement, {
           );
         })}
       </g>
-      <g transform={`translate(${shift}, ${chartY})`}>
+      <g ref={gRef} transform={`translate(${shift}, ${chartY})`}>
         {laid.placed.filter((p) => p.parentKey).map((p) => {
           const par = pos.get(p.parentKey!)!;
           const hot = laid.heavyRoot !== null && legOf(p.key) === laid.heavyRoot;
@@ -113,11 +185,14 @@ export const TreeChart = forwardRef<SVGSVGElement, {
           const top = p.y - blockH / 2;
           const lineY = (i: number) => top + i * lh + lh * 0.78;
           const rankY = top + text.length * lh + rankGap + rankH * 0.78;
-          const click = isRoot ? onPickRoot : onPick ? () => onPick(p.node!.id) : undefined;
+          const click0 = isRoot ? onPickRoot : onPick ? () => onPick(p.node!.id) : undefined;
+          const click = click0 ? () => { if (!justDragged.current) click0(); } : undefined;
+          const dim = drag ? below(drag.id).has(p.key) : false;
           const x0 = p.x - bw / 2, y0 = p.y - bh / 2;
           return (
             <g key={p.key} className={click ? "ft-bubble" : undefined} role={click ? "button" : undefined} tabIndex={click ? 0 : undefined}
-              aria-label={isRoot ? ownerName : p.node!.label} style={click ? { cursor: "pointer" } : undefined}
+              aria-label={isRoot ? ownerName : p.node!.label} style={click ? { cursor: onMove && !isRoot ? "grab" : "pointer", opacity: dim ? 0.3 : 1 } : undefined}
+              onPointerDown={!isRoot && onMove ? (e) => startDrag(e, p.node!.id) : undefined}
               onClick={click} onKeyDown={click ? (e) => key(e, click) : undefined}>
               <title>{isRoot ? ownerName : p.lopsided ? `${p.node!.label} (${p.left} · ${p.right})` : p.node!.label}</title>
               {p.lopsided ? <rect x={x0 - 7} y={y0 - 7} width={bw + 14} height={bh + 14} rx={12} fill="none" stroke={AMBER} strokeWidth={3} strokeDasharray="4 4" /> : null}
@@ -129,6 +204,27 @@ export const TreeChart = forwardRef<SVGSVGElement, {
             </g>
           );
         })}
+        {drag ? (() => {
+          const src = pos.get(drag.id);
+          if (!src?.node) return null;
+          const sw = swatchOf(src.node);
+          const dark = sw === OWNED;
+          const over = drag.over;
+          return (
+            <g pointerEvents="none">
+              {over ? (
+                <g>
+                  <rect x={over.x - 4} y={over.y - 4} width={over.w + 8} height={over.h + 8} rx={11} fill="rgba(171,144,128,.15)" stroke="#AB9080" strokeWidth={3} />
+                  <text x={over.x + over.w / 2} y={over.y + over.h + 20} textAnchor="middle" fontSize={12} fontWeight={700} fill="#8D7364">{over.side === "left" ? "Drop to the left" : "Drop to the right"}</text>
+                </g>
+              ) : null}
+              <g opacity={0.92} transform={`translate(${drag.x - bw / 2}, ${drag.y - bh / 2})`}>
+                <rect width={bw} height={bh} rx={8} fill={sw.fill} stroke={sw.stroke} strokeWidth={2} />
+                <text x={bw / 2} y={bh / 2 + fs * 0.35} textAnchor="middle" fontSize={fs} fill={dark ? "#fff" : "#2B2522"}>{lines(src.node.label, maxChars)[0]}</text>
+              </g>
+            </g>
+          );
+        })() : null}
       </g>
     </svg>
   );

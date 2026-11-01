@@ -1944,3 +1944,4 @@ html, body { max-width: 100%; overflow-x: clip; }
   .ch-top .ch-paid { order: 10; }
 }
 .vn small { white-space: nowrap; }
+.ft-svg { -webkit-user-select: none; user-select: none; }
