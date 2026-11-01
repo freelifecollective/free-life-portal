@@ -11,7 +11,8 @@ import { useWidth } from "./useWidth";
 
 function find(b: Built, id: string): Built | null {
   if (b.node?.id === id) return b;
-  return (b.left && find(b.left, id)) || (b.right && find(b.right, id)) || null;
+  for (const c of [...b.lefts, ...b.rights]) { const f = find(c, id); if (f) return f; }
+  return null;
 }
 
 /** Your Organization (the family tree): add, change and remove bubbles, see how even the two sides are, share a read-only link, and download or print it. */
@@ -32,7 +33,7 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
 
   const openEdit = (id: string) => {
     const b = find(root, id);
-    if (b?.node) setTarget({ mode: "edit", node: b.node, hasLeft: !!b.left, hasRight: !!b.right, branch: countAll(b) - 1 });
+    if (b?.node) setTarget({ mode: "edit", node: b.node, hasLeft: b.lefts.length > 0, hasRight: b.rights.length > 0, branch: countAll(b) - 1 });
   };
   const gone = (id: string) => {
     const dead = new Set<string>([id]);

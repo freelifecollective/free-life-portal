@@ -13,7 +13,7 @@ export type DialogTarget = { mode: "root"; label: string; rank: string } | { mod
 
 /** Add a bubble, or change or remove one. You can pick someone from the FLC community or just type a name or account name. */
 export function NodeDialog({ target, onClose, onSaved, onRemoved, onAddSide, onRootSaved }: {
-  target: DialogTarget | null; onClose: () => void; onSaved: (n: TreeNode) => void; onRootSaved: (label: string, rank: string) => void; onRemoved: (id: string) => void; onAddSide: (parentId: string, side: Side) => void;
+  target: DialogTarget | null; onClose: () => void; onSaved: (n: TreeNode) => void; onRootSaved: (label: string, rank: string) => void; onRemoved: (id: string) => void; onAddSide: (parentId: string | null, side: Side) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [label, setLabel] = useState("");
@@ -91,11 +91,19 @@ export function NodeDialog({ target, onClose, onSaved, onRemoved, onAddSide, onR
         {target.mode !== "root" ? <label className="check" style={{ display: "flex", gap: 10, alignItems: "flex-start" }}><input type="checkbox" checked={owned} onChange={(e) => setOwned(e.target.checked)} style={{ marginTop: 4 }} /><span>I own this account</span></label> : <p className="when" style={{ margin: 0 }}>Leave the name empty to use your profile name.</p>}
         <p className="err" role="alert" style={{ minHeight: 0 }}>{error}</p>
         <div className="dlg-actions"><button className="btn" type="button" onClick={() => dlg.current?.close()}>Cancel</button><button className="btn primary" type="submit" disabled={pending}>{pending ? "Saving…" : target.mode === "add" ? "Add" : "Save changes"}</button></div>
+        {target.mode === "root" ? (
+          <div className="ft-more">
+            <div className="rs-actions">
+              <button type="button" className="btn small" onClick={() => onAddSide(null, "left")}>Add another to the left</button>
+              <button type="button" className="btn small" onClick={() => onAddSide(null, "right")}>Add another to the right</button>
+            </div>
+          </div>
+        ) : null}
         {target.mode === "edit" ? (
           <div className="ft-more">
             <div className="rs-actions">
-              <button type="button" className="btn small" disabled={target.hasLeft} onClick={() => onAddSide(target.node.id, "left")}>Add to the left</button>
-              <button type="button" className="btn small" disabled={target.hasRight} onClick={() => onAddSide(target.node.id, "right")}>Add to the right</button>
+              <button type="button" className="btn small" onClick={() => onAddSide(target.node.id, "left")}>{target.hasLeft ? "Add another to the left" : "Add to the left"}</button>
+              <button type="button" className="btn small" onClick={() => onAddSide(target.node.id, "right")}>{target.hasRight ? "Add another to the right" : "Add to the right"}</button>
             </div>
             {confirm ? (
               <p className="err" style={{ minHeight: 0, margin: 0 }}>Remove this bubble and everything under it? <button type="button" className="linkbtn danger" disabled={pending} onClick={remove}>Yes, remove</button> <button type="button" className="linkbtn" onClick={() => setConfirm(false)}>No</button></p>

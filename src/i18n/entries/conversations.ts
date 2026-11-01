@@ -139,4 +139,6 @@ export const conversations: readonly Entry[] = [
   ["We could not post that reply. Please try again.", "No pudimos publicar esa respuesta. Inténtalo de nuevo.", "Nous n'avons pas pu publier cette réponse. Réessaie.", "Non siamo riusciti a pubblicare la risposta. Riprova.", "Wir konnten die Antwort nicht posten. Versuch es bitte nochmal."],
   ["📎 File", "📎 Archivo", "📎 Fichier", "📎 File", "📎 Datei"],
   ["Frequently used", "Usados con frecuencia", "Utilisés fréquemment", "Usati di frequente", "Häufig verwendet"],
+  ["Add another to the left", "Añadir otro a la izquierda", "Ajouter un autre à gauche", "Aggiungine un altro a sinistra", "Noch einen links hinzufügen"],
+  ["Add another to the right", "Añadir otro a la derecha", "Ajouter un autre à droite", "Aggiungine un altro a destra", "Noch einen rechts hinzufügen"],
 ];
