@@ -58,14 +58,15 @@ export async function renameGroup(group: string, name: string): Promise<R> {
   return { ok: true };
 }
 
-export async function sendGroupMessage(group: string, body: string, replyTo: string | null): Promise<R> {
-  const text = String(body ?? "").trim();
+export async function sendGroupMessage(group: string, body: string, replyTo: string | null, image: string | null = null): Promise<R> {
+  if (image && !/^https:\/\/media\d*\.giphy\.com\//.test(image)) return { ok: false, error: "That GIF did not work." };
+  const text = image ? "GIF" : String(body ?? "").trim();
   if (!UUID.test(group) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };
   if (text.length > MAX) return { ok: false, error: `Please keep messages under ${MAX} characters.` };
   const c = await db();
   if (!c) return { ok: false, error: "Private groups are for affiliates." };
-  const { error } = await c.supabase.from("group_messages").insert({ group_id: group, author_id: c.me, body: text, ...(replyTo ? { reply_to: replyTo } : {}) });
+  const { error } = await c.supabase.from("group_messages").insert({ group_id: group, author_id: c.me, body: text, ...(image ? { image_url: image } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
   if (error) return { ok: false, error: "We could not send that. Please try again." };
   revalidatePath(`/groups/${group}`);
   return { ok: true };

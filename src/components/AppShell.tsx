@@ -26,7 +26,6 @@ const NAV: NavItem[] = [
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead" },
-  { label: "Private Groups", href: "/groups", min: "member" },
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
   { label: "Classroom", href: "/classroom", min: "lead" },
   { label: "Calls", href: "/calls", min: "lead", group: "FLC Calls" },

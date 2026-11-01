@@ -3,7 +3,11 @@ import { Fragment } from "react";
 import { canSee, type Role } from "@/lib/roles";
 import { MemberList } from "./MemberList";
 import { MuteMenu, MutedIcon } from "@/components/mute/MuteMenu";
+import { NewGroup } from "@/components/conversation/NewGroup";
 import type { ChatSection } from "@/lib/chats/types";
+import type { GroupRow } from "@/lib/chats/sidebar";
+
+const Badge = ({ n }: { n?: number }) => (n ? <span className="chat-badge" aria-label={`${n} unread`}>{n > 99 ? "99+" : n}</span> : null);
 
 function Lock() {
   return (
@@ -16,7 +20,7 @@ function Lock() {
 const kindOf = (n: string) => { const k = n.trim().toLowerCase(); return k === "affiliates only" ? "affiliates" as const : k === "new members" ? "leads" as const : null; };
 
 /** Sections with bold headings, each listing its chats. Chats you cannot open yet are faded with a lock. */
-export function ChatList({ sections, current, role, muted }: { sections: ChatSection[]; current: string; role: Role; muted?: Set<string> }) {
+export function ChatList({ sections, current, role, muted, unread, groups }: { sections: ChatSection[]; current: string; role: Role; muted?: Set<string>; unread?: Record<string, number>; groups?: GroupRow[] }) {
   return (
     <nav className="chat-list" aria-label="Chats">
       {sections.map((s) => {
@@ -31,7 +35,7 @@ export function ChatList({ sections, current, role, muted }: { sections: ChatSec
                 <Fragment key={c.id}>
                 <li>
                   {canSee(role, c.min_role)
-                    ? <MuteMenu kind="chat" id={c.id} muted={!!muted?.has(`chat:${c.id}`)}><Link href={`/chats/${c.slug}`} aria-current={c.slug === current ? "page" : undefined}>{c.name}{muted?.has(`chat:${c.id}`) ? <MutedIcon /> : null}</Link></MuteMenu>
+                    ? <MuteMenu kind="chat" id={c.id} muted={!!muted?.has(`chat:${c.id}`)}><Link href={`/chats/${c.slug}`} aria-current={c.slug === current ? "page" : undefined}>{c.name}{muted?.has(`chat:${c.id}`) ? <MutedIcon /> : null}<Badge n={unread?.[c.id]} /></Link></MuteMenu>
                     : <Link href={`/chats/${c.slug}`} className="chat-locked" aria-current={c.slug === current ? "page" : undefined}>{c.name}<Lock /><span className="sr-only"> (locked)</span></Link>}
                 </li>
                 {c.divider_after ? <li className="chat-divider" aria-hidden="true"><span /><i>✦</i><span /></li> : null}
@@ -41,6 +45,21 @@ export function ChatList({ sections, current, role, muted }: { sections: ChatSec
           </section>
         );
       })}
+      {groups && (role !== "lead" || groups.length > 0) ? (
+        <section className="chat-groups">
+          <div className="chat-section-row"><h2 className="chat-section">Group Chats</h2>{role !== "lead" ? <NewGroup /> : null}</div>
+          {groups.length === 0 ? <p className="when" style={{ margin: "0 12px" }}>No groups yet.</p> : null}
+          <ul className="chat-group-list">
+            {groups.map((g) => (
+              <li key={g.id}>
+                <MuteMenu kind="group" id={g.id} muted={!!muted?.has(`group:${g.id}`)}>
+                  <Link href={`/groups/${g.id}`} aria-current={current === `group:${g.id}` ? "page" : undefined}>{g.name}{muted?.has(`group:${g.id}`) ? <MutedIcon /> : null}<Badge n={g.unread} /></Link>
+                </MuteMenu>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </nav>
   );
 }

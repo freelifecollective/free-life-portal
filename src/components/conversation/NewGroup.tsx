@@ -15,7 +15,7 @@ export function NewGroup() {
   const [pending, start] = useTransition();
   return (
     <>
-      <button type="button" className="btn small primary" onClick={() => dlg.current?.showModal()}>New group</button>
+      <button type="button" className="chat-new" onClick={() => dlg.current?.showModal()} title="Create a group">+ Create a Group</button>
       <dialog ref={dlg} className="rs-dialog" aria-label="New group" onClick={(e) => { if (e.target === dlg.current) dlg.current?.close(); }}>
         <form className="set-form" onSubmit={(e) => { e.preventDefault(); start(async () => { setError(""); const r = await createGroup(name, ids); if (!r.ok) { setError(r.error); return; } dlg.current?.close(); setName(""); setIds([]); router.push(`/groups/${r.id}`); router.refresh(); }); }}>
           <h2 className="qh" style={{ margin: 0 }}>New group</h2>

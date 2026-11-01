@@ -63,13 +63,6 @@ export default async function SettingsPage() {
         ) : null}
         </div>
 
-        {isMember ? (
-          <section className="card-s">
-            <h2 className="qh" style={{ marginTop: 0 }}>My open hours</h2>
-            <p className="when" style={{ margin: "0 0 12px" }}>Choose when leads can book a coaching call with you.</p>
-            <Link className="btn small primary" href="/settings/availability" style={{ textDecoration: "none" }}>Set my open hours</Link>
-          </section>
-        ) : null}
 
         {badges ? (
           <section className="card-s">

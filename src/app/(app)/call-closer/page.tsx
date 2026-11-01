@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { CloserHub, type Person, type Stats } from "@/components/closer-hub/CloserHub";
 import { HireRequests, type Request } from "@/components/closers/HireRequests";
 import { totalCalls } from "@/components/chats/ProfileCard";
+import { OpenHoursCard } from "@/components/booking/OpenHoursCard";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
 import { authorsById } from "@/lib/chats/queries";
@@ -18,13 +19,27 @@ export default async function CallCloserPage() {
   const me = session.user.id;
   const { data: prof } = await supabase.from("profiles").select("call_closer").eq("id", me).maybeSingle();
   if (!(prof as { call_closer: boolean } | null)?.call_closer) redirect("/");
-  const [{ data: det }, { data: st }, { data: hires }, { data: cs }, { data: rl }] = await Promise.all([
+  const [r1, r2, r3, r4, r5] = await Promise.all([
     supabase.from("call_closer_details").select("paused, price_per_call_cents, calls_taken, close_rate").eq("member_id", me).maybeSingle(),
     supabase.rpc("closer_stats", { p_id: me }),
     supabase.from("closer_hires").select("id, member_id, calls_total, calls_used, note, status").eq("closer_id", me).in("status", ["pending", "active"]).order("created_at"),
     supabase.from("booked_calls").select("id, member_id, lead_name, starts_at, note, outcome, pay_points, pay_call_cents, pay_products_cents, pay_currency, paid_cents, paid_at").eq("closer_id", me).order("starts_at", { ascending: false }).limit(300),
     supabase.from("closer_pay_rules").select("rank_from, rank_to, kind, amount").eq("closer_id", me).order("rank_from"),
   ]);
+  const { data: det } = r1, { data: st } = r2, { data: hires } = r3, { data: cs } = r4, { data: rl } = r5;
+  const problems = [r1, r2, r3, r4, r5].flatMap((r) => (r.error ? [r.error.message] : []));
+  if (problems.length) {
+    return (
+      <>
+        <PageHeading>Call Closer</PageHeading>
+        <section className="card-s" style={{ maxWidth: 640 }}>
+          <h2 className="qh" style={{ marginTop: 0 }}>The Call Closer page could not load</h2>
+          <p style={{ margin: "0 0 10px" }}>The latest database update for this page probably has not been run yet. Please run <b>0070_closer_hub.sql</b>, then refresh.</p>
+          <p className="when" style={{ margin: 0 }} translate="no">{[...new Set(problems)].join(" · ")}</p>
+        </section>
+      </>
+    );
+  }
   const ids = ((cs ?? []) as { id: string }[]).map((c) => c.id);
   const { data: prods } = ids.length ? await supabase.from("booked_call_products").select("booked_call_id, product, qty").in("booked_call_id", ids) : { data: [] };
   const byCall = new Map<string, Record<string, number>>();
@@ -54,6 +69,7 @@ export default async function CallCloserPage() {
       <div className="stack" style={{ maxWidth: 860 }}>
         {requests.length ? <HireRequests requests={requests} /> : null}
       </div>
+      <OpenHoursCard />
       <CloserHub now={nowMs()} paused={!!d?.paused} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
     </>
   );
