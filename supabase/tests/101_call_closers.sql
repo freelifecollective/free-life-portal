@@ -75,4 +75,15 @@ do $$ begin
   perform tests.eq('the closer sees the booking', (select count(*) from public.booked_calls where lead_name = 'Zed'), 1::bigint);
   perform tests.logout();
 end $$;
+
+do $$ begin
+  perform tests.login('00000000-0000-0000-0000-0000000000a1');
+  perform public.save_my_closer_card('https://example.com/c.jpg', 'Auckland, New Zealand', '2.5 years', 'Warm and direct.');
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a5');
+  perform tests.eq('the cover card shows in the list', (select location from public.call_closers_directory() limit 1), 'Auckland, New Zealand');
+  perform tests.eq('and the bio', (select bio from public.call_closers_directory() limit 1), 'Warm and direct.');
+  perform tests.fails('only closers can edit a cover card', $q$ select public.save_my_closer_card('x', 'y', 'z', 'w') $q$, '42501');
+  perform tests.logout();
+end $$;
 rollback;

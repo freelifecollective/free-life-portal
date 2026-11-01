@@ -2,7 +2,8 @@
 
 import { useActionState, useTransition } from "react";
 import { applyAsCloser, withdrawApplication, type ApplyState } from "@/app/(app)/call-closers/actions";
-import { EXPERIENCE, type Application } from "@/lib/closers/types";
+import type { Application } from "@/lib/closers/types";
+import { CoverFields } from "./CoverFields";
 
 /** The application to become a call closer, or where it stands. */
 export function ApplyForm({ mine, isCloser }: { mine: Application | null; isCloser: boolean }) {
@@ -24,8 +25,7 @@ export function ApplyForm({ mine, isCloser }: { mine: Application | null; isClos
       <p className="when" style={{ marginTop: 0 }}>Call closers take sales calls for other affiliates&rsquo; leads. Tell us about you and an admin will review it.</p>
       {mine?.status === "declined" ? <p className="err" style={{ minHeight: 0 }}>Your last application was not accepted. You are welcome to apply again.{mine.review_note ? <><br />{`Note from the admin: ${mine.review_note}`}</> : null}</p> : null}
       <form action={action} className="set-form">
-        <div className="field"><label htmlFor="ca-exp">How much experience do you have with sales calls?</label>
-          <select id="ca-exp" name="experience" required defaultValue=""><option value="" disabled>Choose one</option>{EXPERIENCE.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}</select></div>
+        <CoverFields idPrefix="ca" />
         <div className="field"><label htmlFor="ca-calls">About how many calls have you taken? (optional)</label><input id="ca-calls" name="calls_taken" type="text" maxLength={40} placeholder="e.g. 50+" /></div>
         <div className="field"><label htmlFor="ca-avail">When are you available?</label><textarea id="ca-avail" name="availability" required maxLength={400} rows={3} placeholder="Days, times and your time zone" /></div>
         <div className="field"><label htmlFor="ca-pitch">Why would you be a great call closer?</label><textarea id="ca-pitch" name="pitch" required maxLength={1500} rows={5} placeholder="Your story, your style and what people can expect from a call with you" /></div>
