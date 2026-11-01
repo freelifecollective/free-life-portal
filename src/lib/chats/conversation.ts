@@ -12,9 +12,12 @@ type RxRow = { post_id: string; user_id: string; kind: string; created_at: strin
  */
 export async function listConversation(supabase: SupabaseClient, chat: ChatInfo, me: string, isAdmin: boolean, limit: number): Promise<{ messages: Msg[]; more: boolean }> {
   const q = (cols: string) => supabase.from("chat_posts").select(cols).eq("chat_id", chat.id).order("created_at", { ascending: false }).limit(limit + 1);
-  const first = await q("id, author_id, body, created_at, reply_to, image_url, edited_at, pinned_at");
-  const rows = first.error ? (await q("id, author_id, body, created_at, reply_to, edited_at, pinned_at")).data : first.data;   /* before the GIF update has been run */
-  const all = (rows ?? []) as unknown as { id: string; author_id: string; body: string; created_at: string; reply_to: string | null; image_url?: string | null; edited_at: string | null; pinned_at: string | null }[];
+  /* newest columns first; older databases (before the GIF or voice note updates were run) fall back */
+  let res = await q("id, author_id, body, created_at, reply_to, image_url, audio_url, audio_secs, edited_at, pinned_at");
+  if (res.error) res = await q("id, author_id, body, created_at, reply_to, image_url, edited_at, pinned_at");
+  if (res.error) res = await q("id, author_id, body, created_at, reply_to, edited_at, pinned_at");
+  const rows = res.data;
+  const all = (rows ?? []) as unknown as { id: string; author_id: string; body: string; created_at: string; reply_to: string | null; image_url?: string | null; audio_url?: string | null; audio_secs?: number | null; edited_at: string | null; pinned_at: string | null }[];
   const more = all.length > limit;
   const page = all.slice(0, limit).reverse();
   const ids = page.map((p) => p.id);
@@ -40,7 +43,7 @@ export async function listConversation(supabase: SupabaseClient, chat: ChatInfo,
     const by = new Map<string, { name: string; at: string }[]>();
     for (const r of rx) by.set(r.kind, [...(by.get(r.kind) ?? []), { name: who(r.user_id).name, at: r.created_at }]);
     return {
-      id: p.id, author: who(p.author_id), body: p.body, image_url: p.image_url, edited_at: p.edited_at, pinned: !!p.pinned_at, created_at: p.created_at, mine: p.author_id === me, canDelete: p.author_id === me || isAdmin, replyTo: quote(p.reply_to),
+      id: p.id, author: who(p.author_id), body: p.body, image_url: p.image_url, audio_url: p.audio_url, audio_secs: p.audio_secs, edited_at: p.edited_at, pinned: !!p.pinned_at, created_at: p.created_at, mine: p.author_id === me, canDelete: p.author_id === me || isAdmin, replyTo: quote(p.reply_to),
       reactions: [...by.entries()].map(([emoji, people]) => ({ emoji, count: people.length, people })).sort((a, b) => b.count - a.count),
       myReaction: rx.find((r) => r.user_id === me)?.kind ?? null,
     };

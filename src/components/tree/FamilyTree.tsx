@@ -6,6 +6,7 @@ import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
 import { TreeChart } from "./TreeChart";
+import { KEY_POSITIONS, useKeyPos } from "./useKeyPos";
 
 function find(b: Built, id: string): Built | null {
   if (b.node?.id === id) return b;
@@ -16,6 +17,7 @@ function find(b: Built, id: string): Built | null {
 export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }: { initial: TreeNode[]; ownerName: string; ownerRank: string | null; token: string | null; rootEdited: boolean }) {
   const [nodes, setNodes] = useState<TreeNode[]>(initial);
   const [top, setTop] = useState({ name: ownerName, rank: ownerRank ?? "" });
+  const [keyPos, setKeyPos] = useKeyPos();
   const [target, setTarget] = useState<DialogTarget | null>(null);
   const [tok, setTok] = useState<string | null>(token);
   const [copied, setCopied] = useState(false);
@@ -78,8 +80,12 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
 
       <div className="ft-print">
         <h2 className="ft-print-title">{`${top.name}'s organization`}</h2>
+        <div className="ft-keypos no-print" role="group" aria-label="Where the colour key sits">
+          <span className="when">Colour key:</span>
+          {KEY_POSITIONS.map((k) => <button key={k.id} type="button" className={keyPos === k.id ? "on" : ""} aria-pressed={keyPos === k.id} onClick={() => setKeyPos(k.id)}>{k.label}</button>)}
+        </div>
         <div className="ft-scroll">
-          <TreeChart ref={svg} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
+          <TreeChart ref={svg} keyPos={keyPos} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
             onPick={openEdit} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
         </div>
       </div>

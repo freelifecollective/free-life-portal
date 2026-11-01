@@ -5,16 +5,18 @@ import { UserText } from "@/components/UserText";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Avatar } from "@/components/Avatar";
+import { VoiceNote } from "@/components/voice/VoiceNote";
+import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { DmPicture } from "@/components/messages/DmPicture";
 import { EmojiPicker } from "@/components/chats/EmojiPicker";
 import { createClient } from "@/lib/supabase/client";
 
 type P = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null };
-type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url: string | null; edited_at?: string | null };
+type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url: string | null; edited_at?: string | null; audio_url?: string | null; audio_secs?: number | null };
 type Convo = { other: P; last: Dm; unread: number };
 type Win = { id: string; min: boolean };
 
-const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url, edited_at";
+const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url, edited_at, audio_url, audio_secs";
 const COLS_OLD = "id, sender_id, recipient_id, body, created_at, read_at, image_url";   /* before the edit update has been run */
 const CARD = "id, first_name, last_name, username, avatar_url";
 const MAX_WINDOWS = 3;
@@ -145,7 +147,7 @@ export function MessageDock({ me, unread }: { me: string; unread: number }) {
                   <li key={c.other.id} className={c.unread ? "unread" : ""}>
                     <button type="button" onClick={() => openChat(c.other)}>
                       <PersonTap id={c.other.id} name={name(c.other)}><Avatar url={c.other.avatar_url} initials={initials(c.other)} size={44} /></PersonTap>
-                      <span className="dock-who"><strong>{name(c.other)}</strong><span>{c.last.sender_id === me ? "You: " : ""}{c.last.body || "📷 Picture"}</span></span>
+                      <span className="dock-who"><strong>{name(c.other)}</strong><span>{c.last.sender_id === me ? "You: " : ""}{c.last.body || (c.last.audio_url ? "🎤 Voice note" : "📷 Picture")}</span></span>
                       <span className="dock-meta">{when(c.last.created_at)}{c.unread ? <i aria-label={`${c.unread} unread`} /> : null}</span>
                     </button>
                   </li>
@@ -221,6 +223,13 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
     else { await fetchThread(); onCounts(); }
   }
 
+  async function sendVoice(url: string, secs: number) {
+    setError("");
+    const { error: e } = await supabase.from("direct_messages").insert({ sender_id: me, recipient_id: other.id, body: "", audio_url: url, audio_secs: secs });
+    if (e) { setError(e.code === "42501" ? "You cannot message this person." : "We could not send that. Please try again."); return; }
+    await fetchThread(); onCounts();
+  }
+
   async function sendPicture(f: File | undefined) {
     if (!f) return;
     if (!/^image\/(jpeg|png|webp|gif)$/.test(f.type)) { setError("Please choose a JPG, PNG, WebP or GIF picture."); return; }
@@ -293,7 +302,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
                         <span className="dock-ask">Remove? <button type="button" onClick={() => void remove(m)}>Yes</button><button type="button" onClick={() => setAsking(null)}>No</button></span>
                       ) : (
                         <>
-                        {!m.image_url ? <button type="button" className="dock-del" aria-label="Edit this message" title="Edit this message" onClick={() => { setEditing(m); setText(m.body); window.setTimeout(() => field.current?.focus(), 0); }}>
+                        {!m.image_url && !m.audio_url ? <button type="button" className="dock-del" aria-label="Edit this message" title="Edit this message" onClick={() => { setEditing(m); setText(m.body); window.setTimeout(() => field.current?.focus(), 0); }}>
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
                         </button> : null}
                         <button type="button" className="dock-del" aria-label="Remove this message" title="Remove this message" onClick={() => setAsking(m.id)}>
@@ -303,6 +312,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
                       )
                     ) : null}
                     <div className={"dock-msg " + (mine ? "mine" : "theirs") + (m.image_url ? " pic" : "")}>
+                      {m.audio_url ? <VoiceNote src={m.audio_url} secs={m.audio_secs} /> : null}
                       {m.image_url ? <DmPicture src={m.image_url} onLoad={() => end.current?.scrollIntoView({ block: "end" })} /> : null}
                       {m.body ? <p><UserText text={m.body} />{m.edited_at ? <i className="dock-edited"> edited</i> : null}</p> : null}
                     </div>
@@ -339,6 +349,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
             <button type="button" className={"dock-tool" + (tray === "emoji" ? " on" : "")} aria-label="Emoji" title="Emoji" aria-expanded={tray === "emoji"} onClick={() => setTray(tray === "emoji" ? null : "emoji")}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14a4.2 4.2 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>
             </button>
+            <VoiceRecorder disabled={sending || !!editing} onSend={sendVoice} />
             <textarea ref={field} rows={1} value={text} maxLength={4000} placeholder="Aa" aria-label={`Message ${name(other)}`} autoFocus
               onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }} />
             <button type="submit" className="dock-send" disabled={!text.trim() || sending} aria-label="Send"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12 2-12 2z" /></svg></button>

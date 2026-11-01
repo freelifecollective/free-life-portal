@@ -1868,3 +1868,27 @@ html { scrollbar-gutter: stable; }
 .av-blocked-list { list-style: none; margin: 10px 0 0; padding: 0; }
 .av-blocked-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
 .av-google-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; }
+
+/* where the colour key sits on Your Organization */
+.ft-keypos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 8px; }
+.ft-keypos button { all: unset; cursor: pointer; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.ft-keypos button:hover { background: var(--tint); }
+.ft-keypos button.on { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
+@media print { .ft-keypos { display: none; } }
+
+/* order of the availability boxes: weekly hours, blocked dates, booking rules, Google Calendar */
+.av-stack { display: grid; gap: 12px; max-width: 560px; align-content: start; }
+.ch-top .av-stack { max-width: none; }
+.av-stack > .av { display: contents; }
+.av-stack .av-weekly { order: 1; }
+.av-stack .av-blocked { order: 2; }
+.av-stack .av-rulescard { order: 3; }
+.av-stack .av-google { order: 4; }
+
+/* voice notes */
+.vn { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
+.vn audio { height: 36px; width: 240px; max-width: 100%; }
+.vr-live { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; padding: 0 4px; white-space: nowrap; }
+.vr-dot { width: 10px; height: 10px; border-radius: 50%; background: #d92d20; animation: vr-pulse 1.1s ease-in-out infinite; }
+@keyframes vr-pulse { 50% { opacity: .25; } }
+.vr-err { font-size: 12px; margin-left: 6px; max-width: 200px; }

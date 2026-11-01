@@ -105,15 +105,19 @@ export async function markSeen(postIds: string[]): Promise<void> {
 /** Sends a message in a conversation chat, optionally quoting an earlier message. */
 const GIF = /^https:\/\/media\d*\.giphy\.com\//;
 
-export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null, image: string | null = null): Promise<Result> {
+const VOICE = /^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/voice-notes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(webm|m4a|ogg)$/i;
+export type Voice = { url: string; secs: number };
+
+export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null, image: string | null = null, voice: Voice | null = null): Promise<Result> {
   if (image && !GIF.test(image)) return { ok: false, error: "That GIF did not work." };
-  const text = image ? "GIF" : String(body ?? "").trim();
+  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 600))) return { ok: false, error: "That voice note did not work." };
+  const text = voice ? "Voice note" : image ? "GIF" : String(body ?? "").trim();
   if (!UUID.test(chatId) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };
   if (text.length > POST_MAX) return { ok: false, error: `Please keep messages under ${POST_MAX} characters.` };
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
-  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: text, ...(image ? { image_url: image } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
+  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: text, ...(image ? { image_url: image } : {}), ...(voice ? { audio_url: voice.url, audio_secs: Math.round(voice.secs) } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
   if (error) return { ok: false, error: "We could not send that. Please try again." };
   refresh(slug);
   return { ok: true };
