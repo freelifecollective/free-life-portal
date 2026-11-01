@@ -1646,9 +1646,9 @@ html { scrollbar-gutter: stable; }
 
 /* Call closer hub */
 .ch { margin-top: 16px; }
-.ch-top { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(260px, 1fr); gap: 18px; align-items: start; }
-.ch-top .av-card { padding: 18px 22px; }
-.ch-top .av-list li { padding: 11px 0; font-size: 15px; }
+.ch-top { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.ch-top .av-card { padding: 16px 18px; }
+.ch-top .av-list li { padding: 9px 0; font-size: 14.5px; }
 .ch-top .av-rules select, .ch-top .av-rules label { font-size: 14.5px; }
 .ch-top .av-rules select { padding: 9px 10px; }
 .ch-side { display: grid; gap: 14px; min-width: 0; }
@@ -1661,9 +1661,9 @@ html { scrollbar-gutter: stable; }
 .ch-ask button { all: unset; cursor: pointer; color: var(--accent-deep); text-decoration: underline; }
 .ch-top .av { max-width: none; }
 @media (max-width: 900px) { .ch-top { grid-template-columns: minmax(0, 1fr); } }
-.ch-pause { display: grid; gap: 8px; padding: 14px 16px; }
+.ch-pause { display: grid; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--tint); }
 .ch-pause p { font-size: 13px; }
-.ch-pause .btn { justify-self: start; padding: 8px 16px; min-height: 0; font-size: 13px; }
+.ch-pause .btn { justify-self: start; }
 .ch-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
 .ch-stats p { margin: 0; display: grid; gap: 2px; padding: 12px; border-radius: 14px; background: var(--tint); }
 .ch-stats b { font-family: var(--font-display); font-size: 26px; }

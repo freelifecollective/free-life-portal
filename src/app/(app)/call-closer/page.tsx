@@ -70,7 +70,7 @@ export default async function CallCloserPage() {
       <div className="stack" style={{ maxWidth: 860 }}>
         {requests.some((r) => r.status === "pending") ? <HireRequests requests={requests} /> : null}
       </div>
-      <CloserHub clients={<ClientList clients={requests.filter((r) => r.status === "active")} />} availability={<AvailabilityPanel supabase={supabase} userId={me} />} now={nowMs()} paused={!!d?.paused} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
+      <CloserHub clients={<ClientList paused={!!d?.paused} clients={requests.filter((r) => r.status === "active")} />} availability={<AvailabilityPanel supabase={supabase} userId={me} />} now={nowMs()} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
     </>
   );
 }
