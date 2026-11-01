@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { CloserHub, type Person, type Stats } from "@/components/closer-hub/CloserHub";
+import { ClientList } from "@/components/closer-hub/ClientList";
 import { HireRequests, type Request } from "@/components/closers/HireRequests";
 import { totalCalls } from "@/lib/closer/total";
 import { AvailabilityPanel } from "@/components/booking/AvailabilityPanel";
@@ -67,9 +68,9 @@ export default async function CallCloserPage() {
     <>
       <PageHeading lede="Your clients, your calls, what you are owed and how you are doing.">Call Closer</PageHeading>
       <div className="stack" style={{ maxWidth: 860 }}>
-        {requests.length ? <HireRequests requests={requests} /> : null}
+        {requests.some((r) => r.status === "pending") ? <HireRequests requests={requests} /> : null}
       </div>
-      <CloserHub availability={<AvailabilityPanel supabase={supabase} userId={me} />} now={nowMs()} paused={!!d?.paused} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
+      <CloserHub clients={<ClientList clients={requests.filter((r) => r.status === "active")} />} availability={<AvailabilityPanel supabase={supabase} userId={me} />} now={nowMs()} paused={!!d?.paused} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
     </>
   );
 }

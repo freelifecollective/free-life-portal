@@ -40,7 +40,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
     pendingFeedback = ((pf ?? []) as { call_id: string; title: string }[]);
     badges["/messages"] = await unreadMessageCount(db);
     {
-      const [{ data: cu }, { data: go }] = await Promise.all([db.rpc("chat_unreads"), session.profile.role !== "lead" ? db.rpc("group_overview") : Promise.resolve({ data: [] })]);
+      const [{ data: cu }, { data: go }] = await Promise.all([db.rpc("chat_unreads"), db.rpc("group_overview")]);
       const total = ((cu ?? []) as { unread: number }[]).reduce((a, r) => a + r.unread, 0) + ((go ?? []) as { unread: number }[]).reduce((a, r) => a + r.unread, 0);
       if (total > 0) badges["/chats"] = total;
     }

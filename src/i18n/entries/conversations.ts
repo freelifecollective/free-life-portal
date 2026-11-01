@@ -106,4 +106,9 @@ export const conversations: readonly Entry[] = [
   ["No limit", "Sin límite", "Sans limite", "Nessun limite", "Kein Limit"],
   ["None", "Ninguno", "Aucun", "Nessuno", "Keine"],
   ["No notice", "Sin aviso", "Aucun préavis", "Nessun preavviso", "Keine Vorlaufzeit"],
+  ["Current clients", "Clientes actuales", "Clients actuels", "Clienti attuali", "Aktuelle Kunden"],
+  ["Let go", "Dejar ir", "Laisser partir", "Lascia andare", "Gehen lassen"],
+  ["Let go?", "¿Dejar ir?", "Laisser partir ?", "Lasciare andare?", "Gehen lassen?"],
+  ["No clients right now. When someone hires you and you accept, they show up here.", "Ahora no hay clientes. Cuando alguien te contrate y aceptes, aparecerá aquí.", "Pas de clients pour l'instant. Quand quelqu'un t'engage et que tu acceptes, il apparaît ici.", "Nessun cliente al momento. Quando qualcuno ti assume e accetti, appare qui.", "Im Moment keine Kunden. Wenn dich jemand bucht und du annimmst, erscheint er hier."],
+  ["New member", "Nuevo miembro", "Nouveau membre", "Nuovo membro", "Neues Mitglied"],
 ];

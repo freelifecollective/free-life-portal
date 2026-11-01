@@ -49,7 +49,7 @@ do $$ declare g uuid; m1 uuid; m2 uuid; cid uuid; p1 uuid; p2 uuid; n int; begin
   perform tests.eq('deleting the quoted message keeps the reply', (select count(*) from public.chat_posts where id = p2 and reply_to is null), 1::bigint);
   -- groups
   g := public.create_group('Team Spain', array['00000000-0000-0000-0000-0000000000a5'::uuid, '00000000-0000-0000-0000-0000000000a3'::uuid]);
-  perform tests.eq('the creator and an affiliate are in; a lead is not', (select count(*) from public.group_members where group_id = g), 2::bigint);
+  perform tests.eq('the creator, an affiliate and a lead are in', (select count(*) from public.group_members where group_id = g), 3::bigint);
   perform tests.eq('the creator owns it', public.is_group_owner(g), true);
   insert into public.group_messages (group_id, author_id, body) values (g, '00000000-0000-0000-0000-0000000000a1', 'Welcome!') returning id into m1;
   insert into public.group_messages (group_id, author_id, body, reply_to) values (g, '00000000-0000-0000-0000-0000000000a1', 'Thanks all', m1) returning id into m2;
@@ -76,17 +76,17 @@ do $$ declare g uuid; m1 uuid; m2 uuid; cid uuid; p1 uuid; p2 uuid; n int; begin
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
   perform public.add_group_members(g, array['00000000-0000-0000-0000-0000000000a4'::uuid]);
-  perform tests.eq('the owner can add someone', (select count(*) from public.group_members where group_id = g), 3::bigint);
+  perform tests.eq('the owner can add someone', (select count(*) from public.group_members where group_id = g), 4::bigint);
   perform public.rename_group(g, 'Team Spain & Italy');
   perform tests.eq('and rename it', (select name from public.group_chats where id = g), 'Team Spain & Italy');
   perform public.remove_group_member(g, '00000000-0000-0000-0000-0000000000a4');
-  perform tests.eq('and remove someone', (select count(*) from public.group_members where group_id = g), 2::bigint);
+  perform tests.eq('and remove someone', (select count(*) from public.group_members where group_id = g), 3::bigint);
   perform public.remove_group_member(g, '00000000-0000-0000-0000-0000000000a1');
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a5');
   perform tests.eq('when the owner leaves the next member takes over', public.is_group_owner(g), true);
   perform public.remove_group_member(g, '00000000-0000-0000-0000-0000000000a5');
-  perform tests.eq('and an empty group disappears', (select count(*) from public.group_chats where id = g), 0::bigint);
+  perform tests.eq('a group with only a lead left is deleted', (select count(*) from public.group_chats where id = g), 0::bigint);
   perform tests.logout();
 end $$;
 rollback;
