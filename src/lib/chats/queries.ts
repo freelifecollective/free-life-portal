@@ -34,17 +34,25 @@ export async function authorsById(supabase: SupabaseClient, ids: string[]): Prom
 
 /** Newest first. Comments, reactions and votes are fetched in one go for just these posts. */
 export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: string, limit: number, pinned = false): Promise<{ posts: PostView[]; more: boolean }> {
-  const base = supabase.from("chat_posts").select("id, author_id, body, created_at, edited_at, pinned_at").eq("chat_id", chat.id);
-  const { data: rows } = await (pinned
-    ? base.not("pinned_at", "is", null).order("pinned_at", { ascending: false }).limit(10)
-    : base.is("pinned_at", null).order("created_at", { ascending: false }).limit(limit + 1));
-  const all = rows ?? [];
+  const read = (cols: string) => {
+    const base = supabase.from("chat_posts").select(cols).eq("chat_id", chat.id);
+    return pinned
+      ? base.not("pinned_at", "is", null).order("pinned_at", { ascending: false }).limit(10)
+      : base.is("pinned_at", null).order("created_at", { ascending: false }).limit(limit + 1);
+  };
+  /* before the voice note update has been run, the voice columns are not there yet */
+  const res = await read("id, author_id, body, created_at, edited_at, pinned_at, audio_url, audio_secs");
+  const { data: rows } = res.error ? await read("id, author_id, body, created_at, edited_at, pinned_at") : res;
+  const all = (rows ?? []) as unknown as { id: string; author_id: string; body: string; created_at: string; edited_at: string | null; pinned_at: string | null; audio_url?: string | null; audio_secs?: number | null }[];
   const more = all.length > limit;
   const page = all.slice(0, limit);
   const ids = page.map((p) => p.id);
   const [{ data: comments }, { data: reactions }, { data: votes }, { data: viewRows }] = ids.length
     ? await Promise.all([
-        supabase.from("chat_comments").select("id, post_id, author_id, body, created_at").in("post_id", ids).order("created_at"),
+        (async () => {
+          const withVoice = await supabase.from("chat_comments").select("id, post_id, author_id, body, created_at, audio_url, audio_secs").in("post_id", ids).order("created_at");
+          return withVoice.error ? supabase.from("chat_comments").select("id, post_id, author_id, body, created_at").in("post_id", ids).order("created_at") : withVoice;
+        })(),
         supabase.from("chat_reactions").select("post_id, user_id, kind, created_at").in("post_id", ids),
         chat.votes_on ? supabase.from("chat_votes").select("post_id, user_id").in("post_id", ids) : Promise.resolve({ data: [] }),
         chat.show_views ? supabase.rpc("post_view_counts", { p_posts: ids }) : Promise.resolve({ data: [] }),
@@ -57,8 +65,8 @@ export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: st
     const rx = (reactions ?? []).filter((r) => r.post_id === p.id);
     const vs = (votes ?? []).filter((v) => v.post_id === p.id);
     return {
-      id: p.id, author: who(p.author_id), body: p.body, created_at: p.created_at, edited: !!p.edited_at, pinned: !!p.pinned_at, mine: p.author_id === me,
-      comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({ id: c.id, author: who(c.author_id), body: c.body, created_at: c.created_at, mine: c.author_id === me })),
+      id: p.id, author: who(p.author_id), body: p.body, created_at: p.created_at, edited: !!p.edited_at, audio_url: p.audio_url, audio_secs: p.audio_secs, pinned: !!p.pinned_at, mine: p.author_id === me,
+      comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({ id: c.id, author: who(c.author_id), body: c.body, created_at: c.created_at, mine: c.author_id === me, audio_url: (c as { audio_url?: string | null }).audio_url, audio_secs: (c as { audio_secs?: number | null }).audio_secs })),
       reactions: summarize(rx, who), myReaction: rx.find((x) => x.user_id === me)?.kind ?? null,
       votes: vs.length, voted: vs.some((v) => v.user_id === me),
       views: ((viewRows ?? []) as { post_id: string; views: number }[]).find((v) => v.post_id === p.id)?.views ?? 0,

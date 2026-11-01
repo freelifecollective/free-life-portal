@@ -2,8 +2,9 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AttachButton } from "@/components/attach/AttachButton";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
-import { sendMessage, sendVoiceMessage, type MessageState } from "@/app/(app)/messages/actions";
+import { sendFileMessage, sendMessage, sendVoiceMessage, type MessageState } from "@/app/(app)/messages/actions";
 
 export function MessageComposer({ otherId, draft = "" }: { otherId: string; draft?: string }) {
   const [state, action, pending] = useActionState(sendMessage.bind(null, otherId), { error: "" } as MessageState);
@@ -17,6 +18,7 @@ export function MessageComposer({ otherId, draft = "" }: { otherId: string; draf
       <textarea id="dm-body" name="body" rows={3} maxLength={4000} placeholder="Write a message…" defaultValue={draft} required />
       <div className="composer-row">
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <AttachButton onPick={async (a) => { setVoiceError(""); const r = await sendFileMessage(otherId, a); if (!r.ok) setVoiceError(r.error ?? "That did not work."); else router.refresh(); }} />
           <VoiceRecorder onSend={async (url, secs) => { setVoiceError(""); const r = await sendVoiceMessage(otherId, url, secs); if (!r.ok) setVoiceError(r.error ?? "That did not work."); else router.refresh(); }} />
           <p className="err" role="alert" style={{ minHeight: 0, margin: 0 }}>{state.error || voiceError}</p>
         </span>

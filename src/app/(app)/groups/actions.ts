@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
+import { validAttach, type Attach } from "@/lib/chats/attach";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX = 4000;
@@ -61,16 +62,17 @@ export async function renameGroup(group: string, name: string): Promise<R> {
 
 const VOICE = /^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/voice-notes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(webm|m4a|ogg)$/i;
 
-export async function sendGroupMessage(group: string, body: string, replyTo: string | null, image: string | null = null, voice: { url: string; secs: number } | null = null): Promise<R> {
+export async function sendGroupMessage(group: string, body: string, replyTo: string | null, image: string | null = null, voice: { url: string; secs: number } | null = null, attach: Attach | null = null): Promise<R> {
+  if (attach && !validAttach(attach)) return { ok: false, error: "That file did not work." };
   if (image && !/^https:\/\/media\d*\.giphy\.com\//.test(image)) return { ok: false, error: "That GIF did not work." };
-  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 600))) return { ok: false, error: "That voice note did not work." };
-  const text = voice ? "Voice note" : image ? "GIF" : String(body ?? "").trim();
+  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 900))) return { ok: false, error: "That voice note did not work." };
+  const text = voice ? "Voice note" : image ? "GIF" : attach ? "Attachment" : String(body ?? "").trim();
   if (!UUID.test(group) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };
   if (text.length > MAX) return { ok: false, error: `Please keep messages under ${MAX} characters.` };
   const c = await db(true);
   if (!c) return { ok: false, error: "Private groups are for affiliates." };
-  const { error } = await c.supabase.from("group_messages").insert({ group_id: group, author_id: c.me, body: text, ...(image ? { image_url: image } : {}), ...(voice ? { audio_url: voice.url, audio_secs: Math.round(voice.secs) } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
+  const { error } = await c.supabase.from("group_messages").insert({ group_id: group, author_id: c.me, body: text, ...(image ? { image_url: image } : {}), ...(voice ? { audio_url: voice.url, audio_secs: Math.round(voice.secs) } : {}), ...(attach ? { attach_url: attach.url, attach_name: attach.name, attach_type: attach.type, attach_size: attach.size } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
   if (error) return { ok: false, error: "We could not send that. Please try again." };
   revalidatePath(`/groups/${group}`);
   return { ok: true };

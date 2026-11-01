@@ -40,7 +40,9 @@ do $$ declare ch uuid; g uuid := '00000000-0000-0000-0000-00000000f001'; good te
   insert into public.chat_posts (chat_id, author_id, body, audio_url, audio_secs) values (ch, '00000000-0000-0000-0000-0000000000a1', 'Voice note', good, 12);
   perform tests.eq('a voice note in a chat', (select count(*) from public.chat_posts where audio_url = good), 1::bigint);
   perform tests.fails('a link to somewhere else is refused', format('insert into public.chat_posts (chat_id, author_id, body, audio_url, audio_secs) values (%L, %L, %L, %L, 5)', ch, '00000000-0000-0000-0000-0000000000a1', 'Voice note', 'https://evil.example/x.webm'), '23514');
-  perform tests.fails('a recording over ten minutes is refused', format('insert into public.chat_posts (chat_id, author_id, body, audio_url, audio_secs) values (%L, %L, %L, %L, 601)', ch, '00000000-0000-0000-0000-0000000000a1', 'Voice note', good), '23514');
+  perform tests.fails('a recording over 15 minutes is refused', format('insert into public.chat_posts (chat_id, author_id, body, audio_url, audio_secs) values (%L, %L, %L, %L, 901)', ch, '00000000-0000-0000-0000-0000000000a1', 'Voice note', good), '23514');
+  insert into public.chat_posts (chat_id, author_id, body, audio_url, audio_secs) values (ch, '00000000-0000-0000-0000-0000000000a1', 'Voice note', good, 840);
+  perform tests.eq('a 14 minute voice note is fine', (select count(*) from public.chat_posts where audio_secs = 840), 1::bigint);
   insert into public.group_chats (id, name, created_by) values (g, 'Crew', '00000000-0000-0000-0000-0000000000a1');
   insert into public.group_members (group_id, user_id, role) values (g, '00000000-0000-0000-0000-0000000000a1', 'owner');
   insert into public.group_messages (group_id, author_id, body, audio_url, audio_secs) values (g, '00000000-0000-0000-0000-0000000000a1', 'Voice note', good, 30);

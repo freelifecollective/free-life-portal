@@ -30,15 +30,16 @@ export default async function GroupPage(props: PageProps<"/groups/[id]">) {
   const [side, { data: mem }, first] = await Promise.all([
     loadSidebar(supabase),
     supabase.from("group_members").select("user_id, role").eq("group_id", id),
-    gq("id, author_id, body, reply_to, created_at, image_url, audio_url, audio_secs, edited_at"),
+    gq("id, author_id, body, reply_to, created_at, image_url, audio_url, audio_secs, attach_url, attach_name, attach_type, attach_size, forwarded_from, edited_at"),
   ]);
   /* older databases (before the voice note, edit or GIF updates were run) fall back to fewer columns */
   let res = first;
+  if (res.error) res = await gq("id, author_id, body, reply_to, created_at, image_url, audio_url, audio_secs, edited_at");
   if (res.error) res = await gq("id, author_id, body, reply_to, created_at, image_url, edited_at");
   if (res.error) res = await gq("id, author_id, body, reply_to, created_at");
   const rows = res.data;
   const members = (mem ?? []) as { user_id: string; role: string }[];
-  const all = (rows ?? []) as unknown as { id: string; author_id: string | null; body: string; reply_to: string | null; created_at: string; image_url?: string | null; audio_url?: string | null; audio_secs?: number | null; edited_at?: string | null }[];
+  const all = (rows ?? []) as unknown as { id: string; author_id: string | null; body: string; reply_to: string | null; created_at: string; image_url?: string | null; audio_url?: string | null; audio_secs?: number | null; attach_url?: string | null; attach_name?: string | null; attach_type?: string | null; attach_size?: number | null; forwarded_from?: string | null; edited_at?: string | null }[];
   const more = all.length > limit;
   const page = all.slice(0, limit).reverse();
   const authors = await authorsById(supabase, [...members.map((m) => m.user_id), ...page.map((m) => m.author_id).filter((x): x is string => !!x)]);
@@ -47,7 +48,7 @@ export default async function GroupPage(props: PageProps<"/groups/[id]">) {
   const isOwner = members.some((m) => m.user_id === me && m.role === "owner");
   const messages: Msg[] = page.map((m) => {
     const q = m.reply_to ? byId.get(m.reply_to) : null;
-    return { id: m.id, author: who(m.author_id), body: m.body, image_url: m.image_url, audio_url: m.audio_url, audio_secs: m.audio_secs, edited_at: m.edited_at, created_at: m.created_at, mine: m.author_id === me, canDelete: m.author_id === me || isOwner, replyTo: q ? { id: q.id, name: who(q.author_id).name, body: q.body } : null };
+    return { id: m.id, author: who(m.author_id), body: m.body, image_url: m.image_url, audio_url: m.audio_url, audio_secs: m.audio_secs, attach_url: m.attach_url, attach_name: m.attach_name, attach_type: m.attach_type, attach_size: m.attach_size, forwarded_from: m.forwarded_from, edited_at: m.edited_at, created_at: m.created_at, mine: m.author_id === me, canDelete: m.author_id === me || isOwner, replyTo: q ? { id: q.id, name: who(q.author_id).name, body: q.body } : null };
   });
   await attachReaders(supabase, "group", id, messages);
   const list: GroupMember[] = members.map((m) => ({ id: m.user_id, name: who(m.user_id).name, avatar_url: who(m.user_id).avatar_url, owner: m.role === "owner" }));
@@ -62,7 +63,7 @@ export default async function GroupPage(props: PageProps<"/groups/[id]">) {
       <div className="chat-main">
         <LiveRefresh tables={["group_messages", "group_members"]} />
         <MarkRead groupId={id} lastId={messages[messages.length - 1]?.id ?? null} unread={unread} />
-        <ConversationView messages={messages} kind="group" targetId={id} canPost placeholder="Write a message…" basePath={`/groups/${id}`} jumpTo={typeof sp.jump === "string" ? sp.jump : undefined} moreHref={more ? `/groups/${id}?limit=${limit + PAGE}` : undefined} nowIso={new Date().toISOString()} />
+        <ConversationView me={me} messages={messages} kind="group" targetId={id} canPost placeholder="Write a message…" basePath={`/groups/${id}`} jumpTo={typeof sp.jump === "string" ? sp.jump : undefined} moreHref={more ? `/groups/${id}?limit=${limit + PAGE}` : undefined} nowIso={new Date().toISOString()} />
       </div>
     </div>
   );

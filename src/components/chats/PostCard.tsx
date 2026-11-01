@@ -2,9 +2,12 @@
 
 import { PersonLink } from "@/components/people/ProfilePopup";
 import { useActionState, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
-import { addComment, deleteComment, deletePost, pinPost, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
+import { useRouter } from "next/navigation";
+import { addComment, deleteComment, deletePost, pinPost, replyVoice, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
 import { Avatar } from "@/components/Avatar";
 import { UserText } from "@/components/UserText";
+import { VoiceNote } from "@/components/voice/VoiceNote";
+import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { COMMENT_MAX, type Author, type PostView } from "@/lib/chats/types";
 import { Reactions } from "./Reactions";
 import { formatInZone } from "@/lib/time";
@@ -22,12 +25,14 @@ function Who({ a, size = 40 }: { a: Author; size?: number }) {
 function CommentForm({ postId, slug }: { postId: string; slug: string }) {
   const [state, action, pending] = useActionState(addComment.bind(null, postId, slug), { error: "" } as ChatFormState);
   const form = useRef<HTMLFormElement>(null);
+  const router = useRouter();
   useEffect(() => { if (state.sent) form.current?.reset(); }, [state.sent]);
   return (
     <form ref={form} action={action} className="comment-form">
       <label className="sr-only" htmlFor={`c-${postId}`}>Reply</label>
       <input id={`c-${postId}`} name="body" type="text" maxLength={COMMENT_MAX} placeholder="Write a reply…" required />
       <button className="btn small" type="submit" disabled={pending}>Reply</button>
+      <VoiceRecorder onSend={async (url, secs) => { const r = await replyVoice(postId, slug, url, secs); if (r.ok) router.refresh(); }} />
       {state.error ? <p className="err" role="alert" style={{ minHeight: 0, margin: 0, flexBasis: "100%" }}>{state.error}</p> : null}
     </form>
   );
@@ -50,7 +55,8 @@ export function PostCard({ post, slug, voting, isAdmin, canReply = true, showVie
         <Who a={post.author} />
         <span className="when-wrap"><When iso={post.created_at} />{post.edited ? " (edited)" : ""}</span>
       </header>
-      <p className="post-body"><UserText text={post.body} /></p>
+      {post.audio_url ? <p className="post-body"><VoiceNote src={post.audio_url} secs={post.audio_secs} /></p> : null}
+      {post.audio_url && post.body === "Voice note" ? null : <p className="post-body"><UserText text={post.body} /></p>}
       <div className="post-actions">
         <Reactions postId={post.id} slug={slug} reactions={post.reactions} mine={post.myReaction} onError={setError} />
         {voting && !post.mine ? (
@@ -72,7 +78,8 @@ export function PostCard({ post, slug, voting, isAdmin, canReply = true, showVie
           {post.comments.map((c) => (
             <li key={c.id}>
               <Who a={c.author} size={28} /> <When iso={c.created_at} />
-              <p><UserText text={c.body} /></p>
+              {c.audio_url ? <p><VoiceNote src={c.audio_url} secs={c.audio_secs} /></p> : null}
+              {c.audio_url && c.body === "Voice note" ? null : <p><UserText text={c.body} /></p>}
               {c.mine || isAdmin ? <button type="button" className="linkbtn danger" onClick={() => run(() => deleteComment(c.id, slug))}>Delete</button> : null}
             </li>
           ))}

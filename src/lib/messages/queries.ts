@@ -1,11 +1,11 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url?: string | null; edited_at?: string | null; audio_url?: string | null; audio_secs?: number | null };
+export type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url?: string | null; edited_at?: string | null; audio_url?: string | null; audio_secs?: number | null; attach_url?: string | null; attach_name?: string | null; attach_type?: string | null; attach_size?: number | null; forwarded_from?: string | null };
 export type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null; is_admin: boolean };
 export type Conversation = { other: Person; last: Dm; unread: number; preview: Dm[] };
 
-const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url, edited_at, audio_url, audio_secs";
+const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url, edited_at, audio_url, audio_secs, attach_url, attach_name, attach_type, attach_size, forwarded_from";
 const COLS_OLD = "id, sender_id, recipient_id, body, created_at, read_at, image_url";   /* before the edit update has been run */
 export const fullName = (p: Pick<Person, "first_name" | "last_name">) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "Member";
 

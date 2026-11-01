@@ -10,6 +10,11 @@ export type Msg = {
   canDelete: boolean;
   /** an older reply from before chats became conversations: it can be read and deleted but not reacted to */
   legacy?: boolean;
+  attach_url?: string | null;
+  attach_name?: string | null;
+  attach_type?: string | null;
+  attach_size?: number | null;
+  forwarded_from?: string | null;
   audio_url?: string | null;
   audio_secs?: number | null;
   edited_at?: string | null;
