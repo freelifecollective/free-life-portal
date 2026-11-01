@@ -25,9 +25,9 @@ function lines(label: string, max: number): string[] {
 
 /** The organization chart. You are the top box; every box has a left and a right side, and its colour tells the rank (or that it is one of your own accounts). */
 export const TreeChart = forwardRef<SVGSVGElement, {
-  nodes: TreeNode[]; ownerName: string; ownerRank?: string | null; keyPos?: KeyPos; leftLabel: string; rightLabel: string;
+  nodes: TreeNode[]; ownerName: string; ownerRank?: string | null; keyPos?: KeyPos; availW?: number; leftLabel: string; rightLabel: string;
   onPick?: (id: string) => void; onPickRoot?: () => void; onAdd?: (parentId: string | null, side: Side) => void;
-}>(function TreeChart({ nodes, ownerName, ownerRank, keyPos = "left", leftLabel, rightLabel, onPick, onPickRoot, onAdd }, ref) {
+}>(function TreeChart({ nodes, ownerName, ownerRank, keyPos = "left", availW = 0, leftLabel, rightLabel, onPick, onPickRoot, onAdd }, ref) {
   const laid = useMemo(() => layoutTree(buildTree(nodes)), [nodes]);
   const R = laid.r;
   const pos = new Map(laid.placed.map((p) => [p.key, p]));
@@ -48,14 +48,18 @@ export const TreeChart = forwardRef<SVGSVGElement, {
   const vertical = keyPos === "left" || keyPos === "right";
   const chartH = laid.height - R * 0.6;
   const sideW = vertical ? colW + 28 : 0, bandH = vertical ? 0 : 38;
-  const W = Math.max(laid.width + sideW, (vertical ? 0 : rowW + 40), 460);
+  const W = Math.max(laid.width + sideW, (vertical ? 0 : rowW + 40), 460, availW);
   const H = Math.max(chartH + bandH, vertical ? colH + 32 : 0);
   const shift = (W - sideW - laid.width) / 2 + (keyPos === "left" ? sideW : 0);
   const chartY = keyPos === "top" ? bandH : 0;
-  const keyX = keyPos === "left" ? 14 : keyPos === "right" ? W - colW - 14 : (W - rowW) / 2;
-  const keyY = keyPos === "bottom" ? chartH + 10 : keyPos === "top" ? 12 : 16;
+  /* the key hugs its edge of the white space and its colours are spread out to fill it */
+  const n = keyItems.length;
+  const vgap = vertical ? Math.min(84, Math.max(22, (H - 64) / (n - 1))) : 22;
+  const hgap = vertical ? gap : Math.max(gap, (W - 56 - keyItems.reduce((t, k) => t + itemW(k.label), 0)) / (n - 1));
+  const keyX = keyPos === "left" ? 18 : keyPos === "right" ? W - colW - 18 : 28;
+  const keyY = keyPos === "bottom" ? chartH + 10 : keyPos === "top" ? 12 : 28;
   const bw = R * 2.7, bh = R * 1.5;
-  const fs = Math.max(11, R * 0.3), maxChars = Math.max(9, Math.round(bw / (fs * 0.5)));
+  const fs = Math.max(11, R * 0.3), maxChars = Math.max(9, Math.round(bw / (fs * 0.62)));
   const key = (e: React.KeyboardEvent, fn: () => void) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } };
   /* straight lines with square corners: down from the parent, across, down into the child */
   const elbow = (px: number, py: number, cx: number, cy: number) => { const midY = py + (cy - py) / 2; return `M ${px} ${py} V ${midY} H ${cx} V ${cy}`; };
@@ -63,8 +67,8 @@ export const TreeChart = forwardRef<SVGSVGElement, {
     <svg ref={ref} width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={ownerName} className="ft-svg">
       <g aria-hidden="true" transform={`translate(${keyX}, ${keyY})`}>
         {keyItems.map((k, i) => {
-          const x = vertical ? 0 : keyItems.slice(0, i).reduce((n, m) => n + itemW(m.label) + gap, 0);
-          const y = vertical ? i * 22 : 0;
+          const x = vertical ? 0 : keyItems.slice(0, i).reduce((t, m) => t + itemW(m.label) + hgap, 0);
+          const y = vertical ? i * vgap : 0;
           return (
             <g key={k.sw.key} transform={`translate(${x}, ${y})`}>
               <rect x={0} y={0} width={16} height={12} rx={3} fill={k.sw.fill} stroke={k.sw.stroke} strokeWidth={1.5} />
