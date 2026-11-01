@@ -1,3 +1,4 @@
+import { UserText } from "@/components/UserText";
 import { Suspense } from "react";
 import { PageHeading } from "@/components/PageHeading";
 import { RegisterForm } from "@/components/RegisterForm";
@@ -35,9 +36,9 @@ async function Content({ params }: { params: PageProps<"/register/[callId]">["pa
   }
   return (
     <Shell>
-      <PageHeading lede={`${formatInZone(new Date(call.starts_at))} · ${callLength(call)}`}>{call.title}</PageHeading>
+      <PageHeading lede={`${formatInZone(new Date(call.starts_at))} · ${callLength(call)}`}><UserText text={call.title} publicCall={{ id: call.id, field: "title" }} /></PageHeading>
       <p style={{ marginTop: -16 }}><LocalTime iso={call.starts_at} /></p>
-      {call.description ? <p className="call-desc" style={{ marginBottom: 28 }}>{call.description}</p> : null}
+      {call.description ? <p className="call-desc" style={{ marginBottom: 28 }}><UserText text={call.description} publicCall={{ id: call.id, field: "description" }} /></p> : null}
       <RegisterForm callId={call.id} />
     </Shell>
   );

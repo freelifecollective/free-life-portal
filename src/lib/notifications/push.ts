@@ -1,6 +1,7 @@
 import "server-only";
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { translateFor } from "@/i18n/server";
 
 const PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 const PRIVATE = process.env.VAPID_PRIVATE_KEY ?? "";
@@ -20,10 +21,12 @@ export async function sendPushForNotifications(ids: string[]): Promise<number> {
   const list = (rows ?? []) as Row[];
   if (list.length === 0) return 0;
   const users = [...new Set(list.map((r) => r.user_id))];
-  const [{ data: subs }, { data: unread }] = await Promise.all([
+  const [{ data: subs }, { data: unread }, { data: langs }] = await Promise.all([
     db.from("push_subscriptions").select("id, user_id, endpoint, p256dh, auth").in("user_id", users),
     db.from("notifications").select("user_id").in("user_id", users).is("read_at", null),
+    db.from("profiles").select("id, lang").in("id", users),
   ]);
+  const langOf = new Map((langs ?? []).map((p: { id: string; lang: string | null }) => [p.id, p.lang]));
   const counts = new Map<string, number>();
   for (const u of unread ?? []) counts.set(u.user_id, (counts.get(u.user_id) ?? 0) + 1);
 
@@ -33,7 +36,7 @@ export async function sendPushForNotifications(ids: string[]): Promise<number> {
     try {
       await webpush.sendNotification(
         { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-        JSON.stringify({ title: n.title, body: n.body ?? "", url: n.url ?? "/notifications", badge: counts.get(n.user_id) ?? 1, tag: n.id }),
+        JSON.stringify({ title: translateFor(langOf.get(n.user_id), n.title) ?? n.title, body: translateFor(langOf.get(n.user_id), n.body) ?? "", url: n.url ?? "/notifications", badge: counts.get(n.user_id) ?? 1, tag: n.id }),
         { TTL: 60 * 60 * 24 },
       );
       sent++;

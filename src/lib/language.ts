@@ -25,5 +25,7 @@ export function currentLang(): LangCode {
 export function setLanguage(code: LangCode) {
   try { localStorage.setItem(KEY, code); } catch { /* fine */ }
   try { document.cookie = `flc_lang=${code}; path=/; max-age=31536000; samesite=lax`; } catch { /* fine */ }
-  location.reload();
+  /* tell the portal too (when signed in), so phone banners come in this language; the page reloads either way */
+  fetch("/api/language", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lang: code }), keepalive: true })
+    .catch(() => {}).finally(() => location.reload());
 }

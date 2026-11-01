@@ -1,3 +1,4 @@
+import { UserText } from "@/components/UserText";
 import { Avatar } from "@/components/Avatar";
 import { LocalTime } from "@/components/calendar/LocalTime";
 import { callLength } from "@/lib/calls/length";
@@ -66,10 +67,10 @@ export function LandingPage({ page, call, owner }: { page: PublicLanding; call: 
             <h2>{T.join.title}</h2>
             {call ? (
               <>
-                <p className="lp-call-title">{call.title}</p>
+                <p className="lp-call-title"><UserText text={call.title} publicCall={{ id: call.id, field: "title" }} /></p>
                 <p className="lp-call-time">{formatInZone(new Date(call.starts_at))} · {callLength(call)} <LocalTime iso={call.starts_at} /></p>
                 {call.speakers?.length ? <div style={{ margin: "4px 0 12px" }}><SpeakerBubbles speakers={call.speakers} /></div> : null}
-                {call.description ? <p className="lp-desc">{call.description}</p> : null}
+                {call.description ? <p className="lp-desc"><UserText text={call.description} publicCall={{ id: call.id, field: "description" }} /></p> : null}
                 <p className="lp-sub" style={{ margin: "14px 0 18px" }}>{T.join.sub}</p>
                 <LandingRegister username={page.username} callId={call.id} />
               </>
