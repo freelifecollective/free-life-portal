@@ -125,3 +125,39 @@ export async function markChatRead(chatId: string): Promise<void> {
   const { supabase } = await requireMember();
   await supabase?.rpc("mark_chat_read", { p_chat: chatId });
 }
+
+/** Change the words of a message I sent. It shows "edited" afterwards. */
+export async function editMessage(kind: "chat" | "group", id: string, body: string): Promise<Result> {
+  const text = String(body ?? "").trim();
+  if (!UUID.test(id)) return { ok: false, error: "Something went wrong." };
+  if (!text) return { ok: false, error: "Write something first." };
+  if (text.length > POST_MAX) return { ok: false, error: `Please keep messages under ${POST_MAX} characters.` };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
+  if (kind === "group") {
+    const { data, error } = await supabase.rpc("edit_group_message", { p_id: id, p_body: text });
+    return error || !data ? { ok: false, error: "We could not save that change." } : { ok: true };
+  }
+  const { data, error } = await supabase.from("chat_posts").update({ body: text, edited_at: new Date().toISOString() }).eq("id", id).eq("author_id", session.user.id).is("image_url", null).select("id");
+  return error || !data?.length ? { ok: false, error: "We could not save that change." } : { ok: true };
+}
+
+export type Hit = { id: string; name: string; body: string; created_at: string };
+
+const likeSafe = (q: string) => q.replace(/[\\%_]/g, (c) => "\\" + c);
+
+/** Looks for words inside one chat or group. */
+export async function searchMessages(kind: "chat" | "group", target: string, q: string): Promise<Hit[]> {
+  const term = String(q ?? "").trim().slice(0, 80);
+  if (term.length < 2 || !UUID.test(target)) return [];
+  const { supabase } = await requireMember();
+  if (!supabase) return [];
+  const { data } = kind === "group"
+    ? await supabase.from("group_messages").select("id, author_id, body, created_at").eq("group_id", target).ilike("body", `%${likeSafe(term)}%`).order("created_at", { ascending: false }).limit(30)
+    : await supabase.from("chat_posts").select("id, author_id, body, created_at").eq("chat_id", target).ilike("body", `%${likeSafe(term)}%`).order("created_at", { ascending: false }).limit(30);
+  const rows = (data ?? []) as { id: string; author_id: string | null; body: string; created_at: string }[];
+  const ids = [...new Set(rows.map((r) => r.author_id).filter((x): x is string => !!x))];
+  const { data: cards } = ids.length ? await supabase.from("profile_cards").select("id, first_name, last_name").in("id", ids) : { data: [] };
+  const names = new Map(((cards ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).map((c) => [c.id, [c.first_name, c.last_name].filter(Boolean).join(" ") || "Member"]));
+  return rows.map((r) => ({ id: r.id, name: (r.author_id && names.get(r.author_id)) || "Member", body: r.body, created_at: r.created_at }));
+}

@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import { canSee, type Role } from "@/lib/roles";
 import { MemberList } from "./MemberList";
 import { MuteMenu, MutedIcon } from "@/components/mute/MuteMenu";
+import { SearchAll } from "./SearchAll";
 import { NewGroup } from "@/components/conversation/NewGroup";
 import type { ChatSection } from "@/lib/chats/types";
 import type { GroupRow } from "@/lib/chats/sidebar";
@@ -23,6 +24,7 @@ const kindOf = (n: string) => { const k = n.trim().toLowerCase(); return k === "
 export function ChatList({ sections, current, role, muted, unread, groups }: { sections: ChatSection[]; current: string; role: Role; muted?: Set<string>; unread?: Record<string, number>; groups?: GroupRow[] }) {
   return (
     <nav className="chat-list" aria-label="Chats">
+      <SearchAll />
       {sections.map((s) => {
         const locked = !canSee(role, s.min_role);
         return (
