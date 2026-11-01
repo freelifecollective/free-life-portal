@@ -1564,7 +1564,7 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .ft-counts { margin: 0; font-weight: 700; }
 .ft-tools { display: flex; flex-wrap: wrap; gap: 8px; }
 .ft-share input { flex: 1 1 260px; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
-.ft-scroll { overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 8px; max-width: 100%; }
+.ft-scroll { overflow: auto; max-height: 78vh; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 8px; max-width: 100%; }
 .ft-svg { display: block; margin: 0 auto; max-width: none; }
 .ft-bubble:hover .ft-box { stroke-width: 3.5; }
 .ft-bubble:focus-visible, .ft-plus:focus-visible { outline: none; }
@@ -1576,7 +1576,7 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
   .ft-print, .ft-print * { visibility: visible !important; }
   .ft-print { position: absolute; left: 0; top: 0; width: 100%; }
   .ft-print-title { display: block; text-align: center; font-family: var(--font-display); margin: 0 0 12px; }
-  .ft-scroll { overflow: visible; border: 0; }
+  .ft-scroll { overflow: visible; max-height: none; border: 0; }
   .ft-svg { width: 100% !important; height: auto !important; }
 }
 
