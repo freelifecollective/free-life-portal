@@ -4,6 +4,9 @@
 alter table public.chat_comments add column if not exists audio_url text;
 alter table public.chat_comments add column if not exists audio_secs smallint;
 
+-- high quality recordings are bigger: allow up to 50 MB per voice note file
+update storage.buckets set file_size_limit = 52428800 where id = 'voice-notes';
+
 -- attachments (pictures, PDFs, documents) and "forwarded from"
 alter table public.chat_posts add column if not exists attach_url text;
 alter table public.chat_posts add column if not exists attach_name text;
