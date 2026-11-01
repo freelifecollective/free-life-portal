@@ -40,6 +40,11 @@ update public.profiles set call_closer = true where id = '00000000-0000-0000-000
 do $$ declare hid uuid; begin
   perform tests.login('00000000-0000-0000-0000-0000000000a5');
   hid := public.hire_closer('00000000-0000-0000-0000-0000000000a1', 2, 'be kind');
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a1');
+  perform public.respond_closer_hire(hid, true);
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a5');
   perform tests.fails('only one closer at a time', $q$ select public.hire_closer('00000000-0000-0000-0000-0000000000a1', null) $q$, '23505');
   perform tests.eq('I can see my hire', (select count(*) from public.closer_hires), 1::bigint);
   insert into public.booked_calls (member_id, lead_name, starts_at) values ('00000000-0000-0000-0000-0000000000a5', 'Zed', now() + interval '1 day');
@@ -51,11 +56,16 @@ do $$ declare hid uuid; begin
   perform tests.eq('a two-call hire ends by itself', (select status from public.closer_hires limit 1), 'ended');
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  perform tests.eq('the closer was told', (select count(*) from public.notifications where title like '% hired you for two calls'), 1::bigint);
+  perform tests.eq('the closer was told', (select count(*) from public.notifications where title like '% wants to hire you for two calls'), 1::bigint);
   perform tests.eq('the closer sees who hired them', (select count(*) from public.closer_hires), 1::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a5');
   hid := public.hire_closer('00000000-0000-0000-0000-0000000000a1', null);
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a1');
+  perform public.respond_closer_hire(hid, true);
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a5');
   insert into public.booked_calls (member_id, lead_name, starts_at) values ('00000000-0000-0000-0000-0000000000a5', 'W', now() + interval '4 day'), ('00000000-0000-0000-0000-0000000000a5', 'V', now() + interval '5 day');
   perform tests.eq('an ongoing hire keeps assigning', (select count(*) from public.booked_calls where lead_name in ('W', 'V') and closer_id = '00000000-0000-0000-0000-0000000000a1'), 2::bigint);
   perform public.end_closer_hire(hid);
