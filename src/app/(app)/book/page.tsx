@@ -2,6 +2,8 @@ import Link from "next/link";
 import { BookingPicker, type Mine } from "@/components/booking/BookingPicker";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
+import { dropBusy } from "@/lib/google/busy";
+import { busyIntervals } from "@/lib/google/calendar";
 
 export const instant = false;
 export const metadata = { title: "Book a Call" };
@@ -18,6 +20,12 @@ export default async function BookPage() {
     supabase.from("booked_calls").select("id, starts_at").eq("lead_id", session.user.id).gt("starts_at", new Date().toISOString()).order("starts_at"),
   ]);
   const info = ((infoRows ?? []) as Info[])[0];
+  let times = ((slots ?? []) as { slot: string }[]).map((x) => x.slot);
+  /* anything already in the closer's (or coach's) Google Calendar is taken off */
+  if (info && times.length) {
+    const busy = await busyIntervals(info.target_id, times[0], new Date(new Date(times[times.length - 1]).getTime() + info.call_minutes * 60_000).toISOString());
+    if (busy) times = dropBusy(times, busy, info.call_minutes);
+  }
   return (
     <>
       <PageHeading lede="Pick a free time for your coaching call.">Book a Call</PageHeading>
@@ -31,7 +39,7 @@ export default async function BookPage() {
       ) : !info.has_hours ? (
         <section className="card-s" style={{ maxWidth: 640 }}><p style={{ margin: 0 }}>{`${info.target_name ?? info.coach_name ?? "Your coach"} has not set open hours yet. Message them and ask for a time.`}</p></section>
       ) : (
-        <BookingPicker slots={((slots ?? []) as { slot: string }[]).map((s) => s.slot)} mine={(mine ?? []) as Mine[]} who={info.target_name ?? info.coach_name ?? "your coach"} minutes={info.call_minutes} withCloser={info.with_closer} />
+        <BookingPicker slots={times} mine={(mine ?? []) as Mine[]} who={info.target_name ?? info.coach_name ?? "your coach"} minutes={info.call_minutes} withCloser={info.with_closer} />
       )}
     </>
   );

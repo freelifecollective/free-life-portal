@@ -14,7 +14,8 @@ import { nowMs } from "@/lib/time";
 export const instant = false;
 export const metadata = { title: "Call Closer" };
 
-export default async function CallCloserPage() {
+export default async function CallCloserPage(props: PageProps<"/call-closer">) {
+  const sp = await props.searchParams;
   const { session, supabase } = await requireMember();
   if (!supabase) return <><PageHeading>Call Closer</PageHeading><p className="page-lede">This needs the database.</p></>;
   const me = session.user.id;
@@ -70,7 +71,7 @@ export default async function CallCloserPage() {
       <div className="stack" style={{ maxWidth: 860 }}>
         {requests.some((r) => r.status === "pending") ? <HireRequests requests={requests} /> : null}
       </div>
-      <CloserHub clients={<ClientList paused={!!d?.paused} clients={requests.filter((r) => r.status === "active")} />} availability={<AvailabilityPanel supabase={supabase} userId={me} />} now={nowMs()} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
+      <CloserHub clients={<ClientList paused={!!d?.paused} clients={requests.filter((r) => r.status === "active")} />} availability={<AvailabilityPanel supabase={supabase} userId={me} googleStatus={typeof sp.google === "string" ? sp.google : null} />} now={nowMs()} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
     </>
   );
 }

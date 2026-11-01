@@ -69,6 +69,11 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
             ))}</ul></details>
         ) : null}
       </section>
+      <section className="card-s" aria-label="How you are paid">
+        <h2 className="qh" style={{ marginTop: 0 }}>How you are paid</h2>
+        <p className="when" style={{ marginTop: 0 }}>{price !== null ? `Your call price is ${money(price, "USD")} (an admin can change it). ` : "An admin sets your call price. "}For products, set a rule for each group of ranks. The rank is the rank of the affiliate who hired you.</p>
+        <PayRules rules={rules} />
+      </section>
         </div>
         <div className="ch-col">
       <section className="card-s ch-upcoming" aria-label="Upcoming calls">
@@ -103,9 +108,6 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
           </ul>
         )}
       </section>
-        </div>
-      </div>
-
       <section className="card-s" aria-label="Your stats">
         <h2 className="qh" style={{ marginTop: 0 }}>Your stats</h2>
         <div className="ch-stats">
@@ -116,12 +118,10 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
         </div>
         {stats.recorded > 0 ? <p className="when" style={{ margin: "10px 0 0" }}>{`From the calls you recorded here: ${stats.closed} of ${stats.recorded} led to a sale.`}</p> : null}
       </section>
+        </div>
+      </div>
 
-      <section className="card-s" aria-label="How you are paid">
-        <h2 className="qh" style={{ marginTop: 0 }}>How you are paid</h2>
-        <p className="when" style={{ marginTop: 0 }}>{price !== null ? `Your call price is ${money(price, "USD")} (an admin can change it). ` : "An admin sets your call price. "}For products, set a rule for each group of ranks. The rank is the rank of the affiliate who hired you.</p>
-        <PayRules rules={rules} />
-      </section>
+
 
       {editCall ? <CallEditor key={editCall.id + editCall.outcome + totalOf(editCall)} call={editCall} forName={who(people[editCall.member_id])} rules={rules} open onClose={() => setEditing(null)} /> : null}
     </div>
