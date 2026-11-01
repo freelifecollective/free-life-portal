@@ -121,9 +121,9 @@ a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visib
   background: var(--surface); font-size: 15px;
 }
 .search input:disabled { color: var(--muted); cursor: not-allowed; }
-.app-body { display: grid; grid-template-columns: minmax(272px, auto) minmax(0, 1fr); }
+.app-body { display: grid; grid-template-columns: minmax(256px, auto) minmax(0, 1fr); }
 @media (max-width: 768px) { .app-body { grid-template-columns: minmax(0, 1fr); } .search { display: none; } .top-right { margin-left: auto; } }
-.nav { padding: 24px 18px 24px max(18px, env(safe-area-inset-left)); border-right: 1px solid var(--line); background: #F1EFE9; }
+.nav { padding: 24px 12px 24px max(12px, env(safe-area-inset-left)); border-right: 1px solid var(--line); background: #F1EFE9; }
 .menu-btn { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 10px; color: var(--ink); cursor: pointer; }
 @media (max-width: 768px) {
   .menu-btn { display: inline-flex; }
@@ -1470,16 +1470,16 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .nav > ul.nav-sizer { position: static; height: 0; max-height: 0; overflow: hidden; visibility: hidden; margin: 0; padding: 0; pointer-events: none; }
 .nav-sizer li > span { display: block; white-space: nowrap; padding: 0 14px; font-family: var(--font-label); font-weight: 600; font-size: 14px; letter-spacing: 0.04em; }
 .nav-sizer li > span.sz-sub { padding-left: 30px; }
-.nav-sizer li > span.sz-soon { padding-right: 96px; }
-.nav-sizer li > span.sz-badge { padding-right: 52px; }
-.nav-sizer li > span.sz-h { padding-right: 62px; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.nav-sizer li > span.sz-soon { padding-right: 84px; }
+.nav-sizer li > span.sz-badge { padding-right: 44px; }
+.nav-sizer li > span.sz-h { padding-right: 54px; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 
 /* ---- The top bar and the left menu share one column, so the logo block is always exactly as wide as the menu ---- */
 .top-main { display: contents; }
 @media (min-width: 769px) {
-  .app { grid-template-columns: minmax(272px, auto) minmax(0, 1fr); }
+  .app { grid-template-columns: minmax(256px, auto) minmax(0, 1fr); }
   .app-top { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: stretch; gap: 0; padding: 0; background: var(--bg); }
-  .app-top .brand { grid-column: 1; background: #F1EFE9; border-right: 1px solid var(--line); padding: 12px 18px 12px max(18px, env(safe-area-inset-left)); }
+  .app-top .brand { grid-column: 1; background: #F1EFE9; border-right: 1px solid var(--line); padding: 12px 12px 12px max(18px, env(safe-area-inset-left)); }
   .top-main { grid-column: 2; display: flex; align-items: center; gap: 16px; padding: 12px max(16px, env(safe-area-inset-right)) 12px 24px; }
   .app-body { display: contents; }
   .app-body > .nav { grid-column: 1; }
