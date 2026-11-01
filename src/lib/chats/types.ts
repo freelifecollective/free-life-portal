@@ -8,7 +8,7 @@ export type ChatInfo = { id: string; section_id: number; slug: string; name: str
 export type ChatSection = { id: number; name: string; min_role: Role; chats: ChatInfo[] };
 
 export type Author = { id: string; name: string; username: string | null; avatar_url: string | null; is_admin: boolean };
-export type CommentView = { id: string; author: Author; body: string; created_at: string; mine: boolean };
+export type CommentView = { id: string; author: Author; body: string; created_at: string; mine: boolean; audio_url?: string | null; audio_secs?: number | null };
 export type PostView = {
   id: string;
   author: Author;

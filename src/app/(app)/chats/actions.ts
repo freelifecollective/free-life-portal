@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { EMOJI_SET } from "@/lib/chats/emoji";
 import { COMMENT_MAX, POST_MAX } from "@/lib/chats/types";
+import { validAttach, type Attach } from "@/lib/chats/attach";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export type ChatFormState = { error: string; sent?: number };
@@ -108,16 +109,17 @@ const GIF = /^https:\/\/media\d*\.giphy\.com\//;
 const VOICE = /^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/voice-notes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(webm|m4a|ogg)$/i;
 export type Voice = { url: string; secs: number };
 
-export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null, image: string | null = null, voice: Voice | null = null): Promise<Result> {
+export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null, image: string | null = null, voice: Voice | null = null, attach: Attach | null = null): Promise<Result> {
+  if (attach && !validAttach(attach)) return { ok: false, error: "That file did not work." };
   if (image && !GIF.test(image)) return { ok: false, error: "That GIF did not work." };
-  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 3600))) return { ok: false, error: "That voice note did not work." };
-  const text = voice ? "Voice note" : image ? "GIF" : String(body ?? "").trim();
+  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 900))) return { ok: false, error: "That voice note did not work." };
+  const text = voice ? "Voice note" : image ? "GIF" : attach ? "Attachment" : String(body ?? "").trim();
   if (!UUID.test(chatId) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };
   if (text.length > POST_MAX) return { ok: false, error: `Please keep messages under ${POST_MAX} characters.` };
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
-  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: text, ...(image ? { image_url: image } : {}), ...(voice ? { audio_url: voice.url, audio_secs: Math.round(voice.secs) } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
+  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: text, ...(image ? { image_url: image } : {}), ...(voice ? { audio_url: voice.url, audio_secs: Math.round(voice.secs) } : {}), ...(attach ? { attach_url: attach.url, attach_name: attach.name, attach_type: attach.type, attach_size: attach.size } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
   if (error) return { ok: false, error: "We could not send that. Please try again." };
   refresh(slug);
   return { ok: true };
@@ -168,11 +170,64 @@ export async function searchMessages(kind: "chat" | "group", target: string, q: 
 
 /** A voice note posted in a feed-style chat (the recording has already been uploaded). */
 export async function postVoice(chatId: string, slug: string, url: string, secs: number): Promise<Result> {
-  if (!UUID.test(chatId) || !VOICE.test(url) || !(secs >= 1 && secs <= 3600)) return { ok: false, error: "That voice note did not work." };
+  if (!UUID.test(chatId) || !VOICE.test(url) || !(secs >= 1 && secs <= 900)) return { ok: false, error: "That voice note did not work." };
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
   const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: "Voice note", audio_url: url, audio_secs: Math.round(secs) });
   if (error) return { ok: false, error: "We could not post that. Please try again." };
   refresh(slug);
+  return { ok: true };
+}
+
+/** A voice note as a reply under a post in a feed-style chat. */
+export async function replyVoice(postId: string, slug: string, url: string, secs: number): Promise<Result> {
+  if (!UUID.test(postId) || !VOICE.test(url) || !(secs >= 1 && secs <= 900)) return { ok: false, error: "That voice note did not work." };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Needs the database." };
+  const { error } = await supabase.from("chat_comments").insert({ post_id: postId, author_id: session.user.id, body: "Voice note", audio_url: url, audio_secs: Math.round(secs) });
+  if (error) return { ok: false, error: "We could not post that reply. Please try again." };
+  refresh(slug);
+  return { ok: true };
+}
+
+export type FwdSource = { kind: "chat" | "group" | "dm"; id: string };
+export type FwdTarget = { kind: "chat" | "group" | "dm"; id: string; slug?: string };
+
+/** Sends a copy of a message (whatever it is: words, GIF, voice note, picture or file) to another chat, group or person. */
+export async function forwardMessage(src: FwdSource, dest: FwdTarget): Promise<Result> {
+  if (!UUID.test(src.id) || !UUID.test(dest.id)) return { ok: false, error: "Something went wrong." };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
+  const me = session.user.id;
+  const table = src.kind === "chat" ? "chat_posts" : src.kind === "group" ? "group_messages" : "direct_messages";
+  const star = await supabase.from(table).select("*").eq("id", src.id).maybeSingle();
+  const m = star.data as Record<string, string | number | null> | null;
+  if (!m) return { ok: false, error: "We could not find that message." };
+  const authorId = String((src.kind === "dm" ? m.sender_id : m.author_id) ?? "");
+  let from = (m.forwarded_from as string | null) ?? null;
+  if (!from && authorId) {
+    const { data: c } = await supabase.from("profile_cards").select("first_name, last_name").eq("id", authorId).maybeSingle();
+    from = [(c as { first_name: string | null } | null)?.first_name, (c as { last_name: string | null } | null)?.last_name].filter(Boolean).join(" ") || null;
+  }
+  let image = (m.image_url as string | null) ?? null;
+  let attach: { url: string; name: string; type: string; size: number } | null = m.attach_url ? { url: String(m.attach_url), name: String(m.attach_name), type: String(m.attach_type), size: Number(m.attach_size) } : null;
+  /* a picture sent in a direct message lives in the pictures folder: in a chat it travels as an attachment */
+  if (image && /\/dm-pictures\//.test(image) && dest.kind !== "dm") { attach = { url: image, name: "Picture", type: "image/jpeg", size: 1 }; image = null; }
+  const audio = m.audio_url ? { url: String(m.audio_url), secs: Number(m.audio_secs) } : null;
+  const original = String(m.body ?? "").trim();
+  const body = original || (audio ? "Voice note" : image ? "GIF" : attach ? "Attachment" : "Forwarded message");
+  const payload = {
+    body: dest.kind === "dm" && !original ? "" : body,
+    ...(image ? { image_url: image } : {}),
+    ...(audio ? { audio_url: audio.url, audio_secs: audio.secs } : {}),
+    ...(attach ? { attach_url: attach.url, attach_name: attach.name, attach_type: attach.type, attach_size: attach.size } : {}),
+    ...(from ? { forwarded_from: from } : {}),
+  };
+  const res = dest.kind === "chat" ? await supabase.from("chat_posts").insert({ chat_id: dest.id, author_id: me, ...payload })
+    : dest.kind === "group" ? await supabase.from("group_messages").insert({ group_id: dest.id, author_id: me, ...payload })
+    : await supabase.from("direct_messages").insert({ sender_id: me, recipient_id: dest.id, ...payload });
+  if (res.error) return { ok: false, error: res.error.code === "42501" ? "You cannot post there." : "We could not forward that. Please try again." };
+  if (dest.kind === "chat" && dest.slug) refresh(dest.slug);
+  revalidatePath(dest.kind === "group" ? `/groups/${dest.id}` : "/messages");
   return { ok: true };
 }

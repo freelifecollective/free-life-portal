@@ -49,7 +49,10 @@ export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: st
   const ids = page.map((p) => p.id);
   const [{ data: comments }, { data: reactions }, { data: votes }, { data: viewRows }] = ids.length
     ? await Promise.all([
-        supabase.from("chat_comments").select("id, post_id, author_id, body, created_at").in("post_id", ids).order("created_at"),
+        (async () => {
+          const withVoice = await supabase.from("chat_comments").select("id, post_id, author_id, body, created_at, audio_url, audio_secs").in("post_id", ids).order("created_at");
+          return withVoice.error ? supabase.from("chat_comments").select("id, post_id, author_id, body, created_at").in("post_id", ids).order("created_at") : withVoice;
+        })(),
         supabase.from("chat_reactions").select("post_id, user_id, kind, created_at").in("post_id", ids),
         chat.votes_on ? supabase.from("chat_votes").select("post_id, user_id").in("post_id", ids) : Promise.resolve({ data: [] }),
         chat.show_views ? supabase.rpc("post_view_counts", { p_posts: ids }) : Promise.resolve({ data: [] }),
@@ -63,7 +66,7 @@ export async function listPosts(supabase: SupabaseClient, chat: ChatInfo, me: st
     const vs = (votes ?? []).filter((v) => v.post_id === p.id);
     return {
       id: p.id, author: who(p.author_id), body: p.body, created_at: p.created_at, edited: !!p.edited_at, audio_url: p.audio_url, audio_secs: p.audio_secs, pinned: !!p.pinned_at, mine: p.author_id === me,
-      comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({ id: c.id, author: who(c.author_id), body: c.body, created_at: c.created_at, mine: c.author_id === me })),
+      comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({ id: c.id, author: who(c.author_id), body: c.body, created_at: c.created_at, mine: c.author_id === me, audio_url: (c as { audio_url?: string | null }).audio_url, audio_secs: (c as { audio_secs?: number | null }).audio_secs })),
       reactions: summarize(rx, who), myReaction: rx.find((x) => x.user_id === me)?.kind ?? null,
       votes: vs.length, voted: vs.some((v) => v.user_id === me),
       views: ((viewRows ?? []) as { post_id: string; views: number }[]).find((v) => v.post_id === p.id)?.views ?? 0,

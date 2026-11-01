@@ -9,6 +9,10 @@ import { Avatar } from "@/components/Avatar";
 import { PersonLink } from "@/components/people/ProfilePopup";
 import { Reactions } from "@/components/chats/Reactions";
 import { UserText } from "@/components/UserText";
+import { AttachButton } from "@/components/attach/AttachButton";
+import { AttachmentView } from "@/components/attach/AttachmentView";
+import { ForwardDialog } from "./ForwardDialog";
+import type { Attach } from "@/lib/chats/attach";
 import { VoiceNote } from "@/components/voice/VoiceNote";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { EmojiPicker } from "@/components/chats/EmojiPicker";
@@ -20,8 +24,8 @@ const snippet = (s: string) => (s.length > 90 ? s.slice(0, 88) + "…" : s);
  * A conversation like Telegram: oldest at the top, newest at the bottom, your messages on the right, a box at the bottom to write in,
  * replies that quote the message they answer, and the view stays at the bottom as new messages come in.
  */
-export function ConversationView({ messages, kind, targetId, slug = "", canPost, placeholder, moreHref, nowIso, readOnlyText, jumpTo, canPin = false, basePath }: {
-  messages: Msg[]; kind: "chat" | "group"; targetId: string; slug?: string; canPost: boolean; placeholder: string; moreHref?: string; nowIso: string; readOnlyText?: string; jumpTo?: string; canPin?: boolean; basePath: string;
+export function ConversationView({ messages, kind, targetId, slug = "", canPost, placeholder, moreHref, nowIso, readOnlyText, jumpTo, canPin = false, basePath, me }: {
+  me: string; messages: Msg[]; kind: "chat" | "group"; targetId: string; slug?: string; canPost: boolean; placeholder: string; moreHref?: string; nowIso: string; readOnlyText?: string; jumpTo?: string; canPin?: boolean; basePath: string;
 }) {
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
@@ -35,6 +39,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
   const [gifQ, setGifQ] = useState("");
   const [gifs, setGifs] = useState<{ enabled: boolean; results: { id: string; url: string; preview: string }[] } | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; m: Msg } | null>(null);
+  const [fwd, setFwd] = useState<Msg | null>(null);
   const [editing, setEditing] = useState<Msg | null>(null);
   const [find, setFind] = useState<{ open: boolean; q: string; hits: Hit[] | null }>({ open: false, q: "", hits: null });
   const [pinAt, setPinAt] = useState(0);
@@ -74,9 +79,9 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
     setText((t) => (t.slice(0, at) + em + t.slice(to)).slice(0, 4000));
     window.setTimeout(() => { el?.focus(); el?.setSelectionRange(at + em.length, at + em.length); }, 0);
   };
-  const send = (image: string | null = null, voice: { url: string; secs: number } | null = null) => {
+  const send = (image: string | null = null, voice: { url: string; secs: number } | null = null, attach: Attach | null = null) => {
     const body = text.trim();
-    if ((!body && !image && !voice) || pending) return;
+    if ((!body && !image && !voice && !attach) || pending) return;
     setTray(null);
     if (editing) {
       const target = editing;
@@ -92,9 +97,9 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
     }
     start(async () => {
       setError("");
-      const r = kind === "chat" ? await sendMessage(targetId, slug, body, replyTo?.legacy ? null : replyTo?.id ?? null, image, voice) : await sendGroupMessage(targetId, body, replyTo?.id ?? null, image, voice);
+      const r = kind === "chat" ? await sendMessage(targetId, slug, body, replyTo?.legacy ? null : replyTo?.id ?? null, image, voice, attach) : await sendGroupMessage(targetId, body, replyTo?.id ?? null, image, voice, attach);
       if (!r.ok) { setError(r.error ?? "That did not work."); return; }
-      if (!image && !voice) setText("");
+      if (!image && !voice && !attach) setText("");
       setReplyTo(null); stick.current = true;
       if (area.current) area.current.style.height = "";
       router.refresh();
@@ -156,8 +161,10 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
                     // eslint-disable-next-line @next/next/no-img-element
                     <img className="cv-gif" src={m.image_url} alt="GIF" loading="lazy" onLoad={() => { if (stick.current && box.current) box.current.scrollTop = box.current.scrollHeight; }} />
                   ) : null}
+                  {m.forwarded_from ? <span className="fwd-from">Forwarded from <b translate="no">{m.forwarded_from}</b></span> : null}
+                  {m.attach_url ? <AttachmentView url={m.attach_url} name={m.attach_name ?? "File"} type={m.attach_type ?? "application/octet-stream"} size={m.attach_size} /> : null}
                   {m.audio_url ? <VoiceNote src={m.audio_url} secs={m.audio_secs} /> : null}
-                  {(m.image_url && m.body === "GIF") || (m.audio_url && m.body === "Voice note") ? null : <p className="cv-text"><UserText text={m.body} /></p>}
+                  {(m.image_url && m.body === "GIF") || (m.audio_url && m.body === "Voice note") || (m.attach_url && m.body === "Attachment") ? null : <p className="cv-text"><UserText text={m.body} /></p>}
                   <span className="cv-meta">{m.pinned ? <span className="cv-pinmark" aria-label="Pinned">📌</span> : null}{m.edited_at ? <span className="cv-edited">edited</span> : null}<time dateTime={m.edited_at ?? m.created_at}>{timeET(m.edited_at ?? m.created_at)}</time>{m.mine && !m.legacy ? <span className={"cv-tick" + (m.readers?.length ? " seen" : "")} aria-label={m.readers?.length ? "Seen" : "Sent"}>{m.readers?.length ? "✓✓" : "✓"}</span> : null}</span>
                 </div>
                 <div className="cv-tools">
@@ -193,6 +200,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
             <button type="button" className={"dock-tool" + (tray === "emoji" ? " on" : "")} aria-label="Emoji" title="Emoji" aria-expanded={tray === "emoji"} onClick={() => setTray(tray === "emoji" ? null : "emoji")}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14a4.2 4.2 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>
             </button>
+            <AttachButton disabled={pending || !!editing} onPick={(a) => send(null, null, a)} />
             <VoiceRecorder disabled={pending || !!editing} onSend={(url, secs) => send(null, { url, secs })} />
             <textarea ref={area} rows={1} maxLength={4000} value={text} placeholder={placeholder} aria-label="Write a message"
               onChange={(e) => { setText(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(160, e.target.scrollHeight) + "px"; }}
@@ -202,11 +210,13 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
           {error ? <p className="err" role="alert" style={{ minHeight: 0, margin: "6px 0 0" }}>{error}</p> : null}
         </div>
       ) : <p className="when" style={{ margin: "10px 4px 0" }}>{readOnlyText ?? "Only admins can post here."}</p>}
+      {fwd ? <ForwardDialog source={{ kind, id: fwd.id }} me={me} onClose={() => setFwd(null)} /> : null}
       {menu ? (
         <div className="mute-menu cv-menu" role="menu" style={{ left: menu.x, top: menu.y }} onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
           {canPost ? <button type="button" role="menuitem" onClick={() => { setReplyTo(menu.m); setMenu(null); area.current?.focus(); }}>Reply</button> : null}
-          {menu.m.mine && !menu.m.legacy && !menu.m.image_url && !menu.m.audio_url ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); setReplyTo(null); setEditing(m); setText(m.body); window.setTimeout(() => area.current?.focus(), 0); }}>Edit</button> : null}
+          {menu.m.mine && !menu.m.legacy && !menu.m.image_url && !menu.m.audio_url && !menu.m.attach_url ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); setReplyTo(null); setEditing(m); setText(m.body); window.setTimeout(() => area.current?.focus(), 0); }}>Edit</button> : null}
           {canPin && kind === "chat" && !menu.m.legacy ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); start(async () => { const r = await pinPost(m.id, slug, !m.pinned); if (!r.ok) setError(r.error ?? "That did not work."); else router.refresh(); }); }}>{menu.m.pinned ? "Unpin" : "Pin to top"}</button> : null}
+          {!menu.m.legacy ? <button type="button" role="menuitem" onClick={() => { setFwd(menu.m); setMenu(null); }}>Forward</button> : null}
           {menu.m.canDelete ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); remove(m); }}>Delete</button> : null}
           {menu.m.mine && !menu.m.legacy ? (
             <>
