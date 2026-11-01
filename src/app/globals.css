@@ -1909,3 +1909,38 @@ html { scrollbar-gutter: stable; }
 .fwd-tabs { display: flex; gap: 6px; margin: 8px 0; }
 .fwd-tabs button { all: unset; cursor: pointer; font-size: 13px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
 .fwd-tabs button.on { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff; }
+
+
+/* ---- phones: nothing may be wider than the screen, so the page never slides sideways ---- */
+html, body { max-width: 100%; overflow-x: clip; }
+.brand-short { display: none; }
+@media (max-width: 768px) { .brand-full { display: none; } .brand-short { display: inline; } }
+
+/* the chat message box fits a phone: the buttons sit on one row, the text box and Send on the next */
+.cv, .cv-scroll, .cv-composer { min-width: 0; max-width: 100%; box-sizing: border-box; }
+@media (max-width: 640px) {
+  .cv-input { flex-wrap: wrap; row-gap: 4px; }
+  .cv-input textarea { order: 5; flex: 1 1 calc(100% - 96px); }
+  .cv-input .btn { order: 6; }
+  .cv-composer { position: sticky; bottom: 0; z-index: 6; box-shadow: 0 -6px 14px rgba(246,245,241,.9); }
+  .vr-live { flex-wrap: wrap; }
+  .vr-err { max-width: 100%; flex-basis: 100%; margin-left: 0; }
+}
+
+/* Call Closer page on a phone, in this order: current clients, money owed, upcoming calls, past calls, your stats,
+   availability, blocked dates, booking rules, Google Calendar, how you are paid */
+@media (max-width: 1100px) {
+  .ch-top { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .ch-top .ch-col, .ch-top .av-stack, .ch-top .av-stack > .av { display: contents; }
+  .ch-top .ch-clients { order: 1; }
+  .ch-top .ch-owed { order: 2; }
+  .ch-top .ch-upcoming { order: 3; }
+  .ch-top .ch-past { order: 4; }
+  .ch-top .ch-stats-card { order: 5; }
+  .ch-top .av-weekly { order: 6; }
+  .ch-top .av-blocked { order: 7; }
+  .ch-top .av-rulescard { order: 8; }
+  .ch-top .av-google { order: 9; }
+  .ch-top .ch-paid { order: 10; }
+}
+.vn small { white-space: nowrap; }

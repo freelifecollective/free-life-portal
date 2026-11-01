@@ -23,9 +23,9 @@ export function AttachButton({ onPick, disabled = false }: { onPick: (a: Attach)
     setBusy(true);
     try {
       const supabase = createClient();
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("not signed in");
-      const path = `${u.user.id}/${crypto.randomUUID()}.${EXT[f.type]}`;
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) throw new Error("not signed in");
+      const path = `${sess.session.user.id}/${crypto.randomUUID()}.${EXT[f.type]}`;
       const { error: up } = await supabase.storage.from("chat-files").upload(path, f, { contentType: f.type, cacheControl: "3600" });
       if (up) throw up;
       await onPick({ url: supabase.storage.from("chat-files").getPublicUrl(path).data.publicUrl, name: f.name.slice(0, 160), type: f.type, size: f.size });

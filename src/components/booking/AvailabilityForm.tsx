@@ -30,7 +30,7 @@ export function AvailabilityForm({ hours, rules, tz, zones }: { hours: Hours[]; 
     <form action={action} className="av">
       <section className="av-card av-weekly">
         <div className="av-head">
-          <h2 className="qh">Weekly hours</h2>
+          <h2 className="qh">Availability</h2>
           <button type="button" className="av-edit" onClick={() => { setEditing(!editing); setCopying(null); }}>{editing ? "Done" : "✎ Edit"}</button>
         </div>
         <div className="av-tz">

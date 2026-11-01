@@ -40,6 +40,8 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
   const [gifs, setGifs] = useState<{ enabled: boolean; results: { id: string; url: string; preview: string }[] } | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number; m: Msg } | null>(null);
   const [fwd, setFwd] = useState<Msg | null>(null);
+  /* a "Sending voice note…" bubble shows at once, until the real message arrives (the message count changes) */
+  const [voiceAt, setVoiceAt] = useState<number | null>(null);
   const [editing, setEditing] = useState<Msg | null>(null);
   const [find, setFind] = useState<{ open: boolean; q: string; hits: Hit[] | null }>({ open: false, q: "", hits: null });
   const [pinAt, setPinAt] = useState(0);
@@ -52,7 +54,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
   useEffect(() => {
     const el = box.current;
     if (el && stick.current) el.scrollTop = el.scrollHeight;
-  }, [lastId, messages.length]);
+  }, [lastId, messages.length, voiceAt]);
   useEffect(() => {
     if (!jumpTo) return;
     const el = document.getElementById(`m-${jumpTo}`);
@@ -104,6 +106,14 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
       if (area.current) area.current.style.height = "";
       router.refresh();
     });
+  };
+  const sendVoice = async (url: string, secs: number) => {
+    setError("");
+    const voice = { url, secs };
+    const r = kind === "chat" ? await sendMessage(targetId, slug, "", replyTo?.legacy ? null : replyTo?.id ?? null, null, voice, null) : await sendGroupMessage(targetId, "", replyTo?.id ?? null, null, voice, null);
+    if (!r.ok) { setVoiceAt(null); setError(r.error ?? "That did not work."); return; }
+    setReplyTo(null); stick.current = true;
+    router.refresh();
   };
   const remove = (m: Msg) => {
     if (!window.confirm("Delete this message?")) return;
@@ -176,6 +186,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
             </div>
           );
         })}
+        {voiceAt === messages.length ? <div className="cv-row mine first last"><div className="cv-col"><div className="cv-bubble"><span className="when">🎤 Sending voice note…</span></div></div></div> : null}
       </div>
       {canPost ? (
         <div className="cv-composer">
@@ -201,7 +212,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14a4.2 4.2 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>
             </button>
             <AttachButton disabled={pending || !!editing} onPick={(a) => send(null, null, a)} />
-            <VoiceRecorder disabled={pending || !!editing} onSend={(url, secs) => send(null, { url, secs })} />
+            <VoiceRecorder disabled={pending || !!editing} onBusy={(b) => setVoiceAt(b ? messages.length : null)} onSend={sendVoice} />
             <textarea ref={area} rows={1} maxLength={4000} value={text} placeholder={placeholder} aria-label="Write a message"
               onChange={(e) => { setText(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(160, e.target.scrollHeight) + "px"; }}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
