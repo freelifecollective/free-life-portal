@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Avatar } from "@/components/Avatar";
 import { DmPicture } from "@/components/messages/DmPicture";
-import { EMOJI } from "@/lib/chats/emoji";
+import { EmojiPicker } from "@/components/chats/EmojiPicker";
 import { createClient } from "@/lib/supabase/client";
 
 type P = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null };
@@ -294,9 +294,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
           </div>
           {error ? <p className="err" role="alert" style={{ margin: "0 12px 4px" }}>{error}</p> : null}
           {tray === "emoji" ? (
-            <div className="dock-tray emoji" role="group" aria-label="Emoji">
-              {EMOJI.map((em) => <button key={em} type="button" onClick={() => addEmoji(em)}>{em}</button>)}
-            </div>
+            <div className="dock-tray" role="group" aria-label="Emoji"><EmojiPicker onPick={addEmoji} /></div>
           ) : null}
           {tray === "gif" ? (
             <div className="dock-tray gif" role="group" aria-label="GIFs">

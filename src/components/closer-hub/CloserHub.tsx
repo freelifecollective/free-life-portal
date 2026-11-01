@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { markPaid, setPaused } from "@/app/(app)/call-closer/actions";
 import { PersonLink } from "@/components/people/ProfilePopup";
@@ -18,7 +18,7 @@ const who = (p: Person | undefined) => p?.name ?? "A member";
 const PersonChip = ({ p, id }: { p: Person | undefined; id: string }) => <PersonLink id={id} name={who(p)} className="who"><Avatar url={p?.avatar_url ?? null} initials={who(p).charAt(0).toUpperCase()} size={32} /><span className="who-name"><strong>{who(p)}</strong></span></PersonLink>;
 
 /** The call closer's own area. */
-export function CloserHub({ paused, calls, people, rules, stats, price, now }: { now: number; paused: boolean; calls: HubCall[]; people: Record<string, Person>; rules: PayRule[]; stats: Stats; price: number | null }) {
+export function CloserHub({ availability, paused, calls, people, rules, stats, price, now }: { availability?: ReactNode; now: number; paused: boolean; calls: HubCall[]; people: Record<string, Person>; rules: PayRule[]; stats: Stats; price: number | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState<string | null>(null);
@@ -33,13 +33,16 @@ export function CloserHub({ paused, calls, people, rules, stats, price, now }: {
 
   return (
     <div className="stack ch" style={{ maxWidth: 860 }}>
+      <div className="ch-top">
+        <div>{availability}</div>
       <section className="card-s ch-pause" aria-label="New clients">
-        <div>
-          <h2 className="qh" style={{ margin: 0 }}>{paused ? "You are not taking new clients" : "You are taking new clients"}</h2>
-          <p className="when" style={{ margin: "4px 0 0" }}>{paused ? "Your card is still in Call Closers for Hire, but the Hire button says Not Currently Booking. People can ask to be told when you are back." : "Pause new clients any time. Your card stays in Call Closers for Hire and the people you already work with are not affected."}</p>
-        </div>
-        <button type="button" className={"btn" + (paused ? " primary" : "")} disabled={pending} onClick={() => start(async () => { await setPaused(!paused); router.refresh(); })}>{paused ? "Start taking clients again" : "Pause new clients"}</button>
-      </section>
+          <div>
+            <h2 className="qh" style={{ margin: 0 }}>{paused ? "You are not taking new clients" : "You are taking new clients"}</h2>
+            <p className="when" style={{ margin: "4px 0 0" }}>{paused ? "Your card is still in Call Closers for Hire, but the Hire button says Not Currently Booking. People can ask to be told when you are back." : "Pause new clients any time. Your card stays in Call Closers for Hire and the people you already work with are not affected."}</p>
+          </div>
+          <button type="button" className={"btn" + (paused ? " primary" : "")} disabled={pending} onClick={() => start(async () => { await setPaused(!paused); router.refresh(); })}>{paused ? "Start taking clients again" : "Pause new clients"}</button>
+        </section>
+      </div>
 
       <section className="card-s" aria-label="Your stats">
         <h2 className="qh" style={{ marginTop: 0 }}>Your stats</h2>
