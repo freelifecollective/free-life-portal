@@ -105,3 +105,14 @@ export async function saveMyCard(_prev: ApplyState, form: FormData): Promise<App
   revalidatePath("/call-closers");
   return { error: "", sent: true };
 }
+
+/** A call closer accepts or declines a hire request. */
+export async function respondHire(id: string, accept: boolean, note: string): Promise<{ ok: boolean; error?: string }> {
+  if (!UUID.test(id)) return { ok: false, error: "Something went wrong." };
+  const { supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Needs the database." };
+  const { error } = await supabase.rpc("respond_closer_hire", { p_id: id, p_accept: accept, p_note: note.trim().slice(0, 200) || null });
+  if (error) return { ok: false, error: "We could not save that. The request may have been taken back." };
+  revalidatePath("/call-closers");
+  return { ok: true };
+}

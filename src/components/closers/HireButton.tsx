@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { endHire, hireCloser } from "@/app/(app)/call-closers/actions";
 
-export type ActiveHire = { id: string; closer_id: string; calls_total: number | null; calls_used: number };
+export type ActiveHire = { id: string; closer_id: string; calls_total: number | null; calls_used: number; status?: "pending" | "active" };
 
 const CHOICES = [
   { id: 1, label: "One call", hint: "They take your next coaching call." },
@@ -22,6 +22,15 @@ export function HireButton({ closerId, first, hire, otherHire, priceCall, priceS
   const router = useRouter();
   const close = () => { dlg.current?.close(); setError(""); };
 
+  if (hire?.status === "pending") {
+    return (
+      <div className="cc-hired">
+        <p style={{ margin: 0 }}><strong>{`Waiting for ${first} to accept`}</strong></p>
+        <p className="when" style={{ margin: 0 }}>{`${first} has your request and will accept or decline it. You will get a notification.`}</p>
+        <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await endHire(hire.id); router.refresh(); })}>Take back my request</button>
+      </div>
+    );
+  }
   if (hire) {
     const left = hire.calls_total === null ? null : hire.calls_total - hire.calls_used;
     return (
@@ -68,7 +77,7 @@ export function HireButton({ closerId, first, hire, otherHire, priceCall, priceS
           </fieldset>
           <div className="field"><label htmlFor={`hn-${closerId}`}>A note for the closer (optional)</label><input id={`hn-${closerId}`} type="text" maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} /></div>
           <p className="err" role="alert" style={{ minHeight: 0 }}>{error}</p>
-          <div className="dlg-actions"><button className="btn" type="button" onClick={close}>Cancel</button><button className="btn primary" type="submit" disabled={pending}>{pending ? "Hiring…" : `Hire ${first}`}</button></div>
+          <div className="dlg-actions"><button className="btn" type="button" onClick={close}>Cancel</button><button className="btn primary" type="submit" disabled={pending}>{pending ? "Sending…" : `Ask ${first} to take my calls`}</button></div>
         </form>
       </dialog>
     </>

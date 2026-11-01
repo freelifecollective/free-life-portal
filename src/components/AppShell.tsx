@@ -17,7 +17,7 @@ import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
 import { ProfilePopupProvider } from "./people/ProfilePopup";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
@@ -27,16 +27,17 @@ const NAV: NavItem[] = [
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead" },
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
-  { label: "Classroom", min: "lead" },
+  { label: "Classroom", href: "/classroom", min: "lead" },
   { label: "Calls", href: "/calls", min: "lead", group: "FLC Calls" },
   { label: "FLC Calls", min: "lead", heading: true, group: "FLC Calls" },
   { label: "Documents", href: "/documents", min: "lead" },
   { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
   { label: "Earnings Estimator", href: "/calculator", min: "member", group: "Placing Sales" },
-  { label: "Graphic maker", min: "member" },
+  { label: "Graphic maker", href: "/graphic-maker", min: "member" },
   { label: "Your Organization", href: "/family-tree", min: "member", group: "Placing Sales" },
   { label: "Tasks", href: "/tasks", min: "member" },
+  { label: "Book a Call", href: "/book", min: "lead", leadOnly: true },
   { label: "Water Share Map", href: "/water-map", min: "member" },
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
@@ -46,6 +47,8 @@ const NAV: NavItem[] = [
   { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Admin only" },
   { label: "Members by country", href: "/admin/countries", min: "admin", admin: true, group: "Admin only" },
   { label: "Call closer applications", href: "/admin/closer-applications", min: "admin", admin: true, group: "Admin only" },
+  { label: "Manage classroom", href: "/admin/classroom", min: "admin", admin: true, group: "Admin only" },
+  { label: "Manage graphics", href: "/admin/graphics", min: "admin", admin: true, group: "Admin only" },
   { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Admin only" },
   { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Admin only" },
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Admin only" },
@@ -100,7 +103,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min) && (!n.leadOnly || p.role === "lead"))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>
