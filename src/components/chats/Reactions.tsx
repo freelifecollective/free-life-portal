@@ -2,7 +2,8 @@
 
 import { useOptimistic, useRef, useState, useTransition } from "react";
 import { setReaction } from "@/app/(app)/chats/actions";
-import { EMOJI, QUICK_REACTION } from "@/lib/chats/emoji";
+import { QUICK_REACTION } from "@/lib/chats/emoji";
+import { EmojiPicker } from "./EmojiPicker";
 import type { PostView } from "@/lib/chats/types";
 import { formatInZone } from "@/lib/time";
 
@@ -50,9 +51,7 @@ export function Reactions({ postId, slug, reactions, mine, onError }: {
         </button>
         {open ? (
           <div className="rx-panel" role="group" aria-label="Choose a reaction" style={pos ? { position: "fixed", left: pos.left, bottom: pos.bottom, top: "auto" } : undefined}>
-            {EMOJI.map((e) => (
-              <button key={e} type="button" className={e === state.mine ? "on" : ""} aria-label={e} onClick={() => choose(e === state.mine ? null : e)}>{e}</button>
-            ))}
+            <EmojiPicker selected={state.mine} onPick={(e) => choose(e === state.mine ? null : e)} />
           </div>
         ) : null}
       </div>

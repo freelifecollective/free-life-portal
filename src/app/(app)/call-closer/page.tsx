@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { CloserHub, type Person, type Stats } from "@/components/closer-hub/CloserHub";
 import { HireRequests, type Request } from "@/components/closers/HireRequests";
 import { totalCalls } from "@/lib/closer/total";
-import { OpenHoursCard } from "@/components/booking/OpenHoursCard";
+import { AvailabilityPanel } from "@/components/booking/AvailabilityPanel";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
 import { authorsById } from "@/lib/chats/queries";
@@ -69,8 +69,7 @@ export default async function CallCloserPage() {
       <div className="stack" style={{ maxWidth: 860 }}>
         {requests.length ? <HireRequests requests={requests} /> : null}
       </div>
-      <OpenHoursCard />
-      <CloserHub now={nowMs()} paused={!!d?.paused} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
+      <CloserHub availability={<AvailabilityPanel supabase={supabase} userId={me} />} now={nowMs()} paused={!!d?.paused} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
     </>
   );
 }

@@ -1648,8 +1648,10 @@ html { scrollbar-gutter: stable; }
 
 /* Call closer hub */
 .ch { margin-top: 16px; }
-.ch-pause { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-.ch-pause > div { flex: 1 1 320px; }
+.ch-top { display: grid; grid-template-columns: minmax(0, 560px) minmax(260px, 1fr); gap: 16px; align-items: start; }
+.ch-top .av { max-width: none; }
+@media (max-width: 900px) { .ch-top { grid-template-columns: minmax(0, 1fr); } }
+.ch-pause { display: grid; gap: 12px; }
 .ch-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
 .ch-stats p { margin: 0; display: grid; gap: 2px; padding: 12px; border-radius: 14px; background: var(--tint); }
 .ch-stats b { font-family: var(--font-display); font-size: 26px; }
@@ -1797,7 +1799,41 @@ html { scrollbar-gutter: stable; }
 .sr-hit b { color: var(--accent-deep); font-size: 13px; }
 .sr-hit span { overflow-wrap: anywhere; }
 .sr-hit small { color: var(--muted); }
-.av-copy { padding: 4px 6px; font-size: 13px; margin-left: auto; }
-.av-copybox { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 12px; border-radius: 10px; background: var(--tint); }
+
+/* availability, GoHighLevel style: compact hours list, then booking rules */
+.av { display: grid; gap: 12px; max-width: 560px; }
+.av-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; }
+.av-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px; }
+.av-head h2 { margin: 0; font-size: 15px; font-weight: 700; }
+.av-head p { margin: 2px 0 0; font-size: 12.5px; }
+.av-edit { all: unset; cursor: pointer; color: var(--accent-deep); font-weight: 600; font-size: 13px; padding: 4px 8px; border-radius: 8px; }
+.av-edit:hover { background: var(--tint); }
+.av-tz { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); padding: 6px 0 8px; border-bottom: 1px solid var(--line); }
+.av-tz select { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 8px; max-width: 100%; min-width: 0; }
+.av-list { list-style: none; margin: 0; padding: 0; }
+.av-list li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.av-list li:last-child { border-bottom: 0; }
+.av-d { width: 38px; font-weight: 700; }
+.av-t { color: var(--ink); }
+.av-list li.off .av-t { color: var(--muted); }
+.av-list select { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 8px; }
+.av-on { display: inline-flex; }
+.av-copy { all: unset; cursor: pointer; margin-left: auto; font-size: 12px; color: var(--accent-deep); text-decoration: underline; text-underline-offset: 3px; }
+.av-copy:disabled { opacity: .4; cursor: default; }
+.av-copybox { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 8px 10px; border-radius: 10px; background: var(--tint); font-size: 13px; }
 .av-copybox label { display: inline-flex; align-items: center; gap: 6px; }
 .av-copyact { display: flex; gap: 8px; margin-left: auto; }
+.av-rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; margin-top: 8px; }
+.av-rules label { display: grid; gap: 4px; font-size: 12.5px; font-weight: 600; }
+.av-rules select { font: inherit; font-weight: 400; font-size: 13.5px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.av-save { display: flex; align-items: center; gap: 12px; }
+@media (max-width: 520px) { .av-rules { grid-template-columns: minmax(0, 1fr); } }
+
+/* emoji picker with category tabs */
+.emo { display: grid; gap: 6px; }
+.emo-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); padding-bottom: 4px; overflow-x: auto; }
+.emo-tabs button { all: unset; cursor: pointer; font-size: 19px; line-height: 1; padding: 6px 8px; border-radius: 8px; flex: none; opacity: .65; }
+.emo-tabs button:hover, .emo-tabs button.on { background: var(--tint); opacity: 1; }
+.emo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); max-height: 190px; overflow-y: auto; }
+.emo-grid button { all: unset; cursor: pointer; font-size: 22px; line-height: 1; padding: 6px; text-align: center; border-radius: 8px; }
+.emo-grid button:hover, .emo-grid button.on { background: var(--tint); }

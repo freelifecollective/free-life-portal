@@ -9,7 +9,7 @@ import { Avatar } from "@/components/Avatar";
 import { PersonLink } from "@/components/people/ProfilePopup";
 import { Reactions } from "@/components/chats/Reactions";
 import { UserText } from "@/components/UserText";
-import { EMOJI } from "@/lib/chats/emoji";
+import { EmojiPicker } from "@/components/chats/EmojiPicker";
 import { dayLabel, timeET, toRows, type Msg } from "@/lib/chats/messages";
 
 const snippet = (s: string) => (s.length > 90 ? s.slice(0, 88) + "…" : s);
@@ -171,7 +171,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
         <div className="cv-composer">
           {editing ? <div className="cv-replying"><span><b>Editing message</b> <span translate="no">{snippet(editing.body)}</span></span><button type="button" className="linkbtn" onClick={() => { setEditing(null); setText(""); }} aria-label="Cancel edit">✕</button></div> : null}
           {replyTo ? <div className="cv-replying"><span><b translate="no">{replyTo.author.name}</b> <span translate="no">{snippet(replyTo.body)}</span></span><button type="button" className="linkbtn" onClick={() => setReplyTo(null)} aria-label="Cancel reply">✕</button></div> : null}
-          {tray === "emoji" ? <div className="dock-tray emoji" role="group" aria-label="Emoji">{EMOJI.map((em) => <button key={em} type="button" onClick={() => addEmoji(em)}>{em}</button>)}</div> : null}
+          {tray === "emoji" ? <div className="dock-tray" role="group" aria-label="Emoji"><EmojiPicker onPick={addEmoji} /></div> : null}
           {tray === "gif" ? (
             <div className="dock-tray gif" role="group" aria-label="GIFs">
               <input type="search" placeholder="Search GIFs" value={gifQ} aria-label="Search GIFs" onChange={(e) => { setGifQ(e.target.value); void searchGifs(e.target.value); }} />
