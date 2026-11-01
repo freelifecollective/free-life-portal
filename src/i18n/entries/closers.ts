@@ -121,4 +121,5 @@ export const closers: readonly Entry[] = [
   ["Write a short bio (up to 600 characters).", "Escribe una biografía corta (hasta 600 caracteres).", "Écris une courte bio (600 caractères maximum).", "Scrivi una breve bio (fino a 600 caratteri).", "Schreib eine kurze Bio (bis zu 600 Zeichen)."],
   ["Where:", "Dónde:", "Où :", "Dove:", "Wo:"],
   ["Bio:", "Biografía:", "Bio :", "Bio:", "Bio:"],
+  ["Coming soon", "Próximamente", "Bientôt disponible", "In arrivo", "Demnächst"],
 ];

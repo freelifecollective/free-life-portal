@@ -1470,7 +1470,6 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .nav > ul.nav-sizer { position: static; height: 0; max-height: 0; overflow: hidden; visibility: hidden; margin: 0; padding: 0; pointer-events: none; }
 .nav-sizer li > span { display: block; white-space: nowrap; padding: 0 14px; font-family: var(--font-label); font-weight: 600; font-size: 14px; letter-spacing: 0.04em; }
 .nav-sizer li > span.sz-sub { padding-left: 30px; }
-.nav-sizer li > span.sz-soon { padding-right: 84px; }
 .nav-sizer li > span.sz-badge { padding-right: 44px; }
 .nav-sizer li > span.sz-h { padding-right: 54px; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 
