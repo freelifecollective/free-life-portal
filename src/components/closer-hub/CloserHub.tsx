@@ -69,7 +69,7 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
             ))}</ul></details>
         ) : null}
       </section>
-      <section className="card-s" aria-label="How you are paid">
+      <section className="card-s ch-paid" aria-label="How you are paid">
         <h2 className="qh" style={{ marginTop: 0 }}>How you are paid</h2>
         <p className="when" style={{ marginTop: 0 }}>{price !== null ? `Your call price is ${money(price, "USD")} (an admin can change it). ` : "An admin sets your call price. "}For products, set a rule for each group of ranks. The rank is the rank of the affiliate who hired you.</p>
         <PayRules rules={rules} />
@@ -108,7 +108,7 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
           </ul>
         )}
       </section>
-      <section className="card-s" aria-label="Your stats">
+      <section className="card-s ch-stats-card" aria-label="Your stats">
         <h2 className="qh" style={{ marginTop: 0 }}>Your stats</h2>
         <div className="ch-stats">
           <p><b>{stats.calls}</b><span>Calls taken</span></p>

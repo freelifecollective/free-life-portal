@@ -82,7 +82,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
         <Link href="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="brand-logo" src="/icons/icon-192.png" alt="" width={34} height={34} />
-          Free Life Collective
+          <span className="brand-full">Free Life Collective</span><span className="brand-short" data-i18n="skip" translate="no">FLC</span>
         </Link>
         <div className="top-main">
         <div className="search" role="search">

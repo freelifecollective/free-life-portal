@@ -17,7 +17,7 @@ function pickType(): { mime: string; ext: string } | null {
 /**
  * A microphone button. Tap it to start recording, tap Send to upload the voice note and hand its address to the chat, or Cancel to throw it away.
  */
-export function VoiceRecorder({ onSend, disabled = false }: { onSend: (url: string, secs: number) => void | Promise<void>; disabled?: boolean }) {
+export function VoiceRecorder({ onSend, onBusy, disabled = false }: { onSend: (url: string, secs: number) => void | Promise<void>; onBusy?: (busy: boolean) => void; disabled?: boolean }) {
   const [state, setState] = useState<"idle" | "recording" | "sending">("idle");
   const [secs, setSecs] = useState(0);
   const [error, setError] = useState("");
@@ -27,6 +27,10 @@ export function VoiceRecorder({ onSend, disabled = false }: { onSend: (url: stri
   const timer = useRef<number | undefined>(undefined);
   const started = useRef(0);
   const keep = useRef(true);
+  const live = useRef<HTMLSpanElement>(null);
+
+  /* on a phone the page can jump when recording starts: bring the recording bar back into view */
+  useEffect(() => { if (state === "recording") live.current?.scrollIntoView({ block: "nearest" }); }, [state]);
 
   const stopTracks = () => { stream.current?.getTracks().forEach((t) => t.stop()); stream.current = null; window.clearInterval(timer.current); };
   useEffect(() => () => { keep.current = false; try { rec.current?.stop(); } catch { /* already stopped */ } stopTracks(); }, []);
@@ -44,7 +48,7 @@ export function VoiceRecorder({ onSend, disabled = false }: { onSend: (url: stri
     r.ondataavailable = (e) => { if (e.data.size) chunks.current.push(e.data); };
     r.onstop = () => { void finish(type.ext, type.mime.split(";")[0]); };
     rec.current = r;
-    r.start();
+    r.start(1000);
     started.current = Date.now();
     setSecs(0); setState("recording");
     timer.current = window.setInterval(() => {
@@ -56,6 +60,7 @@ export function VoiceRecorder({ onSend, disabled = false }: { onSend: (url: stri
 
   function stop(send: boolean) {
     keep.current = send;
+    if (send) { setState("sending"); onBusy?.(true); }   /* show "Sending…" the moment you tap, not after the upload */
     window.clearInterval(timer.current);
     try { rec.current?.stop(); } catch { /* already stopped */ }
   }
@@ -67,19 +72,19 @@ export function VoiceRecorder({ onSend, disabled = false }: { onSend: (url: stri
     setState("sending");
     try {
       const supabase = createClient();
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) throw new Error("not signed in");
-      const path = `${u.user.id}/${crypto.randomUUID()}.${ext}`;
+      const { data: sess } = await supabase.auth.getSession();   /* read on this device: no wait for the server */
+      if (!sess.session) throw new Error("not signed in");
+      const path = `${sess.session.user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: up } = await supabase.storage.from("voice-notes").upload(path, new Blob(chunks.current, { type: mime }), { contentType: mime, cacheControl: "3600" });
       if (up) throw up;
       await onSend(supabase.storage.from("voice-notes").getPublicUrl(path).data.publicUrl, Math.min(length, 900));
-    } catch { setError("We could not send that voice note. Please try again."); }
+    } catch { setError("We could not send that voice note. Please try again."); onBusy?.(false); }
     setState("idle");
   }
 
   if (state === "recording" || state === "sending") {
     return (
-      <span className="vr-live" role="status">
+      <span className="vr-live" role="status" ref={live}>
         <i className="vr-dot" aria-hidden="true" />
         <b>{mmss(secs)}</b>
         {state === "sending" ? <span className="when">Sending…</span> : (
