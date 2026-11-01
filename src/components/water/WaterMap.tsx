@@ -1,9 +1,10 @@
 "use client";
 
 import { openDockChat } from "@/components/messages/MessageDock";
-import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { Map as LMap, Marker, CircleMarker } from "leaflet";
+import type { Map as GLMap, Marker, Popup } from "maplibre-gl";
+import { currentLang } from "@/lib/language";
 import { Avatar } from "@/components/Avatar";
 import { ProfileCard, type MemberPerson } from "@/components/chats/ProfileCard";
 import { createClient } from "@/lib/supabase/client";
@@ -14,16 +15,19 @@ import { pinName, WATER_LABEL, type Place, type WaterPin } from "@/lib/water/typ
 type Search = (q: string) => Promise<{ ok: true; place: Place } | { ok: false; error: string }>;
 type Found = { place: Place; list: (WaterPin & { km: number })[] };
 
-/** An interactive world map (OpenStreetMap, like Google Maps): drag, zoom, tap a dot. The search box finds the closest affiliates to any town. */
+/**
+ * An interactive world map: drag, zoom, tap a dot. It is a modern vector map (OpenFreeMap, built on OpenStreetMap) whose place names
+ * are shown in the language the member picked. The search box finds the closest affiliates to any town.
+ */
 export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[]; myId: string | null; search?: Search }) {
   const box = useRef<HTMLDivElement>(null);
-  const map = useRef<LMap | null>(null);
-  const markers = useRef(new Map<string, CircleMarker>());
-  const target = useRef<Marker | CircleMarker | null>(null);
+  const map = useRef<GLMap | null>(null);
+  const markers = useRef(new Map<string, { marker: Marker; popup: Popup }>());
+  const target = useRef<Marker | null>(null);
   const profileDlg = useRef<HTMLDialogElement>(null);
   const [person, setPerson] = useState<MemberPerson | null>(null);
   const openRef = useRef<(id: string) => void>(() => {});
-  const lib = useRef<typeof import("leaflet") | null>(null);
+  const lib = useRef<typeof import("maplibre-gl") | null>(null);
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
   const [found, setFound] = useState<Found | null>(null);
@@ -34,7 +38,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
     const { data } = await createClient().rpc("speaker_profile", { p_id: id });
     const r = ((data ?? []) as ({ found: boolean } & MemberPerson)[])[0];
     if (!r?.found) return;
-    map.current?.closePopup();
+    markers.current.forEach((m) => m.popup.remove());
     setPerson(r);
     profileDlg.current?.showModal();
   }
@@ -43,19 +47,36 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const L = (await import("leaflet")).default as unknown as typeof import("leaflet");
+      const ml = await import("maplibre-gl");
       if (cancelled || !box.current) return;
-      lib.current = L;
-      const m = L.map(box.current, { worldCopyJump: true, minZoom: 2, zoomControl: true }).setView([25, 0], 2);
-      /* Esri's street map needs no key and writes place names in English worldwide (the plain OpenStreetMap tiles use each country's own language) */
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 18, attribution: "Tiles © Esri — Source: Esri, HERE, Garmin, OpenStreetMap contributors and the GIS user community" }).addTo(m);
+      lib.current = ml;
+      const lang = currentLang();
+      const m = new ml.Map({ container: box.current, style: "https://tiles.openfreemap.org/styles/liberty", center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true } });
+      m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
+      /* every place name on the map is written in the member's language (falling back to the local name where there is no translation) */
+      m.on("styledata", () => {
+        let layers: ReturnType<typeof m.getStyle>["layers"] = [];
+        try { layers = m.getStyle().layers ?? []; } catch { return; }
+        for (const layer of layers) {
+          if (layer.type !== "symbol") continue;
+          const field = layer.layout?.["text-field"];
+          if (field === undefined || !JSON.stringify(field).includes("name")) continue;
+          const want = JSON.stringify(["coalesce", ["get", `name:${lang}`], ["get", "name:latin"], ["get", "name"]]);
+          if (JSON.stringify(field) === want) continue;
+          m.setLayoutProperty(layer.id, "text-field", ["coalesce", ["get", `name:${lang}`], ["get", "name:latin"], ["get", "name"]]);
+        }
+      });
       for (const p of pins) {
         const mine = p.member_id === myId;
-        const c = L.circleMarker([p.lat, p.lng], { radius: mine ? 10 : 8, color: "#fff", weight: 2, fillColor: mine ? "#e5251b" : "#1e78b4", fillOpacity: 0.95 }).addTo(m);
-        c.bindPopup(popupFor(p, mine, (id) => openRef.current(id)));
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "ws-dot" + (mine ? " mine" : "");
+        dot.setAttribute("aria-label", pinName(p));
+        const popup = new ml.Popup({ offset: 16, maxWidth: "300px", closeButton: true }).setDOMContent(popupFor(p, mine, (id) => openRef.current(id)));
+        const marker = new ml.Marker({ element: dot }).setLngLat([p.lng, p.lat]).setPopup(popup).addTo(m);
         /* clicking a dot zooms in to where that person is */
-        c.on("click", () => m.flyTo([p.lat, p.lng], Math.max(m.getZoom(), 12), { duration: 0.8 }));
-        markers.current.set(p.member_id, c);
+        dot.addEventListener("click", () => m.flyTo({ center: [p.lng, p.lat], zoom: Math.max(m.getZoom(), 12), duration: 800 }));
+        markers.current.set(p.member_id, { marker, popup });
       }
       map.current = m;
     })();
@@ -75,16 +96,22 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       setFound({ place: r.place, list });
       if (!m || !L) return;
       target.current?.remove();
-      target.current = L.circleMarker([r.place.lat, r.place.lng], { radius: 9, color: "#2b2522", weight: 3, fillColor: "#fff", fillOpacity: 1 }).addTo(m).bindTooltip(r.place.label);
-      const pts: [number, number][] = [[r.place.lat, r.place.lng], ...list.slice(0, 3).map((p) => [p.lat, p.lng] as [number, number])];
-      if (list.length) m.fitBounds(L.latLngBounds(pts), { padding: [40, 40], maxZoom: 9 }); else m.setView([r.place.lat, r.place.lng], 8);
+      const ring = document.createElement("div");
+      ring.className = "ws-target";
+      target.current = new L.Marker({ element: ring }).setLngLat([r.place.lng, r.place.lat]).setPopup(new L.Popup({ offset: 14, closeButton: false }).setText(r.place.label)).addTo(m);
+      target.current.togglePopup();
+      if (list.length) {
+        const bounds = new L.LngLatBounds([r.place.lng, r.place.lat], [r.place.lng, r.place.lat]);
+        for (const p of list.slice(0, 3)) bounds.extend([p.lng, p.lat]);
+        m.fitBounds(bounds, { padding: 60, maxZoom: 9 });
+      } else m.flyTo({ center: [r.place.lng, r.place.lat], zoom: 8 });
     });
   }
 
   function show(p: WaterPin) {
     const c = markers.current.get(p.member_id);
-    map.current?.flyTo([p.lat, p.lng], Math.max(map.current.getZoom(), 8));
-    c?.openPopup();
+    map.current?.flyTo({ center: [p.lng, p.lat], zoom: Math.max(map.current.getZoom(), 8) });
+    if (c && !c.popup.isOpen()) c.marker.togglePopup();
   }
 
   return (
