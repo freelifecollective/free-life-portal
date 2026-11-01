@@ -41,8 +41,11 @@ do $$ declare r uuid; l uuid; ll uuid; tok text; begin
   insert into public.family_tree_nodes (owner_id, parent_id, side, label, rank) values ('00000000-0000-0000-0000-0000000000a1', null, 'left', 'Anna', '3A') returning id into l;
   insert into public.family_tree_nodes (owner_id, parent_id, side, label) values ('00000000-0000-0000-0000-0000000000a1', null, 'right', 'Ben');
   insert into public.family_tree_nodes (owner_id, parent_id, side, label, linked_member_id) values ('00000000-0000-0000-0000-0000000000a1', l, 'left', 'Max', '00000000-0000-0000-0000-0000000000a5') returning id into ll;
-  perform tests.fails('a side holds one bubble', format($q$ insert into public.family_tree_nodes (owner_id, parent_id, side, label) values (%L, %L, 'left', 'Dup') $q$, '00000000-0000-0000-0000-0000000000a1', l), '23505');
-  perform tests.fails('only two bubbles directly under me', $q$ insert into public.family_tree_nodes (owner_id, parent_id, side, label) values ('00000000-0000-0000-0000-0000000000a1', null, 'left', 'Third') $q$, '23505');
+  -- a side can hold as many accounts as you like (added then taken away again so the counts below stay the same)
+  insert into public.family_tree_nodes (owner_id, parent_id, side, label) values ('00000000-0000-0000-0000-0000000000a1', l, 'left', 'Dup');
+  insert into public.family_tree_nodes (owner_id, parent_id, side, label) values ('00000000-0000-0000-0000-0000000000a1', null, 'left', 'Third');
+  perform tests.eq('a side can hold more than one account', (select count(*) from public.family_tree_nodes where label in ('Dup', 'Third', 'Max')), 3::bigint);
+  delete from public.family_tree_nodes where label in ('Dup', 'Third');
   perform tests.fails('a bubble cannot be moved', format($q$ update public.family_tree_nodes set side = 'right' where id = %L $q$, ll), '23514');
   perform tests.eq('I can rename a bubble', (select count(*) from (select 1 from public.family_tree_nodes where id = ll) x), 1::bigint);
   update public.family_tree_nodes set label = 'Maxine' where id = ll;

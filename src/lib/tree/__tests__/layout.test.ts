@@ -60,4 +60,20 @@ describe("family tree", () => {
     expect(c(null)).toBe("none");
     expect(c("6A2", true)).toBe("owned");
   });
+  it("lets a side hold more than one account", () => {
+    const many = [n("a", null, "left"), n("b", null, "left"), n("c", null, "left"), n("d", null, "right"), n("e", "a", "left"), n("f", "a", "left"), n("g", "a", "right")];
+    const root = buildTree(many);
+    expect(countAll(root)).toBe(7);
+    expect(balanceOf(root)).toMatchObject({ left: 6, right: 1 });
+    const l = layoutTree(root);
+    expect(l.placed).toHaveLength(8);
+    for (const p of l.placed) for (const q of l.placed) if (p !== q && p.y === q.y) expect(Math.abs(p.x - q.x)).toBeGreaterThanOrEqual(2 * l.r + 4);
+    const by = new Map(l.placed.map((p) => [p.node?.id ?? "root", p]));
+    expect(by.get("a")!.x).toBeLessThan(by.get("b")!.x);
+    expect(by.get("b")!.x).toBeLessThan(by.get("c")!.x);
+    expect(by.get("c")!.x).toBeLessThan(by.get("d")!.x);
+    expect(by.get("e")!.y).toBeGreaterThan(by.get("a")!.y);
+    /* the parent sits in the middle of its first and last account */
+    expect(by.get("a")!.x).toBeCloseTo((by.get("e")!.x + by.get("g")!.x) / 2, 5);
+  });
 });
