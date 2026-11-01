@@ -10,11 +10,12 @@ import { EmojiPicker } from "@/components/chats/EmojiPicker";
 import { createClient } from "@/lib/supabase/client";
 
 type P = { id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null };
-type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url: string | null };
+type Dm = { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null; image_url: string | null; edited_at?: string | null };
 type Convo = { other: P; last: Dm; unread: number };
 type Win = { id: string; min: boolean };
 
-const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url";
+const COLS = "id, sender_id, recipient_id, body, created_at, read_at, image_url, edited_at";
+const COLS_OLD = "id, sender_id, recipient_id, body, created_at, read_at, image_url";   /* before the edit update has been run */
 const CARD = "id, first_name, last_name, username, avatar_url";
 const MAX_WINDOWS = 3;
 const name = (p: Pick<P, "first_name" | "last_name">) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "Member";
@@ -57,8 +58,9 @@ export function MessageDock({ me, unread }: { me: string; unread: number }) {
   const box = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from("direct_messages").select(COLS).order("created_at", { ascending: false }).limit(300);
-    const rows = (data ?? []) as Dm[];
+    const first = await supabase.from("direct_messages").select(COLS).order("created_at", { ascending: false }).limit(300);
+    const res = first.error ? await supabase.from("direct_messages").select(COLS_OLD).order("created_at", { ascending: false }).limit(300) : first;
+    const rows = (res.data ?? []) as unknown as Dm[];
     const by = new Map<string, Dm[]>();
     for (const m of rows) { const o = m.sender_id === me ? m.recipient_id : m.sender_id; by.set(o, [...(by.get(o) ?? []), m]); }
     const ids = [...by.keys()];
@@ -178,14 +180,17 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
   const field = useRef<HTMLTextAreaElement>(null);
   const [tray, setTray] = useState<"emoji" | "gif" | null>(null);
   const [asking, setAsking] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Dm | null>(null);
   const [gifQ, setGifQ] = useState("");
   const [gifs, setGifs] = useState<{ enabled: boolean; results: { id: string; url: string; preview: string }[] } | null>(null);
 
   const fetchThread = useCallback(async () => {
-    const { data } = await supabase.from("direct_messages").select(COLS)
+    const thread = (cols: string) => supabase.from("direct_messages").select(cols)
       .or(`and(sender_id.eq.${me},recipient_id.eq.${other.id}),and(sender_id.eq.${other.id},recipient_id.eq.${me})`)
       .order("created_at", { ascending: false }).limit(80);
-    const list = ((data ?? []) as Dm[]).reverse();
+    const firstT = await thread(COLS);
+    const res = firstT.error ? await thread(COLS_OLD) : firstT;
+    const list = ((res.data ?? []) as unknown as Dm[]).reverse();
     setMsgs(list);
     /* an open window means the messages in it are being read */
     if (!min && list.some((m) => m.recipient_id === me && !m.read_at)) { await supabase.rpc("mark_conversation_read", { p_other: other.id }); onCounts(); }
@@ -197,6 +202,16 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
   async function send(image?: string) {
     const body = image ? "" : text.trim();
     if ((!body && !image) || sending) return;
+    if (editing) {
+      const target = editing;
+      setSending(true); setError("");
+      const { data, error: e } = await supabase.rpc("edit_direct_message", { p_id: target.id, p_body: body });
+      setSending(false);
+      if (e || !data) { setError("We could not save that change."); return; }
+      setEditing(null); setText("");
+      await fetchThread();
+      return;
+    }
     setSending(true); setError(""); setTray(null);
     const temp: Dm = { id: "tmp-" + crypto.randomUUID(), sender_id: me, recipient_id: other.id, body, created_at: new Date().toISOString(), read_at: null, image_url: image ?? null };
     setMsgs((cur) => [...cur, temp]); if (!image) setText("");
@@ -277,14 +292,19 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
                       asking === m.id ? (
                         <span className="dock-ask">Remove? <button type="button" onClick={() => void remove(m)}>Yes</button><button type="button" onClick={() => setAsking(null)}>No</button></span>
                       ) : (
+                        <>
+                        {!m.image_url ? <button type="button" className="dock-del" aria-label="Edit this message" title="Edit this message" onClick={() => { setEditing(m); setText(m.body); window.setTimeout(() => field.current?.focus(), 0); }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                        </button> : null}
                         <button type="button" className="dock-del" aria-label="Remove this message" title="Remove this message" onClick={() => setAsking(m.id)}>
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>
                         </button>
+                        </>
                       )
                     ) : null}
                     <div className={"dock-msg " + (mine ? "mine" : "theirs") + (m.image_url ? " pic" : "")}>
                       {m.image_url ? <DmPicture src={m.image_url} onLoad={() => end.current?.scrollIntoView({ block: "end" })} /> : null}
-                      {m.body ? <p><UserText text={m.body} /></p> : null}
+                      {m.body ? <p><UserText text={m.body} />{m.edited_at ? <i className="dock-edited"> edited</i> : null}</p> : null}
                     </div>
                   </div>
                 </div>
@@ -309,6 +329,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
               <small className="when">Powered by GIPHY</small>
             </div>
           ) : null}
+          {editing ? <p className="dock-editing">Editing message <button type="button" className="linkbtn" onClick={() => { setEditing(null); setText(""); }}>Cancel</button></p> : null}
           <form className="dock-compose" onSubmit={(e) => { e.preventDefault(); void send(); }}>
             <input ref={file} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(e) => { void sendPicture(e.target.files?.[0]); e.target.value = ""; }} />
             <button type="button" className="dock-tool" aria-label="Send a picture" title="Send a picture" disabled={sending} onClick={() => file.current?.click()}>
