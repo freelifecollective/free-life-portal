@@ -54,16 +54,17 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       const m = new ml.Map({ container: box.current, style: "https://tiles.openfreemap.org/styles/liberty", center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true } });
       m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
       /* every place name on the map is written in the member's language (falling back to the local name where there is no translation) */
-      m.on("styledata", () => {
+      /* done once, when the map's style has loaded (doing it on every style change made the map keep redrawing itself, and no names ever appeared) */
+      m.once("load", () => {
+        const done = new Set<string>();
         let layers: ReturnType<typeof m.getStyle>["layers"] = [];
         try { layers = m.getStyle().layers ?? []; } catch { return; }
         for (const layer of layers) {
-          if (layer.type !== "symbol") continue;
+          if (layer.type !== "symbol" || done.has(layer.id)) continue;
+          done.add(layer.id);
           const field = layer.layout?.["text-field"];
           if (field === undefined || !JSON.stringify(field).includes("name")) continue;
-          const want = JSON.stringify(["coalesce", ["get", `name:${lang}`], ["get", "name:latin"], ["get", "name"]]);
-          if (JSON.stringify(field) === want) continue;
-          m.setLayoutProperty(layer.id, "text-field", ["coalesce", ["get", `name:${lang}`], ["get", "name:latin"], ["get", "name"]]);
+          try { m.setLayoutProperty(layer.id, "text-field", ["coalesce", ["get", `name:${lang}`], ["get", "name:latin"], ["get", "name"]]); } catch { /* keep the map's own names for this layer */ }
         }
       });
       for (const p of pins) {
