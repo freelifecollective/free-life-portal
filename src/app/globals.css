@@ -1506,11 +1506,38 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .person-tap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Call Closers for Hire */
-.closer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 430px)); gap: 18px; justify-content: start; }
-.cc { background: var(--bg); border: 1px solid var(--line); border-radius: 22px; padding: 22px 20px 20px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); align-content: start; }
-.cc .pc-top { margin-top: 0; }
+.closer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 400px)); gap: 22px; justify-content: start; }
+/* the flipping card: front is the cover, back is the numbers */
+.cc-flip { perspective: 1400px; }
+.cc-inner { display: grid; position: relative; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.3, .7, .2, 1); }
+.cc-flip.flipped .cc-inner { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: reduce) { .cc-inner { transition: none; } }
+.cc-face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
+.cc-front { background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 22px rgba(43,37,34,.08); grid-template-rows: auto 1fr; }
+.cc-back { background: var(--bg); border: 1px solid var(--line); transform: rotateY(180deg); padding: 22px 20px 18px; gap: 14px; cursor: pointer; }
+.cc-cover { position: relative; aspect-ratio: 4 / 4.6; background: var(--tint); overflow: hidden; }
+.cc-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cc-cover-empty { height: 100%; display: grid; place-items: center; }
+.cc-cover::after { content: ""; position: absolute; inset: 45% 0 0 0; background: linear-gradient(to top, rgba(31,26,23,.78), rgba(31,26,23,0)); pointer-events: none; }
+.cc-cover-text { position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 1; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+.cc-cover-text h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.1; }
+.cc-loc { margin: 4px 0 0; font-size: 15px; opacity: .95; }
+.cc-loc::before { content: "📍 "; }
+.cc-front-body { padding: 16px 18px 18px; display: grid; gap: 12px; align-content: start; }
+.cc-exp { margin: 0; display: inline-flex; align-items: baseline; gap: 8px; justify-self: start; padding: 6px 12px; border-radius: 999px; background: var(--tint); font-size: 14px; }
+.cc-exp span { color: var(--muted); }
+.cc-bio { margin: 0; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.cc-flipbtn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; padding: 13px 14px; border-radius: 14px; border: 1.5px solid var(--accent-deep); color: var(--accent-deep); font-weight: 700; font-size: 15px; }
+.cc-flipbtn:hover { background: var(--tint); }
+.cc-flipbtn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+.cc-edit { justify-self: center; font-size: 13px; }
+.cc-back-top { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .cc-stars { color: var(--accent-deep); letter-spacing: 2px; }
-.cc-tiles { display: grid; gap: 10px; }
-.cc-tile { text-align: center; justify-content: center; font-weight: 700; font-size: 14px; min-height: 52px; padding: 12px 8px; }
+.cc-msg { justify-self: center; font-weight: 600; }
+.cc-tapback { margin: 0; text-align: center; font-size: 12px; }
 .cc-hire { width: 100%; }
 .cc-hired { display: grid; gap: 8px; justify-items: start; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--accent); }
+
+.cover-pick { display: flex; gap: 14px; align-items: flex-start; }
+.cover-prev { width: 96px; aspect-ratio: 4 / 5; border-radius: 12px; background: var(--tint); overflow: hidden; display: grid; place-items: center; text-align: center; font-size: 12px; flex: none; }
+.cover-prev img { width: 100%; height: 100%; object-fit: cover; }

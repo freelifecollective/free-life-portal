@@ -2,10 +2,12 @@ export type CloserCardData = {
   id: string; first_name: string | null; last_name: string | null; username: string | null; avatar_url: string | null;
   calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null;
   review_count: number; avg_rating: number | null; members_booked: number;
+  cover_url: string | null; location: string | null; experience_text: string | null; bio: string | null;
 };
 
 export type Application = {
-  id: string; member_id: string; status: "pending" | "approved" | "declined"; experience: "none" | "some" | "lots"; calls_taken: string | null;
+  id: string; member_id: string; status: "pending" | "approved" | "declined"; experience: "none" | "some" | "lots" | null; calls_taken: string | null;
+  cover_url: string | null; location: string | null; experience_text: string | null; bio: string | null;
   availability: string; pitch: string; price_per_call_cents: number | null; price_per_sale: string | null; review_note: string | null; created_at: string;
 };
 

@@ -15,7 +15,7 @@ export default async function CallClosersPage() {
   if (!supabase) return <><PageHeading>Call Closers for Hire</PageHeading><p className="page-lede">This needs the database.</p></>;
   const [{ data: list }, { data: apps }, { data: me }, { data: hires }] = await Promise.all([
     supabase.rpc("call_closers_directory"),
-    supabase.from("closer_applications").select("id, member_id, status, experience, calls_taken, availability, pitch, price_per_call_cents, price_per_sale, review_note, created_at").eq("member_id", session.user.id).order("created_at", { ascending: false }).limit(1),
+    supabase.from("closer_applications").select("id, member_id, status, experience, calls_taken, cover_url, location, experience_text, bio, availability, pitch, price_per_call_cents, price_per_sale, review_note, created_at").eq("member_id", session.user.id).order("created_at", { ascending: false }).limit(1),
     supabase.from("profiles").select("call_closer").eq("id", session.user.id).maybeSingle(),
     supabase.from("closer_hires").select("id, closer_id, calls_total, calls_used").eq("member_id", session.user.id).eq("status", "active").limit(1),
   ]);
