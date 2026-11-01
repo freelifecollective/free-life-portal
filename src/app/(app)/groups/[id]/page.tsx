@@ -30,11 +30,15 @@ export default async function GroupPage(props: PageProps<"/groups/[id]">) {
   const [side, { data: mem }, first] = await Promise.all([
     loadSidebar(supabase),
     supabase.from("group_members").select("user_id, role").eq("group_id", id),
-    gq("id, author_id, body, reply_to, created_at, image_url, edited_at"),
+    gq("id, author_id, body, reply_to, created_at, image_url, audio_url, audio_secs, edited_at"),
   ]);
-  const rows = first.error ? (await gq("id, author_id, body, reply_to, created_at")).data : first.data;   /* before the GIF update has been run */
+  /* older databases (before the voice note, edit or GIF updates were run) fall back to fewer columns */
+  let res = first;
+  if (res.error) res = await gq("id, author_id, body, reply_to, created_at, image_url, edited_at");
+  if (res.error) res = await gq("id, author_id, body, reply_to, created_at");
+  const rows = res.data;
   const members = (mem ?? []) as { user_id: string; role: string }[];
-  const all = (rows ?? []) as unknown as { id: string; author_id: string | null; body: string; reply_to: string | null; created_at: string; image_url?: string | null; edited_at?: string | null }[];
+  const all = (rows ?? []) as unknown as { id: string; author_id: string | null; body: string; reply_to: string | null; created_at: string; image_url?: string | null; audio_url?: string | null; audio_secs?: number | null; edited_at?: string | null }[];
   const more = all.length > limit;
   const page = all.slice(0, limit).reverse();
   const authors = await authorsById(supabase, [...members.map((m) => m.user_id), ...page.map((m) => m.author_id).filter((x): x is string => !!x)]);
@@ -43,7 +47,7 @@ export default async function GroupPage(props: PageProps<"/groups/[id]">) {
   const isOwner = members.some((m) => m.user_id === me && m.role === "owner");
   const messages: Msg[] = page.map((m) => {
     const q = m.reply_to ? byId.get(m.reply_to) : null;
-    return { id: m.id, author: who(m.author_id), body: m.body, image_url: m.image_url, edited_at: m.edited_at, created_at: m.created_at, mine: m.author_id === me, canDelete: m.author_id === me || isOwner, replyTo: q ? { id: q.id, name: who(q.author_id).name, body: q.body } : null };
+    return { id: m.id, author: who(m.author_id), body: m.body, image_url: m.image_url, audio_url: m.audio_url, audio_secs: m.audio_secs, edited_at: m.edited_at, created_at: m.created_at, mine: m.author_id === me, canDelete: m.author_id === me || isOwner, replyTo: q ? { id: q.id, name: who(q.author_id).name, body: q.body } : null };
   });
   await attachReaders(supabase, "group", id, messages);
   const list: GroupMember[] = members.map((m) => ({ id: m.user_id, name: who(m.user_id).name, avatar_url: who(m.user_id).avatar_url, owner: m.role === "owner" }));

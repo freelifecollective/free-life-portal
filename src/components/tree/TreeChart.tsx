@@ -3,6 +3,7 @@
 import { forwardRef, useMemo } from "react";
 import { LEGEND, OWNED, swatchOf } from "@/lib/tree/colors";
 import { buildTree, layoutTree, type Side, type TreeNode } from "@/lib/tree/layout";
+import type { KeyPos } from "./useKeyPos";
 
 const AMBER = "#D9962B";
 
@@ -24,9 +25,9 @@ function lines(label: string, max: number): string[] {
 
 /** The organization chart. You are the top box; every box has a left and a right side, and its colour tells the rank (or that it is one of your own accounts). */
 export const TreeChart = forwardRef<SVGSVGElement, {
-  nodes: TreeNode[]; ownerName: string; ownerRank?: string | null; leftLabel: string; rightLabel: string;
+  nodes: TreeNode[]; ownerName: string; ownerRank?: string | null; keyPos?: KeyPos; leftLabel: string; rightLabel: string;
   onPick?: (id: string) => void; onPickRoot?: () => void; onAdd?: (parentId: string | null, side: Side) => void;
-}>(function TreeChart({ nodes, ownerName, ownerRank, leftLabel, rightLabel, onPick, onPickRoot, onAdd }, ref) {
+}>(function TreeChart({ nodes, ownerName, ownerRank, keyPos = "left", leftLabel, rightLabel, onPick, onPickRoot, onAdd }, ref) {
   const laid = useMemo(() => layoutTree(buildTree(nodes)), [nodes]);
   const R = laid.r;
   const pos = new Map(laid.placed.map((p) => [p.key, p]));
@@ -37,33 +38,42 @@ export const TreeChart = forwardRef<SVGSVGElement, {
     return p && p.parentKey === "root" ? p.side : null;
   };
   const editable = !!onPick;
-  /* the colour key runs across the top on one line */
-  const itemW = (label: string) => 34 + label.length * 6.6;
+  /* the colour key: a column down the left or right, or one line along the top or bottom */
+  const itemW = (label: string) => 26 + label.length * 5.8;
   const keyItems = LEGEND.map((sw) => ({ sw, label: sw === OWNED ? "My accounts" : sw.label }));
-  const keyW = keyItems.reduce((n, k) => n + itemW(k.label), 0) + (keyItems.length - 1) * 14;
-  const legendH = 46;
-  const W = Math.max(laid.width, keyW + 48, 560), H = laid.height + legendH - R * 0.6;
-  const shift = (W - laid.width) / 2;
+  const gap = 12;
+  const rowW = keyItems.reduce((n, k) => n + itemW(k.label), 0) + (keyItems.length - 1) * gap;
+  const colW = Math.max(...keyItems.map((k) => itemW(k.label))) + 8;
+  const colH = keyItems.length * 22;
+  const vertical = keyPos === "left" || keyPos === "right";
+  const chartH = laid.height - R * 0.6;
+  const sideW = vertical ? colW + 28 : 0, bandH = vertical ? 0 : 38;
+  const W = Math.max(laid.width + sideW, (vertical ? 0 : rowW + 40), 460);
+  const H = Math.max(chartH + bandH, vertical ? colH + 32 : 0);
+  const shift = (W - sideW - laid.width) / 2 + (keyPos === "left" ? sideW : 0);
+  const chartY = keyPos === "top" ? bandH : 0;
+  const keyX = keyPos === "left" ? 14 : keyPos === "right" ? W - colW - 14 : (W - rowW) / 2;
+  const keyY = keyPos === "bottom" ? chartH + 10 : keyPos === "top" ? 12 : 16;
   const bw = R * 2.7, bh = R * 1.5;
   const fs = Math.max(11, R * 0.3), maxChars = Math.max(9, Math.round(bw / (fs * 0.56)));
   const key = (e: React.KeyboardEvent, fn: () => void) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } };
   /* straight lines with square corners: down from the parent, across, down into the child */
   const elbow = (px: number, py: number, cx: number, cy: number) => { const midY = py + (cy - py) / 2; return `M ${px} ${py} V ${midY} H ${cx} V ${cy}`; };
-  let kx = (W - keyW) / 2;
   return (
     <svg ref={ref} width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={ownerName} className="ft-svg">
-      <g aria-hidden="true" transform="translate(0, 14)">
-        {keyItems.map((k) => {
-          const x = kx; kx += itemW(k.label) + 14;
+      <g aria-hidden="true" transform={`translate(${keyX}, ${keyY})`}>
+        {keyItems.map((k, i) => {
+          const x = vertical ? 0 : keyItems.slice(0, i).reduce((n, m) => n + itemW(m.label) + gap, 0);
+          const y = vertical ? i * 22 : 0;
           return (
-            <g key={k.sw.key} transform={`translate(${x}, 0)`}>
-              <rect x={0} y={0} width={20} height={16} rx={4} fill={k.sw.fill} stroke={k.sw.stroke} strokeWidth={2} />
-              <text x={28} y={13} fontSize={12} fill="#5b514a">{k.label}</text>
+            <g key={k.sw.key} transform={`translate(${x}, ${y})`}>
+              <rect x={0} y={0} width={16} height={12} rx={3} fill={k.sw.fill} stroke={k.sw.stroke} strokeWidth={1.5} />
+              <text x={22} y={10} fontSize={11} fill="#5b514a">{k.label}</text>
             </g>
           );
         })}
       </g>
-      <g transform={`translate(${shift}, ${legendH - R * 0.6})`}>
+      <g transform={`translate(${shift}, ${chartY})`}>
         {laid.placed.filter((p) => p.parentKey).map((p) => {
           const par = pos.get(p.parentKey!)!;
           const hot = laid.heavyRoot !== null && legOf(p.key) === laid.heavyRoot;

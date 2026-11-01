@@ -9,6 +9,8 @@ import { Avatar } from "@/components/Avatar";
 import { PersonLink } from "@/components/people/ProfilePopup";
 import { Reactions } from "@/components/chats/Reactions";
 import { UserText } from "@/components/UserText";
+import { VoiceNote } from "@/components/voice/VoiceNote";
+import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { EmojiPicker } from "@/components/chats/EmojiPicker";
 import { dayLabel, timeET, toRows, type Msg } from "@/lib/chats/messages";
 
@@ -72,9 +74,9 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
     setText((t) => (t.slice(0, at) + em + t.slice(to)).slice(0, 4000));
     window.setTimeout(() => { el?.focus(); el?.setSelectionRange(at + em.length, at + em.length); }, 0);
   };
-  const send = (image: string | null = null) => {
+  const send = (image: string | null = null, voice: { url: string; secs: number } | null = null) => {
     const body = text.trim();
-    if ((!body && !image) || pending) return;
+    if ((!body && !image && !voice) || pending) return;
     setTray(null);
     if (editing) {
       const target = editing;
@@ -90,9 +92,9 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
     }
     start(async () => {
       setError("");
-      const r = kind === "chat" ? await sendMessage(targetId, slug, body, replyTo?.legacy ? null : replyTo?.id ?? null, image) : await sendGroupMessage(targetId, body, replyTo?.id ?? null, image);
+      const r = kind === "chat" ? await sendMessage(targetId, slug, body, replyTo?.legacy ? null : replyTo?.id ?? null, image, voice) : await sendGroupMessage(targetId, body, replyTo?.id ?? null, image, voice);
       if (!r.ok) { setError(r.error ?? "That did not work."); return; }
-      if (!image) setText("");
+      if (!image && !voice) setText("");
       setReplyTo(null); stick.current = true;
       if (area.current) area.current.style.height = "";
       router.refresh();
@@ -132,7 +134,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
       ) : null}
       {shownPin ? (
         <button type="button" className="cv-pinbar" onClick={() => { jump(shownPin.id); setPinAt((i) => i + 1); }}>
-          <span aria-hidden="true">📌</span><span className="cv-pin-txt"><b>{pinned.length > 1 ? `Pinned message ${(pinAt % pinned.length) + 1} of ${pinned.length}` : "Pinned message"}</b><span translate="no">{snippet(shownPin.image_url && shownPin.body === "GIF" ? "GIF" : shownPin.body)}</span></span>
+          <span aria-hidden="true">📌</span><span className="cv-pin-txt"><b>{pinned.length > 1 ? `Pinned message ${(pinAt % pinned.length) + 1} of ${pinned.length}` : "Pinned message"}</b><span translate="no">{snippet(shownPin.image_url && shownPin.body === "GIF" ? "GIF" : shownPin.audio_url ? "Voice note" : shownPin.body)}</span></span>
         </button>
       ) : null}
       <div className="cv-scroll" ref={box} onScroll={onScroll} role="log" aria-live="polite" aria-label="Messages">
@@ -154,7 +156,8 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
                     // eslint-disable-next-line @next/next/no-img-element
                     <img className="cv-gif" src={m.image_url} alt="GIF" loading="lazy" onLoad={() => { if (stick.current && box.current) box.current.scrollTop = box.current.scrollHeight; }} />
                   ) : null}
-                  {m.image_url && m.body === "GIF" ? null : <p className="cv-text"><UserText text={m.body} /></p>}
+                  {m.audio_url ? <VoiceNote src={m.audio_url} secs={m.audio_secs} /> : null}
+                  {(m.image_url && m.body === "GIF") || (m.audio_url && m.body === "Voice note") ? null : <p className="cv-text"><UserText text={m.body} /></p>}
                   <span className="cv-meta">{m.pinned ? <span className="cv-pinmark" aria-label="Pinned">📌</span> : null}{m.edited_at ? <span className="cv-edited">edited</span> : null}<time dateTime={m.edited_at ?? m.created_at}>{timeET(m.edited_at ?? m.created_at)}</time>{m.mine && !m.legacy ? <span className={"cv-tick" + (m.readers?.length ? " seen" : "")} aria-label={m.readers?.length ? "Seen" : "Sent"}>{m.readers?.length ? "✓✓" : "✓"}</span> : null}</span>
                 </div>
                 <div className="cv-tools">
@@ -190,6 +193,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
             <button type="button" className={"dock-tool" + (tray === "emoji" ? " on" : "")} aria-label="Emoji" title="Emoji" aria-expanded={tray === "emoji"} onClick={() => setTray(tray === "emoji" ? null : "emoji")}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M8.5 14a4.2 4.2 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>
             </button>
+            <VoiceRecorder disabled={pending || !!editing} onSend={(url, secs) => send(null, { url, secs })} />
             <textarea ref={area} rows={1} maxLength={4000} value={text} placeholder={placeholder} aria-label="Write a message"
               onChange={(e) => { setText(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(160, e.target.scrollHeight) + "px"; }}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
@@ -201,7 +205,7 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
       {menu ? (
         <div className="mute-menu cv-menu" role="menu" style={{ left: menu.x, top: menu.y }} onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
           {canPost ? <button type="button" role="menuitem" onClick={() => { setReplyTo(menu.m); setMenu(null); area.current?.focus(); }}>Reply</button> : null}
-          {menu.m.mine && !menu.m.legacy && !menu.m.image_url ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); setReplyTo(null); setEditing(m); setText(m.body); window.setTimeout(() => area.current?.focus(), 0); }}>Edit</button> : null}
+          {menu.m.mine && !menu.m.legacy && !menu.m.image_url && !menu.m.audio_url ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); setReplyTo(null); setEditing(m); setText(m.body); window.setTimeout(() => area.current?.focus(), 0); }}>Edit</button> : null}
           {canPin && kind === "chat" && !menu.m.legacy ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); start(async () => { const r = await pinPost(m.id, slug, !m.pinned); if (!r.ok) setError(r.error ?? "That did not work."); else router.refresh(); }); }}>{menu.m.pinned ? "Unpin" : "Pin to top"}</button> : null}
           {menu.m.canDelete ? <button type="button" role="menuitem" onClick={() => { const m = menu.m; setMenu(null); remove(m); }}>Delete</button> : null}
           {menu.m.mine && !menu.m.legacy ? (

@@ -10,6 +10,8 @@ export type Msg = {
   canDelete: boolean;
   /** an older reply from before chats became conversations: it can be read and deleted but not reacted to */
   legacy?: boolean;
+  audio_url?: string | null;
+  audio_secs?: number | null;
   edited_at?: string | null;
   pinned?: boolean;
   /** a GIF sent with (or instead of) the text */

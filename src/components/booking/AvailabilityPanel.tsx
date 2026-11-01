@@ -22,10 +22,10 @@ export async function AvailabilityPanel({ supabase, userId, googleStatus = null 
   const today = new Date(nowMs()).toISOString().slice(0, 10);
   const email = ((g ?? []) as { email: string | null }[])[0]?.email ?? null;
   return (
-    <>
+    <div className="av-stack">
       <AvailabilityForm hours={(hours ?? []) as Hours[]} rules={rules} tz={zones.includes(tz) ? tz : "America/New_York"} zones={zones} />
       <BlockedDates blocked={(bl ?? []) as Blocked[]} today={today} />
       <GoogleCalendarCard configured={googleConfigured} email={email} status={googleStatus} />
-    </>
+    </div>
   );
 }
