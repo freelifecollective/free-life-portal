@@ -99,7 +99,6 @@ export const closers: readonly Entry[] = [
   ["Change photo", "Cambiar foto", "Changer la photo", "Cambia foto", "Foto ändern"],
   ["Upload a photo", "Subir una foto", "Téléverser une photo", "Carica una foto", "Foto hochladen"],
   ["Uploading…", "Subiendo…", "Téléversement…", "Caricamento…", "Wird hochgeladen…"],
-  ["A tall photo of you works best. We crop it to fit.", "Una foto vertical tuya funciona mejor. La recortamos para que encaje.", "Une photo de toi en format portrait fonctionne le mieux. On la recadre pour qu'elle s'adapte.", "Una tua foto in verticale funziona meglio. La ritagliamo per adattarla.", "Ein Hochformat-Foto von dir passt am besten. Wir schneiden es passend zu."],
   ["That file is not a picture. Try a JPG or PNG.", "Ese archivo no es una imagen. Prueba con un JPG o PNG.", "Ce fichier n'est pas une image. Essaie un JPG ou PNG.", "Quel file non è un'immagine. Prova con un JPG o PNG.", "Diese Datei ist kein Bild. Versuch es mit JPG oder PNG."],
   ["We could not upload that picture. Please try another.", "No pudimos subir esa foto. Prueba con otra.", "On n'a pas pu téléverser cette photo. Essaie-en une autre.", "Non siamo riusciti a caricare quella foto. Prova con un'altra.", "Wir konnten dieses Bild nicht hochladen. Versuch ein anderes."],
   ["Where you are", "Dónde estás", "Où tu es", "Dove sei", "Wo du bist"],
@@ -122,4 +121,7 @@ export const closers: readonly Entry[] = [
   ["Where:", "Dónde:", "Où :", "Dove:", "Wo:"],
   ["Bio:", "Biografía:", "Bio :", "Bio:", "Bio:"],
   ["Coming soon", "Próximamente", "Bientôt disponible", "In arrivo", "Demnächst"],
+  ["Your whole photo is shown, so pick one you love.", "Se muestra tu foto completa, así que elige una que te encante.", "Ta photo est affichée en entier, alors choisis-en une que tu adores.", "Viene mostrata tutta la tua foto, quindi scegline una che ami.", "Dein ganzes Foto wird angezeigt – such dir eines aus, das du liebst."],
+  ["This is your own card, so the Hire button is switched off.", "Esta es tu propia tarjeta, así que el botón Contratar está desactivado.", "C'est ta propre carte, donc le bouton Engager est désactivé.", "Questa è la tua carta, quindi il pulsante Ingaggia è disattivato.", "Das ist deine eigene Karte, deshalb ist der Buchen-Button ausgeschaltet."],
+  ["You and {0} settle payment between you. The portal does not take payment.", "Tú y {0} arreglan el pago entre ustedes. El portal no cobra pagos.", "Toi et {0}, vous réglez le paiement entre vous. Le portail ne prend aucun paiement.", "Tu e {0} vi accordate sul pagamento tra voi. Il portale non incassa pagamenti.", "Du und {0} regelt die Bezahlung unter euch. Das Portal nimmt keine Zahlungen entgegen."],
 ];
