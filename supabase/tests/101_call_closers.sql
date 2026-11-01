@@ -65,4 +65,14 @@ do $$ declare app uuid; begin
   perform tests.eq('leads cannot browse closers', (select count(*) from public.call_closers_directory()), 0::bigint);
   perform tests.logout();
 end $$;
+
+do $$ begin
+  perform tests.login('00000000-0000-0000-0000-0000000000a5');
+  insert into public.booked_calls (member_id, lead_name, starts_at, closer_id, note) values ('00000000-0000-0000-0000-0000000000a5', 'Zed', now() + interval '1 day', '00000000-0000-0000-0000-0000000000a1', 'be kind');
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a1');
+  perform tests.eq('the closer is told when hired for a call', (select count(*) from public.notifications where title like '% hired you for a call'), 1::bigint);
+  perform tests.eq('the closer sees the booking', (select count(*) from public.booked_calls where lead_name = 'Zed'), 1::bigint);
+  perform tests.logout();
+end $$;
 rollback;

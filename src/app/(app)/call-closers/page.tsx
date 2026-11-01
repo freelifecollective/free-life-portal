@@ -23,11 +23,11 @@ export default async function CallClosersPage() {
   return (
     <>
       <PageHeading lede="Hire an FLC call closer to take the sales call with your lead. Message them, agree a price, then add the call on Home so they can be reviewed.">Call Closers for Hire</PageHeading>
-      <div className="stack" style={{ maxWidth: 820 }}>
+      <div className="stack">
         {closers.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>No call closers are listed yet.</p></section> : (
           <div className="closer-grid">{closers.map((c) => <CloserCard key={c.id} c={c} me={session.user.id} />)}</div>
         )}
-        <ApplyForm mine={mine} isCloser={isCloser} />
+        <div style={{ maxWidth: 820 }}><ApplyForm mine={mine} isCloser={isCloser} /></div>
       </div>
     </>
   );
