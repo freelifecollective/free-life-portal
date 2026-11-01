@@ -17,7 +17,7 @@ import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
 import { ProfilePopupProvider } from "./people/ProfilePopup";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
@@ -37,6 +37,7 @@ const NAV: NavItem[] = [
   { label: "Graphic maker", min: "member" },
   { label: "Your Organization", href: "/family-tree", min: "member", group: "Placing Sales" },
   { label: "Tasks", href: "/tasks", min: "member" },
+  { label: "Book a Call", href: "/book", min: "lead", leadOnly: true },
   { label: "Water Share Map", href: "/water-map", min: "member" },
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
@@ -100,7 +101,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min) && (!n.leadOnly || p.role === "lead"))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>

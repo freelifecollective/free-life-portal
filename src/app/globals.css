@@ -1581,3 +1581,15 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
   .ft-scroll { overflow: visible; border: 0; }
   .ft-svg { width: 100% !important; height: auto !important; }
 }
+
+/* Open hours and booking */
+.av-days { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.av-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.av-row:not(.on) { opacity: .6; }
+.av-day { display: flex; align-items: center; gap: 8px; min-width: 130px; font-weight: 600; }
+.av-row select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.bk-days { display: grid; gap: 14px; }
+.bk-day h3 { margin: 0 0 8px; font-size: 16px; }
+.bk-slots { display: flex; flex-wrap: wrap; gap: 8px; }
+.bk-slot { font: inherit; font-weight: 600; padding: 9px 14px; border-radius: 999px; border: 1.5px solid var(--accent-deep); background: #fff; color: var(--accent-deep); cursor: pointer; }
+.bk-slot:hover, .bk-slot[aria-pressed="true"] { background: var(--accent-deep); color: #fff; }
