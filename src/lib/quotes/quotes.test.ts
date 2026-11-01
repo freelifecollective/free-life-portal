@@ -18,11 +18,11 @@ describe("daily quotes", () => {
     expect(dayNumber("2024-03-01")).toBe(60);
   });
   it("mixes angel numbers in with the energetic messages", () => {
-    const s = QUOTES.spiritual.map((q) => q.text);
-    expect(s.some((t) => /^\d/.test(t))).toBe(true);
-    expect(s.some((t) => !/^\d/.test(t))).toBe(true);
-    expect(/^\d/.test(s[0])).toBe(false);
-    expect(/^\d/.test(s[1])).toBe(true);
+    const s = QUOTES.spiritual.map((q) => !!q.num);
+    expect(s.some((t) => t)).toBe(true);
+    expect(s.some((t) => !t)).toBe(true);
+    expect(s[0]).toBe(false);
+    expect(s[1]).toBe(true);
   });
   it("gives every Bible quote a reference", () => {
     expect(QUOTES.faith.every((q) => q.by && /\d/.test(q.by))).toBe(true);

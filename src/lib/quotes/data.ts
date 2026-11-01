@@ -1,5 +1,5 @@
 /** Daily quotes in three styles. One is shown per day; when the list ends it starts over. Edit freely: one line per quote. */
-export type Quote = { text: string; by?: string };
+export type Quote = { text: string; by?: string; num?: string };
 export type QuoteStyle = "general" | "faith" | "spiritual";
 export const QUOTE_STYLES: { id: QuoteStyle; label: string; hint: string }[] = [
   { id: "general", label: "Inspirational", hint: "Motivation for business and life" },
@@ -264,7 +264,7 @@ const ANGEL: Quote[] = [
   ["7070", "Listen to your intuition. It is leading you to your next right step."],
   ["8080", "Your abundance is on its way. Keep believing and keep doing the work."],
   ["9090", "Complete what you have started. Then rest, and welcome the new."],
-].map(([n, m]) => ({ text: `${n}: ${m}` }));
+].map(([n, m]) => ({ num: n, text: m }));
 
 const ENERGY: Quote[] = [
   "The universe is rearranging things in your favor. Stay open and keep taking inspired action.",

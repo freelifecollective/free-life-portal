@@ -5,6 +5,8 @@ import { NextCallCard } from "@/components/dashboard/NextCallCard";
 import { listAffiliates } from "@/lib/calls/affiliates";
 import { getTz } from "@/lib/tasks/queries";
 import { parseRange, presets } from "@/lib/dashboard/range";
+import { cookies } from "next/headers";
+import { translateFor } from "@/i18n/server";
 import { isQuoteStyle, quoteFor, type QuoteStyle } from "@/lib/quotes";
 import { listUpcomingCalls, pickFeatured, rsvpSummary } from "@/lib/calls/queries";
 import { formatInZone, nowMs, toZonedInput } from "@/lib/time";
@@ -34,7 +36,10 @@ export default async function HomePage(props: PageProps<"/">) {
     const { data: pref } = await supabase.from("member_prefs").select("quote_style").maybeSingle();
     if (isQuoteStyle(pref?.quote_style)) quoteStyle = pref.quote_style;
   }
-  const quote = quoteFor(quoteStyle, toZonedInput(new Date(now)).slice(0, 10));
+  const rawQuote = quoteFor(quoteStyle, toZonedInput(new Date(now)).slice(0, 10));
+  /* written in the reader's language on the server, so the quote is already right when the page arrives */
+  const lang = (await cookies()).get("flc_lang")?.value;
+  const quote = { ...rawQuote, text: translateFor(lang, rawQuote.text) ?? rawQuote.text, by: rawQuote.by ? translateFor(lang, rawQuote.by) ?? rawQuote.by : undefined };
 
   const range = parseRange(one(sp.from), one(sp.to), now);
   const today = toZonedInput(new Date(now)).slice(0, 10);
@@ -66,7 +71,7 @@ export default async function HomePage(props: PageProps<"/">) {
         <p className="home-eyebrow">Free Life Collective</p>
         <h1 className="home-title">Welcome, {profile.first_name}</h1>
         <blockquote className="home-quote" style={{ margin: "14px auto 0" }}>
-          <q>{quote.text}</q>
+          <q>{quote.num ? `${quote.num}: ` : ""}{quote.text}</q>
           {quote.by ? <cite>{quote.by}</cite> : null}
         </blockquote>
       </header>
