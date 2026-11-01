@@ -141,4 +141,8 @@ export const conversations: readonly Entry[] = [
   ["Frequently used", "Usados con frecuencia", "Utilisés fréquemment", "Usati di frequente", "Häufig verwendet"],
   ["Add another to the left", "Añadir otro a la izquierda", "Ajouter un autre à gauche", "Aggiungine un altro a sinistra", "Noch einen links hinzufügen"],
   ["Add another to the right", "Añadir otro a la derecha", "Ajouter un autre à droite", "Aggiungine un altro a destra", "Noch einen rechts hinzufügen"],
+  ["Drop to the left", "Suelta a la izquierda", "Dépose à gauche", "Rilascia a sinistra", "Links ablegen"],
+  ["Drop to the right", "Suelta a la derecha", "Dépose à droite", "Rilascia a destra", "Rechts ablegen"],
+  ["A bubble cannot go under itself or anything below it.", "Una burbuja no puede ir debajo de sí misma ni de nada que esté debajo de ella.", "Une bulle ne peut pas aller sous elle-même ni sous ce qui est en dessous.", "Una bolla non può andare sotto se stessa né sotto ciò che c'è sotto di lei.", "Eine Blase kann nicht unter sich selbst oder unter etwas darunter stehen."],
+  ["We could not move that. Please try again.", "No pudimos moverlo. Inténtalo de nuevo.", "Nous n'avons pas pu le déplacer. Réessaie.", "Non siamo riusciti a spostarlo. Riprova.", "Wir konnten das nicht verschieben. Versuch es bitte nochmal."],
 ];
