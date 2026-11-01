@@ -3,7 +3,7 @@
 import { openDockChat } from "@/components/messages/MessageDock";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { Map as GLMap, Marker, Popup } from "maplibre-gl";
+import type { ExpressionSpecification, LayerSpecification, Map as GLMap, Marker, Popup, SourceSpecification } from "maplibre-gl";
 import { currentLang } from "@/lib/language";
 import { Avatar } from "@/components/Avatar";
 import { ProfileCard, type MemberPerson } from "@/components/chats/ProfileCard";
@@ -16,7 +16,7 @@ type Search = (q: string) => Promise<{ ok: true; place: Place } | { ok: false; e
 type Found = { place: Place; list: (WaterPin & { km: number })[] };
 
 /**
- * An interactive world map: drag, zoom, tap a dot. It is a modern vector map (country shapes that ship with the portal, with street pictures from CARTO / OpenStreetMap on top) whose country names
+ * An interactive world map: drag, zoom, tap a dot. It is a modern vector map (country shapes that ship with the portal, with street detail from OpenFreeMap on top) whose country names
  * are shown in the language the member picked. The search box finds the closest affiliates to any town.
  */
 export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[]; myId: string | null; search?: Search }) {
@@ -57,29 +57,44 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       if (cancelled || !box.current) return;
       const topo = (atlas.default ?? atlas) as unknown as Parameters<typeof feature>[0];
       const land = feature(topo, (topo as unknown as { objects: { countries: Parameters<typeof feature>[1] } }).objects.countries) as unknown as GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon, { name?: string }>;
-      const tiles = (kind: string) => ["a", "b", "c", "d"].map((x) => `https://${x}.basemaps.cartocdn.com/rastertiles/${kind}/{z}/{x}/{y}.png`);
-      const credit = "© OpenStreetMap contributors © CARTO";
       const m = new ml.Map({
         container: box.current, center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true },
         style: {
           version: 8,
-          sources: {
-            land: { type: "geojson", data: land },
-            plain: { type: "raster", tiles: tiles("voyager_nolabels"), tileSize: 256, maxzoom: 18, attribution: credit },
-            named: { type: "raster", tiles: tiles("voyager"), tileSize: 256, maxzoom: 18, attribution: credit },
-          },
+          glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+          sources: { land: { type: "geojson", data: land } },
           layers: [
             { id: "sea", type: "background", paint: { "background-color": "#cfe3ee" } },
             { id: "land", type: "fill", source: "land", paint: { "fill-color": "#f3efe6" } },
             { id: "borders", type: "line", source: "land", paint: { "line-color": "#b9ae9c", "line-width": 0.8 } },
-            { id: "plain", type: "raster", source: "plain", maxzoom: 5 },
-            { id: "named", type: "raster", source: "named", minzoom: 5 },
           ],
         },
       });
       m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
+      /* Street-level detail (water, roads, towns) from OpenFreeMap is added on top when it answers. If it does not, the map above still works. */
+      m.once("load", () => {
+        void (async () => {
+          try {
+            const res = await fetch("https://tiles.openfreemap.org/styles/liberty");
+            if (!res.ok || cancelled) return;
+            const st = (await res.json()) as { sources: Record<string, SourceSpecification>; layers: LayerSpecification[] };
+            for (const [id, src] of Object.entries(st.sources)) { if (!m.getSource(id)) m.addSource(id, src); }
+            const field = ["coalesce", ["get", `name:${lang}`], ["get", `name_${lang}`], ["get", "name:latin"], ["get", "name"]] as ExpressionSpecification;
+            for (const l of st.layers) {
+              if (l.type === "background") continue;
+              if (l.type === "symbol") {
+                /* only town and city names (country names are drawn above); nothing that needs the map's own icon sheet */
+                if (!/^label_(city|town|village|other)/.test(l.id) || l.layout?.["icon-image"]) continue;
+                l.layout = { ...l.layout, "text-field": field };
+              }
+              m.addLayer(l);
+            }
+          } catch { /* no street detail; the country map stays */ }
+        })();
+      });
       /* country names in the member's language, put on the map as plain text so they never depend on a font server */
       const names = (() => { try { return new Intl.DisplayNames([lang], { type: "region" }); } catch { return null; } })();
+      const labels: { el: HTMLElement; lng: number; lat: number; area: number }[] = [];
       for (const f of land.features) {
         const polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
         let best: number[][] | null = null, bestArea = 0;
@@ -88,7 +103,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
           for (let i = 0; i < ring.length - 1; i++) area += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
           if (Math.abs(area) > bestArea) { bestArea = Math.abs(area); best = ring; }
         }
-        if (!best || bestArea < 6) continue; /* skip the tiny ones; they appear once the street pictures load */
+        if (!best || bestArea < 6) continue; /* skip the tiny ones */
         let cx = 0, cy = 0, a2 = 0;
         for (let i = 0; i < best.length - 1; i++) { const k = best[i][0] * best[i + 1][1] - best[i + 1][0] * best[i][1]; a2 += k; cx += (best[i][0] + best[i + 1][0]) * k; cy += (best[i][1] + best[i + 1][1]) * k; }
         if (!a2) continue;
@@ -98,10 +113,27 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
         if (!text) continue;
         const el = document.createElement("div");
         el.className = "ws-country"; el.textContent = text; el.setAttribute("translate", "no");
-        new ml.Marker({ element: el }).setLngLat([cx / (3 * a2), cy / (3 * a2)]).addTo(m);
+        const lng = cx / (3 * a2), lat = cy / (3 * a2);
+        new ml.Marker({ element: el }).setLngLat([lng, lat]).addTo(m);
+        labels.push({ el, lng, lat, area: bestArea });
       }
-      const showNames = () => { box.current?.classList.toggle("ws-no-names", m.getZoom() >= 5); };
-      m.on("zoom", showNames); showNames();
+      labels.sort((x, y) => y.area - x.area);
+      /* the biggest countries get their names first; a name that would sit on top of one already shown is left out until you zoom in */
+      const showNames = () => {
+        const hide = m.getZoom() >= 6;
+        box.current?.classList.toggle("ws-no-names", hide);
+        if (hide) return;
+        const taken: { x0: number; y0: number; x1: number; y1: number }[] = [];
+        for (const l of labels) {
+          const pt = m.project([l.lng, l.lat]);
+          const w = l.el.offsetWidth || 70, h = l.el.offsetHeight || 14;
+          const r = { x0: pt.x - w / 2 - 3, y0: pt.y - h / 2 - 2, x1: pt.x + w / 2 + 3, y1: pt.y + h / 2 + 2 };
+          const clash = taken.some((t) => r.x0 < t.x1 && r.x1 > t.x0 && r.y0 < t.y1 && r.y1 > t.y0);
+          l.el.style.visibility = clash ? "hidden" : "visible";
+          if (!clash) taken.push(r);
+        }
+      };
+      m.on("zoomend", showNames); m.on("resize", showNames); m.once("load", showNames); showNames();
       for (const p of pins) {
         const mine = p.member_id === myId;
         const dot = document.createElement("button");
