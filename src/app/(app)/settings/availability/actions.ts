@@ -43,3 +43,41 @@ export async function saveHours(_prev: HoursState, form: FormData): Promise<Hour
   revalidatePath("/settings/availability"); revalidatePath("/call-closer");
   return { error: "", saved: true };
 }
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Blocks one date, or every date from the first to the last, so leads cannot book them. */
+export async function blockDates(from: string, to: string, note: string): Promise<{ ok: boolean; error?: string }> {
+  const { session, supabase } = await requireMember();
+  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Availability is for affiliates." };
+  const last = to || from;
+  if (!DAY.test(from) || !DAY.test(last)) return { ok: false, error: "Choose a date." };
+  const a = new Date(`${from}T00:00:00Z`).getTime(), b = new Date(`${last}T00:00:00Z`).getTime();
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return { ok: false, error: "The last date must be on or after the first." };
+  const days = Math.round((b - a) / 86_400_000) + 1;
+  if (days > 120) return { ok: false, error: "Block up to 120 days at a time." };
+  const n = note.trim().slice(0, 80) || null;
+  const rows = Array.from({ length: days }, (_, i) => ({ member_id: session.user.id, day: new Date(a + i * 86_400_000).toISOString().slice(0, 10), note: n }));
+  const { error } = await supabase.from("coach_blocked_dates").upsert(rows, { onConflict: "member_id,day" });
+  if (error) return { ok: false, error: "We could not save that. Please try again." };
+  revalidatePath("/settings/availability"); revalidatePath("/call-closer"); revalidatePath("/book");
+  return { ok: true };
+}
+
+export async function unblockDate(day: string): Promise<{ ok: boolean }> {
+  if (!DAY.test(day)) return { ok: false };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false };
+  const { error } = await supabase.from("coach_blocked_dates").delete().eq("member_id", session.user.id).eq("day", day);
+  revalidatePath("/settings/availability"); revalidatePath("/call-closer"); revalidatePath("/book");
+  return { ok: !error };
+}
+
+/** Takes the Google Calendar link away. */
+export async function disconnectGoogle(): Promise<{ ok: boolean }> {
+  const { supabase } = await requireMember();
+  if (!supabase) return { ok: false };
+  const { error } = await supabase.rpc("disconnect_google_calendar");
+  revalidatePath("/settings/availability"); revalidatePath("/call-closer"); revalidatePath("/book");
+  return { ok: !error };
+}
