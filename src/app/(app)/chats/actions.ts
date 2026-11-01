@@ -101,3 +101,17 @@ export async function markSeen(postIds: string[]): Promise<void> {
   const { supabase } = await requireMember();
   await supabase?.rpc("mark_posts_seen", { p_posts: ids });
 }
+
+/** Sends a message in a conversation chat, optionally quoting an earlier message. */
+export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null): Promise<Result> {
+  const text = String(body ?? "").trim();
+  if (!UUID.test(chatId) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
+  if (!text) return { ok: false, error: "Write something first." };
+  if (text.length > POST_MAX) return { ok: false, error: `Please keep messages under ${POST_MAX} characters.` };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
+  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: text, ...(replyTo ? { reply_to: replyTo } : {}) });
+  if (error) return { ok: false, error: "We could not send that. Please try again." };
+  refresh(slug);
+  return { ok: true };
+}

@@ -26,6 +26,7 @@ const NAV: NavItem[] = [
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead" },
+  { label: "Private Groups", href: "/groups", min: "member" },
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
   { label: "Classroom", href: "/classroom", min: "lead" },
   { label: "Calls", href: "/calls", min: "lead", group: "FLC Calls" },
@@ -38,7 +39,6 @@ const NAV: NavItem[] = [
   { label: "Your Organization", href: "/family-tree", min: "member", group: "Placing Sales" },
   { label: "Tasks", href: "/tasks", min: "member" },
   { label: "Book a Call", href: "/book", min: "lead", leadOnly: true },
-  { label: "Call Closer", href: "/call-closer", min: "member", closerOnly: true },
   { label: "Water Share Map", href: "/water-map", min: "member" },
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
@@ -98,7 +98,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
             </Link>
           )}
           {session.mode === "supabase" ? <NotificationBell count={unread} userId={session.user.id} /> : null}
-          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
+          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} showCloser={!!p.call_closer} />
         </div>
         </div>
       </header>
