@@ -3,6 +3,7 @@ export type CloserCardData = {
   calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null;
   review_count: number; avg_rating: number | null; members_booked: number;
   cover_url: string | null; location: string | null; experience_text: string | null; bio: string | null;
+  paused?: boolean; on_waitlist?: boolean;
 };
 
 export type Application = {

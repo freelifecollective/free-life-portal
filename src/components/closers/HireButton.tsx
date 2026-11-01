@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { endHire, hireCloser } from "@/app/(app)/call-closers/actions";
+import { endHire, hireCloser, toggleWaitlist } from "@/app/(app)/call-closers/actions";
 
 export type ActiveHire = { id: string; closer_id: string; calls_total: number | null; calls_used: number; status?: "pending" | "active" };
 
@@ -13,7 +13,7 @@ const CHOICES = [
 ] as const;
 
 /** "Hire Sonya": for one call, two calls, or every future call. Shows where the hire stands once it is made. */
-export function HireButton({ closerId, first, hire, otherHire, priceCall, priceSale }: { closerId: string; first: string; hire: ActiveHire | null; otherHire: boolean; priceCall: number | null; priceSale: string | null }) {
+export function HireButton({ closerId, first, hire, otherHire, priceCall, priceSale, paused = false, onWaitlist = false }: { closerId: string; first: string; hire: ActiveHire | null; otherHire: boolean; priceCall: number | null; priceSale: string | null; paused?: boolean; onWaitlist?: boolean }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [calls, setCalls] = useState<number>(1);
   const [note, setNote] = useState("");
@@ -39,6 +39,15 @@ export function HireButton({ closerId, first, hire, otherHire, priceCall, priceS
         <p className="when" style={{ margin: 0 }}>{left === null ? "They take all your future coaching calls." : left === 1 ? "They take your next coaching call." : `They take your next ${left} coaching calls.`}</p>
         <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await endHire(hire.id); router.refresh(); })}>Stop this hire</button>
       </div>
+    );
+  }
+  if (paused) {
+    return (
+      <button type="button" className="cc-hire cc-paused" aria-pressed={onWaitlist} disabled={pending}
+        onClick={() => start(async () => { await toggleWaitlist(closerId); router.refresh(); })}>
+        <strong>Not Currently Booking</strong>
+        <small>{onWaitlist ? `We will tell you when ${first} is booking again. Tap to undo.` : `Would you like to be notified when ${first}'s booking again?`}</small>
+      </button>
     );
   }
   if (otherHire) return <p className="when" style={{ margin: 0 }}>{`You have another call closer hired. Stop that hire first to hire ${first}.`}</p>;
