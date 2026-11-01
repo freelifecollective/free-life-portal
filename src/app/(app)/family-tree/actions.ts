@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
+import { TREE_RANKS } from "@/lib/tree/colors";
 import type { TreeNode } from "@/lib/tree/layout";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const RANKS = ["1A", "2A", "3A", "4A", "5A", "6A", "6A2", "6A2-2", "6A2-3+"];
+const RANKS: string[] = [...TREE_RANKS];
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 export type NodeInput = { id?: string; chartId: string; parentId: string | null; side: "left" | "right"; label: string; rank: string; linkedId: string | null; owned: boolean };
@@ -31,7 +32,15 @@ export async function saveNode(input: NodeInput): Promise<Result<{ node: TreeNod
     revalidatePath("/family-tree");
     return { ok: true, node: data as TreeNode };
   }
-  const { data, error } = await supabase.from("family_tree_nodes").insert({ owner_id: session.user.id, chart_id: input.chartId, parent_id: input.parentId, side: input.side, label, rank, linked_member_id: linked, owned }).select(cols).maybeSingle();
+  /* "add to the left" puts the new account before the others under that bubble, "add to the right" after them */
+  let createdAt: string | undefined;
+  if (input.side === "left") {
+    const sibs = supabase.from("family_tree_nodes").select("created_at").eq("chart_id", input.chartId).order("created_at").limit(1);
+    const { data: first } = await (input.parentId ? sibs.eq("parent_id", input.parentId) : sibs.is("parent_id", null)).maybeSingle();
+    const t = (first as { created_at: string } | null)?.created_at;
+    if (t) createdAt = new Date(new Date(t).getTime() - 1000).toISOString();
+  }
+  const { data, error } = await supabase.from("family_tree_nodes").insert({ owner_id: session.user.id, chart_id: input.chartId, parent_id: input.parentId, side: input.side, label, rank, linked_member_id: linked, owned, ...(createdAt ? { created_at: createdAt } : {}) }).select(cols).maybeSingle();
   if (error || !data) {
     if (error?.code === "23505") return { ok: false, error: "That spot is already taken. Refresh and try again." };
     if (error?.code === "23514") return { ok: false, error: "A chart can hold up to 600 bubbles." };

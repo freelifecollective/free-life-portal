@@ -1,7 +1,7 @@
 import type { TreeNode } from "./layout";
 
-/** The ranks a bubble can have. "6A2-3+" means 6A2-3 and above. */
-export const TREE_RANKS = ["1A", "2A", "3A", "4A", "5A", "6A", "6A2", "6A2-2", "6A2-3+"] as const;
+/** The ranks a bubble can have. 6A2-3 up to 6A2-8 share one colour ("6A2-3 and above"). */
+export const TREE_RANKS = ["1A", "2A", "3A", "4A", "5A", "6A", "6A2", "6A2-2", "6A2-3", "6A2-4", "6A2-5", "6A2-6", "6A2-7", "6A2-8"] as const;
 
 export type Swatch = { key: string; label: string; fill: string; stroke: string };
 export const OWNED: Swatch = { key: "owned", label: "My accounts", fill: "#AB9080", stroke: "#8D7364" };
@@ -23,7 +23,7 @@ export function rankKey(rank: string | null | undefined): string | null {
     case "6A": return "6";
     case "6A2": return "62";
     case "6A2-2": return "62-2";
-    case "6A2-3+": case "6A+": return "62-3";
+    case "6A2-3": case "6A2-4": case "6A2-5": case "6A2-6": case "6A2-7": case "6A2-8": case "6A2-3+": case "6A+": return "62-3";
     default: return null;
   }
 }

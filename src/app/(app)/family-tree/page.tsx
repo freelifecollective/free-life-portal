@@ -26,7 +26,7 @@ export default async function FamilyTreePage(props: PageProps<"/family-tree">) {
     supabase.from("member_private").select("rank_id").maybeSingle(),
   ]);
   const rankId = (mp as { rank_id: number | null } | null)?.rank_id ?? null;
-  const ranks = ["1A", "2A", "3A", "4A", "5A", "6A", "6A2-3+"];
+  const ranks = ["1A", "2A", "3A", "4A", "5A", "6A", "6A2-3"];
   const t = active;
   const p = session.profile;
   const name = t?.root_label || [p.first_name, p.last_name].filter(Boolean).join(" ") || "You";
