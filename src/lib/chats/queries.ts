@@ -3,19 +3,22 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Author, ChatInfo, ChatSection, PostView } from "./types";
 import type { Role } from "@/lib/roles";
 
-const CHAT_COLUMNS = "id, section_id, slug, name, description, sort, votes_on, min_role, description_lead, posting, replies_allowed, show_views, divider_after";
+const CHAT_COLUMNS = "id, section_id, slug, name, description, sort, votes_on, min_role, description_lead, posting, replies_allowed, show_views, divider_after, mode";
 
 /** Sections and their chats. Row level security hides what this person may not see. */
 export async function listChatSections(supabase: SupabaseClient): Promise<ChatSection[]> {
-  const [{ data: sections }, { data: chats }] = await Promise.all([
+  const [{ data: sections }, withMode] = await Promise.all([
     supabase.from("chat_sections").select("id, name, min_role").order("sort"),
     supabase.from("chats").select(CHAT_COLUMNS).order("sort"),
   ]);
+  /* until the database update for conversations has been run, fall back to the old columns so chats keep working */
+  const chats = withMode.error ? (await supabase.from("chats").select(CHAT_COLUMNS.replace(", mode", "")).order("sort")).data : withMode.data;
   return ((sections ?? []) as { id: number; name: string; min_role: Role }[]).map((s) => ({ ...s, chats: ((chats ?? []) as ChatInfo[]).filter((c) => c.section_id === s.id) }));
 }
 
 export async function getChat(supabase: SupabaseClient, slug: string): Promise<ChatInfo | null> {
-  const { data } = await supabase.from("chats").select(CHAT_COLUMNS).eq("slug", slug).maybeSingle();
+  const first = await supabase.from("chats").select(CHAT_COLUMNS).eq("slug", slug).maybeSingle();
+  const data = first.error ? (await supabase.from("chats").select(CHAT_COLUMNS.replace(", mode", "")).eq("slug", slug).maybeSingle()).data : first.data;
   return (data as ChatInfo | null) ?? null;
 }
 

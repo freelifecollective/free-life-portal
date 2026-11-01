@@ -5,6 +5,7 @@ export const AVATAR_KINDS: AvatarKind[] = ["upload", "generated", "monogram"];
 
 export type Profile = {
   id: string;
+  call_closer?: boolean;
   first_name: string | null;
   last_name: string | null;
   username: string | null;

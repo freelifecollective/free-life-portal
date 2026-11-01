@@ -40,6 +40,9 @@ async function SessionGate({ children }: { children: ReactNode }) {
     pendingFeedback = ((pf ?? []) as { call_id: string; title: string }[]);
     badges["/messages"] = await unreadMessageCount(db);
     if (session.profile.role !== "lead") {
+      const { data: go } = await db.rpc("group_overview");
+      const gu = ((go ?? []) as { unread: number }[]).reduce((a, g) => a + g.unread, 0);
+      if (gu > 0) badges["/groups"] = gu;
       const { data: asked } = await db.from("water_share_asked").select("member_id").maybeSingle();
       waterPrompt = !asked;
       const [{ data: ab }, { data: mp }] = await Promise.all([db.from("ab_profiles").select("pool_status, in_pool_since, complete").maybeSingle(), db.from("member_private").select("rank_id").maybeSingle()]);

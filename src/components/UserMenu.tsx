@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "./Avatar";
 
 /** Your picture at the top right. Click it for your settings and to sign out. */
-export function UserMenu({ url, initials, preview, label, showSubscription, unread = 0, showNotifications = false }: { url: string | null; initials: string; preview: boolean; label: string; showSubscription: boolean; unread?: number; showNotifications?: boolean }) {
+export function UserMenu({ url, initials, preview, label, showSubscription, showCloser }: { url: string | null; initials: string; preview: boolean; label: string; showSubscription: boolean; showCloser: boolean; }) {
   const path = usePathname();
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === path; // changing page closes it
@@ -31,8 +31,8 @@ export function UserMenu({ url, initials, preview, label, showSubscription, unre
       {open ? (
         <div className="user-pop" role="menu">
           <Link href="/settings" role="menuitem">Profile</Link>
+          {showCloser ? <Link href="/call-closer" role="menuitem">Call Closer</Link> : null}
           {showSubscription ? <Link href="/settings/subscription" role="menuitem">My Subscription</Link> : null}
-          {showNotifications ? <Link href="/notifications" role="menuitem" className="phone-only um-notif">Notifications{unread ? <span className="badge" aria-label={`${unread} unread`}>{unread > 99 ? "99+" : unread}</span> : null}</Link> : null}
           <Link href="/settings/app" role="menuitem">Get the App</Link>
           <button type="button" role="menuitem" onClick={() => { setOpenAt(null); window.dispatchEvent(new Event("flc:tour")); }}>Take the tour</button>
           <button type="button" role="menuitem" onClick={() => { setOpenAt(null); logoutDialog.current?.showModal(); }}>Log out</button>

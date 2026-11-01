@@ -70,6 +70,7 @@ export async function hireCloser(closerId: string, calls: number, note: string):
   const { error } = await supabase.rpc("hire_closer", { p_closer: closerId, p_calls: calls || null, p_note: note.trim().slice(0, 200) || null });
   if (error) {
     if (error.code === "23505") return { ok: false, error: "You already have a call closer hired. End that one first." };
+    if (error.code === "P0001") return { ok: false, error: "They are not booking right now." };
     return { ok: false, error: "We could not hire them. Please try again." };
   }
   revalidatePath("/call-closers");
@@ -115,4 +116,14 @@ export async function respondHire(id: string, accept: boolean, note: string): Pr
   if (error) return { ok: false, error: "We could not save that. The request may have been taken back." };
   revalidatePath("/call-closers");
   return { ok: true };
+}
+
+/** Join or leave the list of people to tell when a paused closer starts booking again. */
+export async function toggleWaitlist(closerId: string): Promise<{ ok: boolean; on?: boolean }> {
+  if (!UUID.test(closerId)) return { ok: false };
+  const { supabase } = await requireMember();
+  if (!supabase) return { ok: false };
+  const { data, error } = await supabase.rpc("closer_waitlist_toggle", { p_closer: closerId });
+  revalidatePath("/call-closers");
+  return error ? { ok: false } : { ok: true, on: !!data };
 }

@@ -83,8 +83,8 @@ export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hir
             ))}
           </div>
           {c.id !== me
-            ? <HireButton closerId={c.id} first={first} hire={hire?.closer_id === c.id ? hire : null} otherHire={!!hire && hire.closer_id !== c.id} priceCall={c.price_per_call_cents} priceSale={c.price_per_sale} />
-            : <><button type="button" className="btn primary cc-hire" disabled>{`Hire ${first}`}</button><p className="cc-tapback when" style={{ marginTop: -6 }}>This is your own card, so the Hire button is switched off.</p></>}
+            ? <HireButton closerId={c.id} first={first} hire={hire?.closer_id === c.id ? hire : null} otherHire={!!hire && hire.closer_id !== c.id} priceCall={c.price_per_call_cents} priceSale={c.price_per_sale} paused={!!c.paused} onWaitlist={!!c.on_waitlist} />
+            : <><button type="button" className="btn primary cc-hire" disabled>{c.paused ? "Not Currently Booking" : `Hire ${first}`}</button><p className="cc-tapback when" style={{ marginTop: -6 }}>This is your own card, so the Hire button is switched off.</p></>}
           {canMessage ? <Link className="linkbtn cc-msg" href={`/messages/${c.username}`}>{`Message ${first}`}</Link> : null}
           <p className="cc-tapback when">Tap the white space to go back</p>
         </div>

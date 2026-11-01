@@ -17,7 +17,7 @@ import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
 import { ProfilePopupProvider } from "./people/ProfilePopup";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
@@ -26,6 +26,7 @@ const NAV: NavItem[] = [
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead" },
+  { label: "Private Groups", href: "/groups", min: "member" },
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
   { label: "Classroom", href: "/classroom", min: "lead" },
   { label: "Calls", href: "/calls", min: "lead", group: "FLC Calls" },
@@ -96,14 +97,14 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
             </Link>
           )}
-          {session.mode === "supabase" ? <span className="desk-only"><NotificationBell count={unread} userId={session.user.id} /></span> : null}
-          <UserMenu unread={unread} showNotifications={session.mode === "supabase"} url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} />
+          {session.mode === "supabase" ? <NotificationBell count={unread} userId={session.user.id} /> : null}
+          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} showCloser={!!p.call_closer} />
         </div>
         </div>
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min) && (!n.leadOnly || p.role === "lead"))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min) && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
         <main className="main" id="main">{children}</main>
       </div>
