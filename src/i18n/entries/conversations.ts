@@ -111,4 +111,9 @@ export const conversations: readonly Entry[] = [
   ["Let go?", "¿Dejar ir?", "Laisser partir ?", "Lasciare andare?", "Gehen lassen?"],
   ["No clients right now. When someone hires you and you accept, they show up here.", "Ahora no hay clientes. Cuando alguien te contrate y aceptes, aparecerá aquí.", "Pas de clients pour l'instant. Quand quelqu'un t'engage et que tu acceptes, il apparaît ici.", "Nessun cliente al momento. Quando qualcuno ti assume e accetti, appare qui.", "Im Moment keine Kunden. Wenn dich jemand bucht und du annimmst, erscheint er hier."],
   ["New member", "Nuevo miembro", "Nouveau membre", "Nuovo membro", "Neues Mitglied"],
+  ["Courses", "Cursos", "Cours", "Corsi", "Kurse"],
+  ["Manage courses", "Gestionar cursos", "Gérer les cours", "Gestisci i corsi", "Kurse verwalten"],
+  ["Cover photo", "Foto de portada", "Photo de couverture", "Foto di copertina", "Titelbild"],
+  ["Remove photo", "Quitar foto", "Retirer la photo", "Rimuovi foto", "Foto entfernen"],
+  ["This is the picture people see on the Courses page.", "Esta es la imagen que la gente ve en la página de Cursos.", "C'est l'image que les gens voient sur la page Cours.", "Questa è l'immagine che le persone vedono nella pagina Corsi.", "Dieses Bild sehen die Leute auf der Kursseite."],
 ];

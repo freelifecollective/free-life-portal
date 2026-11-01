@@ -1,30 +1,35 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createCourse, deleteCourse, deleteLesson, moveCourse, moveLesson, saveCourse, saveLesson } from "@/app/(app)/admin/classroom/actions";
+import { CourseCoverField } from "./CourseCoverField";
 import type { CourseRow, LessonRow } from "@/lib/classroom/types";
 
 /** The list of courses with a box to start a new one, and arrows to put them in order. */
 export function CourseList({ courses }: { courses: CourseRow[] }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
+  const [newCover, setNewCover] = useState("");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   return (
     <div className="stack" style={{ maxWidth: 720 }}>
-      <form className="card-s" onSubmit={(e) => { e.preventDefault(); start(async () => { setError(""); const r = await createCourse(title); if (!r.ok) { setError(r.error); return; } setTitle(""); router.push(`/admin/classroom/${r.id}`); }); }}>
+      <form className="card-s" onSubmit={(e) => { e.preventDefault(); start(async () => { setError(""); const r = await createCourse(title, newCover); if (!r.ok) { setError(r.error); return; } setTitle(""); setNewCover(""); router.push(`/admin/classroom/${r.id}`); }); }}>
         <label htmlFor="nc-title" className="qh" style={{ display: "block", marginTop: 0 }}>Start a new course</label>
         <div className="rs-actions" style={{ marginTop: 0 }}>
           <input id="nc-title" type="text" maxLength={120} required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Course title" />
           <button className="btn primary" type="submit" disabled={pending}>Create</button>
         </div>
+        <CourseCoverField idPrefix="nc" value={newCover} onChange={setNewCover} />
         {error ? <p className="err" role="alert">{error}</p> : null}
       </form>
       {courses.map((c, i) => (
         <div key={c.id} className="card-s" style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
-          <div><strong translate="no">{c.title}</strong> {!c.published ? <span className="tag">Draft</span> : null}<br /><span className="when">{`${c.lessons} lessons · ${c.audience === "everyone" ? "Everyone" : "Affiliates only"}`}</span></div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>{c.cover_url ? <img src={c.cover_url} alt="" style={{ width: 64, height: 48, objectFit: "cover", borderRadius: 8 }} /> : null}<div><strong translate="no">{c.title}</strong> {!c.published ? <span className="tag">Draft</span> : null}<br /><span className="when">{`${c.lessons} lessons · ${c.audience === "everyone" ? "Everyone" : "Affiliates only"}`}</span></div></div>
           <div className="rs-actions" style={{ marginTop: 0 }}>
             <button type="button" className="btn small" disabled={pending || i === 0} aria-label="Move up" onClick={() => start(async () => { await moveCourse(c.id, -1); router.refresh(); })}>↑</button>
             <button type="button" className="btn small" disabled={pending || i === courses.length - 1} aria-label="Move down" onClick={() => start(async () => { await moveCourse(c.id, 1); router.refresh(); })}>↓</button>
@@ -63,14 +68,16 @@ export function CourseEditor({ course, lessons }: { course: CourseRow; lessons: 
   const [description, setDescription] = useState(course.description ?? "");
   const [audience, setAudience] = useState<string>(course.audience);
   const [published, setPublished] = useState(course.published);
+  const [cover, setCover] = useState(course.cover_url ?? "");
   const [msg, setMsg] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [pending, start] = useTransition();
   return (
     <div className="stack" style={{ maxWidth: 760 }}>
-      <form className="card-s set-form" onSubmit={(e) => { e.preventDefault(); start(async () => { setMsg(""); const r = await saveCourse({ id: course.id, title, description, audience, published }); setMsg(r.ok ? "Saved." : r.error); router.refresh(); }); }}>
+      <form className="card-s set-form" onSubmit={(e) => { e.preventDefault(); start(async () => { setMsg(""); const r = await saveCourse({ id: course.id, title, description, audience, published, cover_url: cover }); setMsg(r.ok ? "Saved." : r.error); router.refresh(); }); }}>
         <h2 className="qh" style={{ margin: 0 }}>Course details</h2>
         <div className="field"><label htmlFor="cd-title">Title</label><input id="cd-title" type="text" required maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+        <CourseCoverField idPrefix="cd" value={cover} onChange={setCover} />
         <div className="field"><label htmlFor="cd-desc">Description (optional)</label><textarea id="cd-desc" rows={3} maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
         <div className="field"><label htmlFor="cd-aud">Who can see it</label>
           <select id="cd-aud" value={audience} onChange={(e) => setAudience(e.target.value)}><option value="affiliates">Affiliates only</option><option value="everyone">Everyone, including leads</option></select></div>

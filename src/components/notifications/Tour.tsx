@@ -16,7 +16,7 @@ const TABS: Record<string, string> = {
   "Calendar": "Every call, with the date and time. Tap I'll be there live or I'll watch the recording. Times are Eastern, and your own time shows underneath if you are somewhere else.",
   "Calls": "Join live calls from here, and watch replays any time. Filter recordings by topic and year.",
   "Chats": "Talk with the community. New Members chats are open to everyone, and Affiliates Only chats unlock when you join as an affiliate. Important Updates has the latest team news.",
-  "Classroom": "Courses and lessons, with your progress saved. Coming soon.",
+  "Courses": "Courses and lessons, with your progress saved. Coming soon.",
   "Earnings Estimator": "Pick your country and points, then tap products to see what your commissions could be.",
   "Documents": "Guides and resources to download and share, organised in folders.",
   "Financing Options": "Different ways to fund your business, sorted by country. Affiliates can suggest new ones for approval.",

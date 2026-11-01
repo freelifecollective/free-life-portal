@@ -8,25 +8,28 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type R = { ok: true; id?: string } | { ok: false; error: string };
 const refresh = () => { revalidatePath("/admin/classroom", "layout"); revalidatePath("/classroom", "layout"); };
 
-export async function createCourse(title: string): Promise<R> {
+const COVER = /^https:\/\/[^\s]{1,480}$/;
+const coverOf = (u: string) => { const t = (u ?? "").trim(); return t && COVER.test(t) ? t : null; };
+
+export async function createCourse(title: string, cover = ""): Promise<R> {
   const t = title.trim();
   if (!t || t.length > 120) return { ok: false, error: "Give the course a title of up to 120 characters." };
   const { supabase } = await requireAdmin();
   const { data: last } = await supabase.from("classroom_courses").select("sort").order("sort", { ascending: false }).limit(1).maybeSingle();
-  const { data, error } = await supabase.from("classroom_courses").insert({ title: t, sort: ((last as { sort: number } | null)?.sort ?? 0) + 1 }).select("id").maybeSingle();
+  const { data, error } = await supabase.from("classroom_courses").insert({ title: t, sort: ((last as { sort: number } | null)?.sort ?? 0) + 1, ...(coverOf(cover) ? { cover_url: coverOf(cover) } : {}) }).select("id").maybeSingle();
   if (error || !data) return { ok: false, error: "We could not create that. Please try again." };
   refresh();
   return { ok: true, id: (data as { id: string }).id };
 }
 
-export async function saveCourse(c: { id: string; title: string; description: string; audience: string; published: boolean }): Promise<R> {
+export async function saveCourse(c: { id: string; title: string; description: string; audience: string; published: boolean; cover_url?: string }): Promise<R> {
   if (!UUID.test(c.id)) return { ok: false, error: "Something went wrong." };
   const title = c.title.trim();
   if (!title || title.length > 120) return { ok: false, error: "Give the course a title of up to 120 characters." };
   if (c.description.length > 1000) return { ok: false, error: "Keep the description under 1000 characters." };
   if (c.audience !== "everyone" && c.audience !== "affiliates") return { ok: false, error: "Choose who can see the course." };
   const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("classroom_courses").update({ title, description: c.description.trim() || null, audience: c.audience, published: !!c.published }).eq("id", c.id);
+  const { error } = await supabase.from("classroom_courses").update({ title, description: c.description.trim() || null, audience: c.audience, published: !!c.published, cover_url: coverOf(c.cover_url ?? "") }).eq("id", c.id);
   if (error) return { ok: false, error: "We could not save that. Please try again." };
   refresh();
   return { ok: true };
