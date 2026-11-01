@@ -5,7 +5,7 @@ import { moveNode, setSharing } from "@/app/(app)/family-tree/actions";
 import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
-import { TreeChart } from "./TreeChart";
+import { TreeChart, type Place } from "./TreeChart";
 import { KEY_POSITIONS, useKeyPos } from "./useKeyPos";
 import { useWidth } from "./useWidth";
 
@@ -41,14 +41,21 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
     while (grew) { grew = false; for (const n of nodes) if (n.parent_id && dead.has(n.parent_id) && !dead.has(n.id)) { dead.add(n.id); grew = true; } }
     setNodes(nodes.filter((n) => !dead.has(n.id)));
   };
-  const onMove = (id: string, parentId: string | null, side: Side) => {
+  const onMove = (id: string, parentId: string | null, side: Side, place?: Place) => {
     const cur = nodes.find((n) => n.id === id);
-    if (!cur || (cur.parent_id === parentId && cur.side === side)) return;
+    if (!cur || (cur.parent_id === parentId && cur.side === side && !place)) return;
     const before = nodes;
-    setNodes([...nodes.filter((n) => n.id !== id), { ...cur, parent_id: parentId, side }]);   /* it joins the end of its new side */
+    /* it goes where it was dropped among the others on that side: first, right after one of them, or at the end */
+    const rest = nodes.filter((n) => n.id !== id);
+    const moved = { ...cur, parent_id: parentId, side };
+    const same = (n: TreeNode) => n.parent_id === parentId && n.side === side;
+    let at = rest.length;
+    if (place?.first) { const f = rest.findIndex(same); if (f >= 0) at = f; }
+    else if (place?.after) { const a = rest.findIndex((n) => n.id === place.after); if (a >= 0) at = a + 1; }
+    setNodes([...rest.slice(0, at), moved, ...rest.slice(at)]);
     setMsg("");
     start(async () => {
-      const r = await moveNode(id, parentId, side);
+      const r = await moveNode(id, parentId, side, place);
       if (!r.ok) { setNodes(before); setMsg(r.error); }
     });
   };
@@ -103,7 +110,7 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
             onPick={openEdit} onMove={onMove} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
         </div>
       </div>
-      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side. Tap the top bubble to change your own name or rank. To move a bubble (and everything under it), drag it onto another bubble, the top bubble or a +. On a phone, press and hold first.</p>
+      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side. Tap the top bubble to change your own name or rank. To move a bubble (and everything under it), drag it onto another bubble, the top bubble or a +, or drop it in the white space next to a line to start a new branch right there. On a phone, press and hold first.</p>
 
       <NodeDialog target={target} onClose={() => setTarget(null)}
         onRootSaved={(label, rank) => { setTop({ name: label || ownerName, rank: rank || (label ? "" : ownerRank ?? "") }); setTarget(null); }}
