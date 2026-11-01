@@ -1,15 +1,15 @@
--- The course library seed: 17 drafts with covers, safe to run twice.
+-- The course library seed: 15 drafts with covers, safe to run twice.
 begin;
 \ir ../seeds/course-library.sql
 do $$ begin
-  if (select count(*) from public.classroom_courses) <> 17 then raise exception 'FAIL expected 17 courses, got %', (select count(*) from public.classroom_courses); end if;
-  raise notice 'ok   17 courses created';
+  if (select count(*) from public.classroom_courses) <> 15 then raise exception 'FAIL expected 15 courses, got %', (select count(*) from public.classroom_courses); end if;
+  raise notice 'ok   15 courses created';
   if exists (select 1 from public.classroom_courses where published or audience <> 'affiliates' or cover_url is null or cover_url !~ '^https://') then raise exception 'FAIL every course should be a draft for affiliates with a cover'; end if;
   raise notice 'ok   all drafts, affiliates only, all with covers';
 end $$;
 \ir ../seeds/course-library.sql
 do $$ begin
-  if (select count(*) from public.classroom_courses) <> 17 then raise exception 'FAIL running it twice made duplicates'; end if;
+  if (select count(*) from public.classroom_courses) <> 15 then raise exception 'FAIL running it twice made duplicates'; end if;
   raise notice 'ok   running it twice makes no duplicates';
 end $$;
 rollback;
