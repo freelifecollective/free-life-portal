@@ -1,5 +1,6 @@
 "use client";
 
+import { totalCalls } from "@/lib/closer/total";
 import { PersonLink } from "@/components/people/ProfilePopup";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -29,14 +30,6 @@ type Listing = { headline: string | null; about: string | null; tasks: string[];
 type Closer = { calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null };
 export type View = "profile" | "services" | "closer" | "reviews";
 type Stats = { calls_counted: number; members_booked: number; review_count: number; avg_rating: number | null; viewer_booked: boolean; my_rating: number | null; my_review: string | null; members_counted: number; members_base: string | null };
-
-/** "40+" plus 3 new calls becomes "43+"; a figure that is not a number is shown as typed with the new calls noted. */
-export function totalCalls(base: string | null, counted: number): string | null {
-  const m = (base ?? "").match(/^\s*(\d[\d,]*)(.*)$/);
-  if (m) return (Number(m[1].replace(/,/g, "")) + counted).toLocaleString("en-US") + m[2];
-  if (base && base.trim()) return counted ? `${base} (+${counted})` : base;
-  return counted ? String(counted) : null;
-}
 
 /**
  * A profile bubble laid out like a contact card: picture and name on top, a row of buttons (Message, services, call closer),
