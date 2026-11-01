@@ -107,7 +107,12 @@ export const TreeChart = forwardRef<SVGSVGElement, {
           const dark = isRoot || sw === OWNED;
           const text = lines(isRoot ? ownerName : p.node!.label, maxChars);
           const rank = isRoot ? ownerRank : p.node!.rank;
-          const startY = p.y - (rank ? fs * 0.5 : 0) - (text.length - 1) * (fs * 0.55);
+          /* the name lines and the rank are centred as one block, so the text sits in the middle of the box however much there is */
+          const lh = fs * 1.2, rankGap = rank ? fs * 0.35 : 0, rankH = rank ? fs * 1.1 : 0;
+          const blockH = text.length * lh + rankGap + rankH;
+          const top = p.y - blockH / 2;
+          const lineY = (i: number) => top + i * lh + lh * 0.78;
+          const rankY = top + text.length * lh + rankGap + rankH * 0.78;
           const click = isRoot ? onPickRoot : onPick ? () => onPick(p.node!.id) : undefined;
           const x0 = p.x - bw / 2, y0 = p.y - bh / 2;
           return (
@@ -118,8 +123,8 @@ export const TreeChart = forwardRef<SVGSVGElement, {
               {p.lopsided ? <rect x={x0 - 7} y={y0 - 7} width={bw + 14} height={bh + 14} rx={12} fill="none" stroke={AMBER} strokeWidth={3} strokeDasharray="4 4" /> : null}
               {hot ? <rect x={x0 - 4} y={y0 - 4} width={bw + 8} height={bh + 8} rx={11} fill="none" stroke={AMBER} strokeWidth={2} /> : null}
               <rect className="ft-box" x={x0} y={y0} width={bw} height={bh} rx={8} fill={sw.fill} stroke={sw.stroke} strokeWidth={2} />
-              {text.map((t, i) => <text key={i} x={p.x} y={startY + i * fs * 1.1 + fs * 0.35} textAnchor="middle" fontSize={fs} fontWeight={400} fill={dark ? "#fff" : "#2B2522"}>{t}</text>)}
-              {rank ? <text x={p.x} y={p.y + bh * 0.34} textAnchor="middle" fontSize={fs * 0.92} fontWeight={400} fill={dark ? "#fff" : sw.stroke}>{rank}</text> : null}
+              {text.map((t, i) => <text key={i} x={p.x} y={lineY(i)} textAnchor="middle" fontSize={fs} fontWeight={400} fill={dark ? "#fff" : "#2B2522"}>{t}</text>)}
+              {rank ? <text x={p.x} y={rankY} textAnchor="middle" fontSize={fs * 0.92} fontWeight={400} fill={dark ? "#fff" : sw.stroke}>{rank}</text> : null}
               {!isRoot && p.node!.linked_member_id ? <circle cx={x0 + bw - 6} cy={y0 + 6} r={5} fill="#5E9C76" stroke="#fff" strokeWidth={1.5} /> : null}
             </g>
           );
