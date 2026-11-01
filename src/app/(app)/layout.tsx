@@ -54,6 +54,8 @@ async function SessionGate({ children }: { children: ReactNode }) {
     const [resources, financing] = await Promise.all([pendingSubmissionCount(supabase), pendingFinancingCount(supabase)]);
     badges["/admin/resources"] = resources;
     badges["/admin/financing"] = financing;
+    const { count: closerApps } = await supabase.from("closer_applications").select("id", { count: "exact", head: true }).eq("status", "pending");
+    badges["/admin/closer-applications"] = closerApps ?? 0;
   }
   return (
     <AppShell session={session} badges={badges} unread={unread} showTour={showTour} buddyRemind={buddyRemind} pendingFeedback={pendingFeedback} liveNow={liveNow} waterPrompt={waterPrompt}>

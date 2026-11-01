@@ -27,7 +27,7 @@ function ageOf(y: number, m: number, d: number): number {
 
 type Listing = { headline: string | null; about: string | null; tasks: string[]; hourly_rate_cents: number };
 type Closer = { calls_taken: string | null; closer_since: string | null; close_rate: number | null; price_per_call_cents: number | null; price_per_sale: string | null };
-type View = "profile" | "services" | "closer" | "reviews";
+export type View = "profile" | "services" | "closer" | "reviews";
 type Stats = { calls_counted: number; members_booked: number; review_count: number; avg_rating: number | null; viewer_booked: boolean; my_rating: number | null; my_review: string | null; members_counted: number; members_base: string | null };
 
 /** "40+" plus 3 new calls becomes "43+"; a figure that is not a number is shown as typed with the new calls noted. */
@@ -43,8 +43,8 @@ function totalCalls(base: string | null, counted: number): string | null {
  * then the details underneath. Choosing services or call closer swaps the details for that information, inside the same popup.
  * A guest speaker only shows a picture, a name and "Guest Speaker".
  */
-export function ProfileCard({ p, guest = false, canMessage, onBack, onClose }: { p: MemberPerson; guest?: boolean; canMessage: boolean; onBack?: () => void; onClose: () => void }) {
-  const [view, setView] = useState<View>("profile");
+export function ProfileCard({ p, guest = false, canMessage, onBack, onClose, startView = "profile" }: { p: MemberPerson; guest?: boolean; canMessage: boolean; onBack?: () => void; onClose: () => void; startView?: View }) {
+  const [view, setView] = useState<View>(startView);
   const [zoom, setZoom] = useState(false);
   const [copied, setCopied] = useState(false);
   const [admin, setAdmin] = useState(false);
