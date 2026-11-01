@@ -75,11 +75,11 @@ export async function saveRoot(label: string, rank: string): Promise<Result> {
 }
 
 /** Moves an account, with everything under it, to another account, the top box or an empty spot. */
-export async function moveNode(id: string, parentId: string | null, side: "left" | "right"): Promise<Result> {
-  if (!UUID.test(id) || (parentId && !UUID.test(parentId)) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
+export async function moveNode(id: string, parentId: string | null, side: "left" | "right", place?: { first?: boolean; after?: string }): Promise<Result> {
+  if (!UUID.test(id) || (parentId && !UUID.test(parentId)) || (side !== "left" && side !== "right") || (place?.after && !UUID.test(place.after))) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
   if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
-  const { error } = await supabase.rpc("move_tree_node", { p_id: id, p_parent: parentId, p_side: side });
+  const { error } = await supabase.rpc("move_tree_node", { p_id: id, p_parent: parentId, p_side: side, p_after: place?.after ?? null, p_first: !!place?.first });
   if (error) return { ok: false, error: error.code === "23514" ? "A bubble cannot go under itself or anything below it." : "We could not move that. Please try again." };
   revalidatePath("/family-tree");
   return { ok: true };
