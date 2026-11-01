@@ -65,10 +65,10 @@ export const TreeChart = forwardRef<SVGSVGElement, {
   const chartY = keyPos === "top" ? bandH : 0;
   /* the key hugs its edge of the white space and its colours are spread out to fill it */
   const n = keyItems.length;
-  const vgap = vertical ? Math.min(84, Math.max(22, (H - 64) / (n - 1))) : 22;
+  const vgap = vertical ? Math.min(84, Math.max(22, (H - 80) / (n - 1))) : 22;
   const hgap = vertical ? gap : Math.max(gap, (W - 56 - keyItems.reduce((t, k) => t + itemW(k.label), 0)) / (n - 1));
   const keyX = keyPos === "left" ? 18 : keyPos === "right" ? W - colW - 18 : 28;
-  const keyY = keyPos === "bottom" ? chartH + 10 : keyPos === "top" ? 12 : 28;
+  const keyY = keyPos === "bottom" ? chartH + 10 : keyPos === "top" ? 12 : 44;
   const bw = R * 2.7, bh = R * 1.5;
   /* everything inside a dragged account moves with it, so none of it can be a place to drop */
   const below = (id: string) => {

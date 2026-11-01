@@ -7,13 +7,14 @@ import { TreeChart } from "./TreeChart";
 import { useWidth } from "./useWidth";
 
 /** The read-only copy someone sees through a share link. */
-export function SharedTree({ ownerName, ownerRank, nodes }: { ownerName: string; ownerRank: string | null; nodes: TreeNode[] }) {
+export function SharedTree({ chartName, ownerName, ownerRank, nodes }: { chartName: string; ownerName: string; ownerRank: string | null; nodes: TreeNode[] }) {
   const svg = useRef<SVGSVGElement>(null);
   const [box, boxW] = useWidth<HTMLDivElement>();
   const bal = balanceOf(buildTree(nodes));
   return (
     <main className="ft" style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 16px 60px" }}>
       <h1 className="page-heading">{`${ownerName}'s organization`}</h1>
+      <p className="when" translate="no" style={{ margin: "-6px 0 8px" }}>{chartName}</p>
       <p className="ft-counts">{`Left side: ${bal.left} · Right side: ${bal.right}`}</p>
       <div className="ft-tools">
         <button type="button" className="btn small" onClick={() => svg.current && void downloadSvgAsPng(svg.current, "your-organization.png")}>Download picture</button>
