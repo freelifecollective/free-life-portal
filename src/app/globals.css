@@ -1975,3 +1975,5 @@ html, body { max-width: 100%; overflow-x: clip; }
 .ft-keypos .danger { color: #b42318; }
 .ft-confirm { font-size: 12.5px; display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 @media print { .ft-mini, .ft-charts, .ft-newform { display: none; } }
+.ws-country { pointer-events: none; font-family: var(--font-label, system-ui); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b6354; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; white-space: nowrap; }
+.ws-no-names .ws-country { display: none; }

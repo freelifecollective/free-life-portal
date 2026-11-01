@@ -16,7 +16,7 @@ type Search = (q: string) => Promise<{ ok: true; place: Place } | { ok: false; e
 type Found = { place: Place; list: (WaterPin & { km: number })[] };
 
 /**
- * An interactive world map: drag, zoom, tap a dot. It is a modern vector map (CARTO Voyager, built on OpenStreetMap) whose place names
+ * An interactive world map: drag, zoom, tap a dot. It is a modern vector map (country shapes that ship with the portal, with street pictures from CARTO / OpenStreetMap on top) whose country names
  * are shown in the language the member picked. The search box finds the closest affiliates to any town.
  */
 export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[]; myId: string | null; search?: Search }) {
@@ -51,23 +51,57 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       if (cancelled || !box.current) return;
       lib.current = ml;
       const lang = currentLang();
-      const m = new ml.Map({ container: box.current, style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json", center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true } });
-      m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
-      /* every place name on the map is written in the member's language (falling back to the local name where there is no translation) */
-      /* done once, when the map's style has loaded (doing it on every style change made the map keep redrawing itself, and no names ever appeared) */
-      m.once("load", () => {
-        if (lang === "en") return; /* the map already writes its names in English */
-        const done = new Set<string>();
-        let layers: ReturnType<typeof m.getStyle>["layers"] = [];
-        try { layers = m.getStyle().layers ?? []; } catch { return; }
-        for (const layer of layers) {
-          if (layer.type !== "symbol" || done.has(layer.id)) continue;
-          done.add(layer.id);
-          const field = layer.layout?.["text-field"];
-          if (field === undefined || !JSON.stringify(field).includes("name")) continue;
-          try { m.setLayoutProperty(layer.id, "text-field", ["coalesce", ["get", `name_${lang}`], ["get", `name:${lang}`], ["get", "name_en"], ["get", "name:latin"], ["get", "name"]]); } catch { /* keep the map's own names for this layer */ }
-        }
+      /* The map's base is drawn from country shapes that ship with the portal, so it always appears (no outside map server has to answer).
+         Street-level pictures are laid on top when they load, and the country names are written in the member's own language. */
+      const [{ feature }, atlas, iso] = await Promise.all([import("topojson-client"), import("world-atlas/countries-110m.json"), import("i18n-iso-countries")]);
+      if (cancelled || !box.current) return;
+      const topo = (atlas.default ?? atlas) as unknown as Parameters<typeof feature>[0];
+      const land = feature(topo, (topo as unknown as { objects: { countries: Parameters<typeof feature>[1] } }).objects.countries) as unknown as GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon, { name?: string }>;
+      const tiles = (kind: string) => ["a", "b", "c", "d"].map((x) => `https://${x}.basemaps.cartocdn.com/rastertiles/${kind}/{z}/{x}/{y}.png`);
+      const credit = "© OpenStreetMap contributors © CARTO";
+      const m = new ml.Map({
+        container: box.current, center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true },
+        style: {
+          version: 8,
+          sources: {
+            land: { type: "geojson", data: land },
+            plain: { type: "raster", tiles: tiles("voyager_nolabels"), tileSize: 256, maxzoom: 18, attribution: credit },
+            named: { type: "raster", tiles: tiles("voyager"), tileSize: 256, maxzoom: 18, attribution: credit },
+          },
+          layers: [
+            { id: "sea", type: "background", paint: { "background-color": "#cfe3ee" } },
+            { id: "land", type: "fill", source: "land", paint: { "fill-color": "#f3efe6" } },
+            { id: "borders", type: "line", source: "land", paint: { "line-color": "#b9ae9c", "line-width": 0.8 } },
+            { id: "plain", type: "raster", source: "plain", maxzoom: 5 },
+            { id: "named", type: "raster", source: "named", minzoom: 5 },
+          ],
+        },
       });
+      m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
+      /* country names in the member's language, put on the map as plain text so they never depend on a font server */
+      const names = (() => { try { return new Intl.DisplayNames([lang], { type: "region" }); } catch { return null; } })();
+      for (const f of land.features) {
+        const polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
+        let best: number[][] | null = null, bestArea = 0;
+        for (const poly of polys) {
+          const ring = poly[0]; let area = 0;
+          for (let i = 0; i < ring.length - 1; i++) area += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+          if (Math.abs(area) > bestArea) { bestArea = Math.abs(area); best = ring; }
+        }
+        if (!best || bestArea < 6) continue; /* skip the tiny ones; they appear once the street pictures load */
+        let cx = 0, cy = 0, a2 = 0;
+        for (let i = 0; i < best.length - 1; i++) { const k = best[i][0] * best[i + 1][1] - best[i + 1][0] * best[i][1]; a2 += k; cx += (best[i][0] + best[i + 1][0]) * k; cy += (best[i][1] + best[i + 1][1]) * k; }
+        if (!a2) continue;
+        const code = f.id !== undefined ? iso.default.numericToAlpha2(String(f.id)) : undefined;
+        let text = f.properties?.name ?? "";
+        if (code && names) { try { text = names.of(code) ?? text; } catch { /* keep the English name */ } }
+        if (!text) continue;
+        const el = document.createElement("div");
+        el.className = "ws-country"; el.textContent = text; el.setAttribute("translate", "no");
+        new ml.Marker({ element: el }).setLngLat([cx / (3 * a2), cy / (3 * a2)]).addTo(m);
+      }
+      const showNames = () => { box.current?.classList.toggle("ws-no-names", m.getZoom() >= 5); };
+      m.on("zoom", showNames); showNames();
       for (const p of pins) {
         const mine = p.member_id === myId;
         const dot = document.createElement("button");
