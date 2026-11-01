@@ -33,18 +33,29 @@ export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hir
     setBack(false);
   };
 
+  /* a press anywhere on the front flips it too, except on its own link, edit button and form */
+  const frontPress = (e: React.MouseEvent<HTMLElement>) => {
+    if ((e.target as HTMLElement).closest("a, input, select, textarea, label, dialog, .cc-edit")) return;
+    setBack(true);
+  };
+
   return (
     <article className={"cc-flip" + (back ? " flipped" : "")}>
       <div className="cc-inner">
-        <div className="cc-face cc-front" aria-hidden={back} inert={back}>
-          <div className="cc-cover" role="button" tabIndex={0} aria-label={`See ${first}'s stats`} onClick={() => setBack(true)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setBack(true); } }}>
-            {photo ? <img src={photo} alt={name} /> : <div className="cc-cover-empty"><Avatar url={null} initials={name.charAt(0).toUpperCase()} size={120} /></div>}
-            <div className="cc-cover-text">
+        <div className="cc-face cc-front" aria-hidden={back} inert={back} onClick={frontPress}>
+          <div className="cc-cover">
+            {photo ? (
+              <>
+                <div className="cc-cover-bg" style={{ backgroundImage: `url("${photo}")` }} aria-hidden="true" />
+                <img src={photo} alt={name} />
+              </>
+            ) : <div className="cc-cover-empty"><Avatar url={null} initials={name.charAt(0).toUpperCase()} size={120} /></div>}
+          </div>
+          <div className="cc-front-body">
+            <div className="cc-ident">
               <h2>{name}</h2>
               {c.location ? <p className="cc-loc">{c.location}</p> : null}
             </div>
-          </div>
-          <div className="cc-front-body">
             {c.experience_text ? <p className="cc-exp"><span>Experience</span><b>{c.experience_text}</b></p> : null}
             {c.bio ? <p className="cc-bio">{c.bio}</p> : <p className="cc-bio when">No bio yet.</p>}
             <button type="button" className="cc-flipbtn" onClick={() => setBack(true)}>{`See ${first}'s stats`} <span aria-hidden="true">↻</span></button>
