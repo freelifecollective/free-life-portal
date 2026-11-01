@@ -16,7 +16,7 @@ type Search = (q: string) => Promise<{ ok: true; place: Place } | { ok: false; e
 type Found = { place: Place; list: (WaterPin & { km: number })[] };
 
 /**
- * An interactive world map: drag, zoom, tap a dot. It is a modern vector map (OpenFreeMap, built on OpenStreetMap) whose place names
+ * An interactive world map: drag, zoom, tap a dot. It is a modern vector map (CARTO Voyager, built on OpenStreetMap) whose place names
  * are shown in the language the member picked. The search box finds the closest affiliates to any town.
  */
 export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[]; myId: string | null; search?: Search }) {
@@ -51,11 +51,12 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       if (cancelled || !box.current) return;
       lib.current = ml;
       const lang = currentLang();
-      const m = new ml.Map({ container: box.current, style: "https://tiles.openfreemap.org/styles/liberty", center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true } });
+      const m = new ml.Map({ container: box.current, style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json", center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true } });
       m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
       /* every place name on the map is written in the member's language (falling back to the local name where there is no translation) */
       /* done once, when the map's style has loaded (doing it on every style change made the map keep redrawing itself, and no names ever appeared) */
       m.once("load", () => {
+        if (lang === "en") return; /* the map already writes its names in English */
         const done = new Set<string>();
         let layers: ReturnType<typeof m.getStyle>["layers"] = [];
         try { layers = m.getStyle().layers ?? []; } catch { return; }
@@ -64,7 +65,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
           done.add(layer.id);
           const field = layer.layout?.["text-field"];
           if (field === undefined || !JSON.stringify(field).includes("name")) continue;
-          try { m.setLayoutProperty(layer.id, "text-field", ["coalesce", ["get", `name:${lang}`], ["get", "name:latin"], ["get", "name"]]); } catch { /* keep the map's own names for this layer */ }
+          try { m.setLayoutProperty(layer.id, "text-field", ["coalesce", ["get", `name_${lang}`], ["get", `name:${lang}`], ["get", "name_en"], ["get", "name:latin"], ["get", "name"]]); } catch { /* keep the map's own names for this layer */ }
         }
       });
       for (const p of pins) {

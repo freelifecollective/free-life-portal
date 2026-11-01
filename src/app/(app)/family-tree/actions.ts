@@ -132,6 +132,17 @@ export async function deleteChart(chartId: string): Promise<Result> {
 }
 
 /** Copies an account (and, if asked, everything under it) into another chart, under that chart's top bubble. */
+/** Copy the top bubble of this chart into another chart (alone, or with everything under it). */
+export async function copyTop(chartId: string, destId: string, side: "left" | "right", below: boolean): Promise<Result> {
+  if (!UUID.test(chartId) || !UUID.test(destId) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
+  const { session, supabase } = await requireMember();
+  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
+  const { error } = await supabase.rpc("copy_chart_top", { p_src: chartId, p_dest: destId, p_side: side, p_below: below });
+  if (error) return { ok: false, error: error.code === "23514" ? "That chart is full (600 bubbles)." : "We could not copy that. Please try again." };
+  revalidatePath("/family-tree");
+  return { ok: true };
+}
+
 export async function copyNode(id: string, chartId: string, side: "left" | "right", below: boolean): Promise<Result> {
   if (!UUID.test(id) || !UUID.test(chartId) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
