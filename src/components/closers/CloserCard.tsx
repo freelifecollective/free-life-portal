@@ -37,7 +37,7 @@ export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hir
     <article className={"cc-flip" + (back ? " flipped" : "")}>
       <div className="cc-inner">
         <div className="cc-face cc-front" aria-hidden={back} inert={back}>
-          <div className="cc-cover">
+          <div className="cc-cover" role="button" tabIndex={0} aria-label={`See ${first}'s stats`} onClick={() => setBack(true)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setBack(true); } }}>
             {photo ? <img src={photo} alt={name} /> : <div className="cc-cover-empty"><Avatar url={null} initials={name.charAt(0).toUpperCase()} size={120} /></div>}
             <div className="cc-cover-text">
               <h2>{name}</h2>
@@ -67,7 +67,9 @@ export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hir
               <div className="pc-row pc-plain" key={r.label}><div><small>{r.label}</small><span style={r.pre ? { whiteSpace: "pre-line" } : undefined}>{r.value}</span></div></div>
             ))}
           </div>
-          {c.id !== me ? <HireButton closerId={c.id} first={first} hire={hire?.closer_id === c.id ? hire : null} otherHire={!!hire && hire.closer_id !== c.id} /> : null}
+          {c.id !== me
+            ? <HireButton closerId={c.id} first={first} hire={hire?.closer_id === c.id ? hire : null} otherHire={!!hire && hire.closer_id !== c.id} priceCall={c.price_per_call_cents} priceSale={c.price_per_sale} />
+            : <><button type="button" className="btn primary cc-hire" disabled>{`Hire ${first}`}</button><p className="cc-tapback when" style={{ marginTop: -6 }}>This is your own card, so the Hire button is switched off.</p></>}
           {canMessage ? <Link className="linkbtn cc-msg" href={`/messages/${c.username}`}>{`Message ${first}`}</Link> : null}
           <p className="cc-tapback when">Tap the white space to go back</p>
         </div>

@@ -13,7 +13,7 @@ const CHOICES = [
 ] as const;
 
 /** "Hire Sonya": for one call, two calls, or every future call. Shows where the hire stands once it is made. */
-export function HireButton({ closerId, first, hire, otherHire }: { closerId: string; first: string; hire: ActiveHire | null; otherHire: boolean }) {
+export function HireButton({ closerId, first, hire, otherHire, priceCall, priceSale }: { closerId: string; first: string; hire: ActiveHire | null; otherHire: boolean; priceCall: number | null; priceSale: string | null }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [calls, setCalls] = useState<number>(1);
   const [note, setNote] = useState("");
@@ -50,6 +50,13 @@ export function HireButton({ closerId, first, hire, otherHire }: { closerId: str
       <dialog ref={dlg} className="rs-dialog" aria-label={`Hire ${first}`} onClick={(e) => { if (e.target === dlg.current) close(); }}>
         <form onSubmit={submit} className="set-form">
           <h2 className="qh" style={{ margin: 0 }}>{`Hire ${first}`}</h2>
+          {priceCall !== null || priceSale ? (
+            <div className="hire-prices">
+              {priceCall !== null ? <p><small>Price per call (USD)</small><b>{`$${(priceCall / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}`}</b></p> : null}
+              {priceSale ? <p><small>Charge per product sale (USD)</small><b style={{ whiteSpace: "pre-line" }}>{priceSale}</b></p> : null}
+            </div>
+          ) : null}
+          <p className="when" style={{ margin: 0 }}>{`You and ${first} settle payment between you. The portal does not take payment.`}</p>
           <fieldset style={{ border: 0, padding: 0, margin: 0, display: "grid", gap: 8 }}>
             <legend className="when" style={{ padding: 0, marginBottom: 6 }}>How long do you want to hire them?</legend>
             {CHOICES.map((c) => (

@@ -42,7 +42,7 @@ export function CoverFields({ initial, idPrefix }: { initial?: Partial<CoverValu
           <div style={{ display: "grid", gap: 6, alignContent: "start" }}>
             <label className="btn small" htmlFor={`${idPrefix}-cover`} style={{ cursor: "pointer" }}>{busy ? "Uploading…" : cover ? "Change photo" : "Upload a photo"}</label>
             <input id={`${idPrefix}-cover`} type="file" accept="image/*" onChange={pick} disabled={busy} className="sr-only" />
-            <span className="when">A tall photo of you works best. We crop it to fit.</span>
+            <span className="when">Your whole photo is shown, so pick one you love.</span>
           </div>
         </div>
         <input type="hidden" name="cover_url" value={cover} />
