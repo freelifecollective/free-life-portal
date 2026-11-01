@@ -7,6 +7,7 @@ import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } 
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
 import { TreeChart } from "./TreeChart";
 import { KEY_POSITIONS, useKeyPos } from "./useKeyPos";
+import { useWidth } from "./useWidth";
 
 function find(b: Built, id: string): Built | null {
   if (b.node?.id === id) return b;
@@ -18,6 +19,7 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
   const [nodes, setNodes] = useState<TreeNode[]>(initial);
   const [top, setTop] = useState({ name: ownerName, rank: ownerRank ?? "" });
   const [keyPos, setKeyPos] = useKeyPos();
+  const [box, boxW] = useWidth<HTMLDivElement>();
   const [target, setTarget] = useState<DialogTarget | null>(null);
   const [tok, setTok] = useState<string | null>(token);
   const [copied, setCopied] = useState(false);
@@ -84,8 +86,8 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
           <span className="when">Colour key:</span>
           {KEY_POSITIONS.map((k) => <button key={k.id} type="button" className={keyPos === k.id ? "on" : ""} aria-pressed={keyPos === k.id} onClick={() => setKeyPos(k.id)}>{k.label}</button>)}
         </div>
-        <div className="ft-scroll">
-          <TreeChart ref={svg} keyPos={keyPos} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
+        <div className="ft-scroll" ref={box}>
+          <TreeChart ref={svg} keyPos={keyPos} availW={Math.max(0, boxW - 18)} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
             onPick={openEdit} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
         </div>
       </div>
