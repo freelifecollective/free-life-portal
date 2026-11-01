@@ -6,7 +6,7 @@ import { requireMember } from "@/lib/auth/guards";
 import type { CourseRow, LessonRow } from "@/lib/classroom/types";
 
 export const instant = false;
-export const metadata = { title: "Classroom" };
+export const metadata = { title: "Courses" };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function CoursePage(props: PageProps<"/classroom/[courseId]">) {
