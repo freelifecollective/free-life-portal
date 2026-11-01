@@ -55,7 +55,7 @@ export const TreeChart = forwardRef<SVGSVGElement, {
   const keyX = keyPos === "left" ? 14 : keyPos === "right" ? W - colW - 14 : (W - rowW) / 2;
   const keyY = keyPos === "bottom" ? chartH + 10 : keyPos === "top" ? 12 : 16;
   const bw = R * 2.7, bh = R * 1.5;
-  const fs = Math.max(11, R * 0.3), maxChars = Math.max(9, Math.round(bw / (fs * 0.56)));
+  const fs = Math.max(11, R * 0.3), maxChars = Math.max(9, Math.round(bw / (fs * 0.5)));
   const key = (e: React.KeyboardEvent, fn: () => void) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } };
   /* straight lines with square corners: down from the parent, across, down into the child */
   const elbow = (px: number, py: number, cx: number, cy: number) => { const midY = py + (cy - py) / 2; return `M ${px} ${py} V ${midY} H ${cx} V ${cy}`; };
@@ -114,8 +114,8 @@ export const TreeChart = forwardRef<SVGSVGElement, {
               {p.lopsided ? <rect x={x0 - 7} y={y0 - 7} width={bw + 14} height={bh + 14} rx={12} fill="none" stroke={AMBER} strokeWidth={3} strokeDasharray="4 4" /> : null}
               {hot ? <rect x={x0 - 4} y={y0 - 4} width={bw + 8} height={bh + 8} rx={11} fill="none" stroke={AMBER} strokeWidth={2} /> : null}
               <rect className="ft-box" x={x0} y={y0} width={bw} height={bh} rx={8} fill={sw.fill} stroke={sw.stroke} strokeWidth={2} />
-              {text.map((t, i) => <text key={i} x={p.x} y={startY + i * fs * 1.1 + fs * 0.35} textAnchor="middle" fontSize={fs} fontWeight={600} fill={dark ? "#fff" : "#2B2522"}>{t}</text>)}
-              {rank ? <text x={p.x} y={p.y + bh * 0.34} textAnchor="middle" fontSize={fs * 0.92} fontWeight={700} fill={dark ? "#fff" : sw.stroke}>{rank}</text> : null}
+              {text.map((t, i) => <text key={i} x={p.x} y={startY + i * fs * 1.1 + fs * 0.35} textAnchor="middle" fontSize={fs} fontWeight={400} fill={dark ? "#fff" : "#2B2522"}>{t}</text>)}
+              {rank ? <text x={p.x} y={p.y + bh * 0.34} textAnchor="middle" fontSize={fs * 0.92} fontWeight={400} fill={dark ? "#fff" : sw.stroke}>{rank}</text> : null}
               {!isRoot && p.node!.linked_member_id ? <circle cx={x0 + bw - 6} cy={y0 + 6} r={5} fill="#5E9C76" stroke="#fff" strokeWidth={1.5} /> : null}
             </g>
           );
