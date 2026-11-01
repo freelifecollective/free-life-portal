@@ -34,7 +34,7 @@ export function NotificationBell({ count, userId }: { count: number; userId: str
   useEffect(() => {
     if (!open) return;
     let live = true;
-    void createClient().from("notifications").select("id, kind, title, body, url, created_at, read_at").order("created_at", { ascending: false }).limit(15)
+    void createClient().from("notifications").select("id, kind, title, body, url, created_at, read_at").neq("kind", "chat_message").order("created_at", { ascending: false }).limit(15)
       .then(({ data }) => { if (live) setItems((data ?? []) as Item[]); });
     return () => { live = false; };
   }, [open, count]);

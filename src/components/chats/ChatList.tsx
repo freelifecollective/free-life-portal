@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { canSee, type Role } from "@/lib/roles";
 import { MemberList } from "./MemberList";
+import { MuteMenu, MutedIcon } from "@/components/mute/MuteMenu";
 import type { ChatSection } from "@/lib/chats/types";
 
 function Lock() {
@@ -15,7 +16,7 @@ function Lock() {
 const kindOf = (n: string) => { const k = n.trim().toLowerCase(); return k === "affiliates only" ? "affiliates" as const : k === "new members" ? "leads" as const : null; };
 
 /** Sections with bold headings, each listing its chats. Chats you cannot open yet are faded with a lock. */
-export function ChatList({ sections, current, role }: { sections: ChatSection[]; current: string; role: Role }) {
+export function ChatList({ sections, current, role, muted }: { sections: ChatSection[]; current: string; role: Role; muted?: Set<string> }) {
   return (
     <nav className="chat-list" aria-label="Chats">
       {sections.map((s) => {
@@ -30,7 +31,7 @@ export function ChatList({ sections, current, role }: { sections: ChatSection[];
                 <Fragment key={c.id}>
                 <li>
                   {canSee(role, c.min_role)
-                    ? <Link href={`/chats/${c.slug}`} aria-current={c.slug === current ? "page" : undefined}>{c.name}</Link>
+                    ? <MuteMenu kind="chat" id={c.id} muted={!!muted?.has(`chat:${c.id}`)}><Link href={`/chats/${c.slug}`} aria-current={c.slug === current ? "page" : undefined}>{c.name}{muted?.has(`chat:${c.id}`) ? <MutedIcon /> : null}</Link></MuteMenu>
                     : <Link href={`/chats/${c.slug}`} className="chat-locked" aria-current={c.slug === current ? "page" : undefined}>{c.name}<Lock /><span className="sr-only"> (locked)</span></Link>}
                 </li>
                 {c.divider_after ? <li className="chat-divider" aria-hidden="true"><span /><i>✦</i><span /></li> : null}

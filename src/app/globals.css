@@ -1083,7 +1083,7 @@ body.doc-dragging { user-select: none; -webkit-user-select: none; }
 
 /* message dock: the Facebook-style list and chat windows at the bottom of the screen */
 .dock-icon { position: relative; }
-.dock-panel { position: absolute; right: 0; top: calc(100% + 8px); width: min(360px, calc(100vw - 24px)); background: var(--card, #fff); border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); z-index: 60; overflow: hidden; }
+.dock-panel { position: absolute; right: 0; top: calc(100% + 8px); width: min(360px, calc(100vw - 24px)); background: var(--surface); border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.2); z-index: 60; overflow: hidden; }
 .dock-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; }
 .dock-new { padding: 0 10px 6px; }
 .dock-new input { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 10px; font: inherit; margin-bottom: 6px; }
@@ -1734,3 +1734,11 @@ html { scrollbar-gutter: stable; }
 .grp-item .last { color: var(--muted); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .grp-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .grp-bar h2 { margin: 0; font-family: var(--font-display); font-size: 24px; }
+
+/* mute menu (right-click or press and hold on a chat) */
+.mute-wrap { display: contents; }
+.mute-menu { position: fixed; z-index: 90; min-width: 210px; padding: 6px; border-radius: 14px; background: var(--card, #fff); border: 1px solid var(--line, #e6e0d6); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.mute-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; border: 0; border-radius: 9px; background: transparent; font: inherit; color: inherit; cursor: pointer; }
+.mute-menu button:hover, .mute-menu button:focus-visible { background: color-mix(in srgb, currentColor 9%, transparent); }
+.mute-menu hr { border: 0; border-top: 1px solid var(--line, #e6e0d6); margin: 4px 6px; }
+.mute-icon { margin-left: 6px; opacity: .6; vertical-align: -2px; flex: none; }
