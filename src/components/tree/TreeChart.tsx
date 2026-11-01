@@ -216,7 +216,7 @@ export const TreeChart = forwardRef<SVGSVGElement, {
             <g key={p.key} className={click ? "ft-bubble" : undefined} role={click ? "button" : undefined} tabIndex={click ? 0 : undefined}
               aria-label={isRoot ? ownerName : p.node!.label} style={click ? { cursor: onMove && !isRoot ? "grab" : "pointer", opacity: dim ? 0.3 : 1 } : undefined}
               onPointerDown={!isRoot && onMove ? (e) => startDrag(e, p.node!.id) : undefined}
-              onContextMenu={!isRoot && onMenu ? (e) => { e.preventDefault(); onMenu(p.node!.id, e.clientX, e.clientY); } : undefined}
+              onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(isRoot ? "root" : p.node!.id, e.clientX, e.clientY); } : undefined}
               onClick={click} onKeyDown={click ? (e) => key(e, click) : undefined}>
               <title>{isRoot ? ownerName : p.lopsided ? `${p.node!.label} (${p.left} · ${p.right})` : p.node!.label}</title>
               {p.lopsided ? <rect x={x0 - 7} y={y0 - 7} width={bw + 14} height={bh + 14} rx={12} fill="none" stroke={AMBER} strokeWidth={3} strokeDasharray="4 4" /> : null}

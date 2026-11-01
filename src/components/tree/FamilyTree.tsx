@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { copyNode, createChart, deleteChart, moveNode, renameChart, setSharing } from "@/app/(app)/family-tree/actions";
+import { copyNode, copyTop, createChart, deleteChart, moveNode, renameChart, setSharing } from "@/app/(app)/family-tree/actions";
 import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
@@ -105,7 +105,7 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
   const doCopy = () => start(async () => {
     if (!copyFor || !copyFor.to) return;
     setMsg("");
-    const r = await copyNode(copyFor.id, copyFor.to, copyFor.side, copyFor.below);
+    const r = copyFor.id === "root" ? await copyTop(chartId, copyFor.to, copyFor.side, copyFor.below) : await copyNode(copyFor.id, copyFor.to, copyFor.side, copyFor.below);
     if (!r.ok) { setMsg(r.error); return; }
     setCopiedMsg(`Copied to “${charts.find((c) => c.id === copyFor.to)?.name ?? "that chart"}”.`);
     setCopyFor(null);
