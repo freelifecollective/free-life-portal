@@ -8,7 +8,7 @@ export const RESERVED_USERNAMES = [
   "calculator", "graphics", "messages", "notifications", "onboarding", "privacy", "terms",
   "register", "join", "invite", "home", "public", "static", "assets", "images", "favicon", "robots", "sitemap",
   "manifest", "unsubscribe", "thanks", "links",
-  "chats", "financing", "outsourcing", "water-map", "watermap", "facebook-follows", "facebookfollows", "responses", "follows", "downline", "recording", "feedback", "call-closers", "callclosers", "family-tree", "familytree", "tree",
+  "chats", "financing", "outsourcing", "water-map", "watermap", "facebook-follows", "facebookfollows", "responses", "follows", "downline", "recording", "feedback", "call-closers", "callclosers", "family-tree", "familytree", "tree", "your-organization", "yourorganization", "organization",
 ] as const;
 
 export type UsernameProblem = "too_short" | "too_long" | "bad_chars" | "reserved" | "taken";

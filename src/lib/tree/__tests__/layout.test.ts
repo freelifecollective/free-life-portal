@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { balanceOf, buildTree, countAll, isLopsided, layoutTree, type TreeNode } from "../layout";
+import { balanceOf, bubbleRadius, buildTree, countAll, isLopsided, layoutTree, type TreeNode } from "../layout";
+import { swatchOf } from "../colors";
 
 const n = (id: string, parent: string | null, side: "left" | "right", label = id): TreeNode => ({ id, parent_id: parent, side, label, rank: null });
 
@@ -21,7 +22,7 @@ describe("family tree", () => {
   it("lays bubbles out without overlap", () => {
     const l = layoutTree(buildTree(nodes));
     expect(l.placed).toHaveLength(6);
-    for (const p of l.placed) for (const q of l.placed) if (p !== q && p.y === q.y) expect(Math.abs(p.x - q.x)).toBeGreaterThanOrEqual(100);
+    for (const p of l.placed) for (const q of l.placed) if (p !== q && p.y === q.y) expect(Math.abs(p.x - q.x)).toBeGreaterThanOrEqual(2 * l.r + 4);
     const by = new Map(l.placed.map((p) => [p.node?.id ?? "root", p]));
     expect(by.get("a")!.x).toBeLessThan(by.get("b")!.x);
     expect(by.get("c")!.x).toBeLessThan(by.get("d")!.x);
@@ -40,5 +41,23 @@ describe("family tree", () => {
     const l = layoutTree(buildTree([]));
     expect(l.placed).toHaveLength(1);
     expect(l.phantoms.map((p) => p.side).sort()).toEqual(["left", "right"]);
+  });
+  it("bubbles shrink slowly as the tree grows", () => {
+    expect(bubbleRadius(0)).toBe(54);
+    expect(bubbleRadius(7)).toBe(54);
+    expect(bubbleRadius(30)).toBeLessThan(54);
+    expect(bubbleRadius(30)).toBeGreaterThan(40);
+    expect(bubbleRadius(500)).toBe(34);
+  });
+  it("colours bubbles by rank, with the owner's own accounts in one colour", () => {
+    const c = (rank: string | null, owned = false) => swatchOf({ rank, owned }).key;
+    expect([c("1A"), c("2A"), c("3A")]).toEqual(["1-3", "1-3", "1-3"]);
+    expect([c("4A"), c("5A")]).toEqual(["4-5", "4-5"]);
+    expect(c("6A")).toBe("6");
+    expect(c("6A2")).toBe("62");
+    expect(c("6A2-2")).toBe("62-2");
+    expect(c("6A2-3+")).toBe("62-3");
+    expect(c(null)).toBe("none");
+    expect(c("6A2", true)).toBe("owned");
   });
 });
