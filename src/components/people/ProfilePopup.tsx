@@ -46,3 +46,13 @@ export function PersonLink({ id, name, className = "", children }: { id?: string
     <button type="button" className={"person-link " + className} onClick={() => open(id)} aria-label={`See ${name}'s profile`}>{children}</button>
   );
 }
+
+/** For a picture that sits inside a row that is already a button or a link: pressing the picture itself opens the profile, pressing the rest does what the row does. */
+export function PersonTap({ id, name, children }: { id?: string | null; name: string; children: ReactNode }) {
+  const open = useContext(Ctx);
+  if (!id || !open) return <>{children}</>;
+  const go = (e: { preventDefault: () => void; stopPropagation: () => void }) => { e.preventDefault(); e.stopPropagation(); open(id); };
+  return (
+    <span role="button" tabIndex={0} className="person-tap" aria-label={`See ${name}'s profile`} onClick={go} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") go(e); }}>{children}</span>
+  );
+}

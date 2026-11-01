@@ -1,5 +1,6 @@
 "use client";
 
+import { PersonTap } from "@/components/people/ProfilePopup";
 import { UserText } from "@/components/UserText";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -130,7 +131,7 @@ export function MessageDock({ me, unread }: { me: string; unread: number }) {
                 <input type="search" autoFocus placeholder="Search for someone" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search for someone" />
                 <ul className="dock-list">
                   {(everyone ?? []).filter((p) => name(p).toLowerCase().includes(q.trim().toLowerCase())).slice(0, 30).map((p) => (
-                    <li key={p.id}><button type="button" onClick={() => openChat(p)}><Avatar url={p.avatar_url} initials={initials(p)} size={40} /><span className="dock-who"><strong>{name(p)}</strong></span></button></li>
+                    <li key={p.id}><button type="button" onClick={() => openChat(p)}><PersonTap id={p.id} name={name(p)}><Avatar url={p.avatar_url} initials={initials(p)} size={40} /></PersonTap><span className="dock-who"><strong>{name(p)}</strong></span></button></li>
                   ))}
                   {everyone && everyone.length === 0 ? <li className="dock-empty">There is no one you can message yet.</li> : null}
                   {!everyone ? <li className="dock-empty">Loading…</li> : null}
@@ -141,7 +142,7 @@ export function MessageDock({ me, unread }: { me: string; unread: number }) {
                 {(convos ?? []).slice(0, 14).map((c) => (
                   <li key={c.other.id} className={c.unread ? "unread" : ""}>
                     <button type="button" onClick={() => openChat(c.other)}>
-                      <Avatar url={c.other.avatar_url} initials={initials(c.other)} size={44} />
+                      <PersonTap id={c.other.id} name={name(c.other)}><Avatar url={c.other.avatar_url} initials={initials(c.other)} size={44} /></PersonTap>
                       <span className="dock-who"><strong>{name(c.other)}</strong><span>{c.last.sender_id === me ? "You: " : ""}{c.last.body || "📷 Picture"}</span></span>
                       <span className="dock-meta">{when(c.last.created_at)}{c.unread ? <i aria-label={`${c.unread} unread`} /> : null}</span>
                     </button>
@@ -252,7 +253,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
     <section className={"dock-win" + (min ? " min" : "")} aria-label={`Chat with ${name(other)}`}>
       <header className="dock-win-head">
         <button type="button" className="dock-win-title" onClick={onMin} aria-expanded={!min}>
-          <Avatar url={other.avatar_url} initials={initials(other)} size={40} />
+          <PersonTap id={other.id} name={name(other)}><Avatar url={other.avatar_url} initials={initials(other)} size={40} /></PersonTap>
           <span className="dock-win-who"><strong>{name(other)}</strong>{other.username ? <small>@{other.username}</small> : null}</span>
         </button>
         <span className="dock-win-tools">

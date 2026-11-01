@@ -85,6 +85,8 @@ export function translateDates(text: string, lang: Lang): string | null {
   });
   /* a bare long month name left over (e.g. "September" before a year) */
   out = out.replace(new RegExp(`\\b${monthRe}\\b`, "g"), (m: string) => { const i = EN_MONTH_LONG.indexOf(m); return i >= 0 ? MONTH_LONG[lang][i] : m; });
+  /* "Monday, Nov 3 at 4:00 PM ET" */
+  out = out.replace(/ at (\d{1,2}:\d{2})/g, (_w, t: string) => ` ${{ es: "a las", fr: "à", it: "alle", de: "um" }[lang]} ${t}`);
   return out === text ? null : out;
 }
 

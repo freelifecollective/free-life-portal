@@ -1501,3 +1501,6 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .main, .btn, .tile, .opt, .choice, .tag, .dock-win, .rs-dialog, .members-dialog { hyphens: auto; }
 .tile, .btn, .tag, .opt, .choice { overflow-wrap: anywhere; }
 .tile { width: min(108px, 100%); }
+.person-tap { display: inline-flex; border-radius: 50%; cursor: pointer; flex: none; }
+.person-tap:hover .avatar { box-shadow: 0 0 0 2px var(--accent); }
+.person-tap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

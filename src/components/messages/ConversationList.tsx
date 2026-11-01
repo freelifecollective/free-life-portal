@@ -1,4 +1,5 @@
 "use client";
+import { PersonTap } from "@/components/people/ProfilePopup";
 import { DmPicture } from "@/components/messages/DmPicture";
 
 import Link from "next/link";
@@ -20,7 +21,7 @@ export function ConversationList({ items, me }: { items: Conversation[]; me: str
         {items.map((c) => (
           <li key={c.other.id} className={c.unread ? "unread" : ""}>
             <Link href={`/messages/${c.other.username}`} className="convo-main">
-              <Avatar url={c.other.avatar_url} initials={name(c.other).charAt(0).toUpperCase()} size={44} />
+              <PersonTap id={c.other.id} name={name(c.other)}><Avatar url={c.other.avatar_url} initials={name(c.other).charAt(0).toUpperCase()} size={44} /></PersonTap>
               <span className="convo-text">
                 <strong>{name(c.other)}{c.other.is_admin ? <small className="admin-tag"> Admin</small> : null}</strong>
                 <span className="convo-last">{c.last.sender_id === me ? "You: " : ""}{c.last.body || "📷 Picture"}</span>
