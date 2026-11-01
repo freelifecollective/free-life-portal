@@ -30,7 +30,7 @@ export function AvailabilityForm({ hours, rules, tz, zones }: { hours: Hours[]; 
     <form action={action} className="av">
       <section className="av-card">
         <div className="av-head">
-          <h2>Weekly hours</h2>
+          <h2 className="qh">Weekly hours</h2>
           <button type="button" className="av-edit" onClick={() => { setEditing(!editing); setCopying(null); }}>{editing ? "Done" : "✎ Edit"}</button>
         </div>
         <div className="av-tz">
@@ -72,7 +72,7 @@ export function AvailabilityForm({ hours, rules, tz, zones }: { hours: Hours[]; 
       </section>
 
       <section className="av-card">
-        <div className="av-head"><div><h2>Booking rules</h2><p className="when">Control how and when calls can be booked.</p></div></div>
+        <div className="av-head"><div><h2 className="qh">Booking rules</h2><p className="when">Control how and when calls can be booked.</p></div></div>
         <div className="av-rules">
           <label>Meeting duration<select name="call_minutes" defaultValue={rules.call_minutes}>{CALL_LENGTHS.map((m) => <option key={m} value={m}>{mins(m)}</option>)}</select></label>
           <label>Meeting interval<select name="interval_minutes" defaultValue={rules.interval_minutes ?? ""}><option value="">Same as duration</option>{INTERVALS.map((m) => <option key={m} value={m}>{mins(m)}</option>)}</select></label>
