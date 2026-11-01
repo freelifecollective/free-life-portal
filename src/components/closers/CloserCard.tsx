@@ -43,20 +43,22 @@ export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hir
     <article className={"cc-flip" + (back ? " flipped" : "")}>
       <div className="cc-inner">
         <div className="cc-face cc-front" aria-hidden={back} inert={back} onClick={frontPress}>
-          <div className="cc-cover">
-            {photo ? (
-              <>
-                <div className="cc-cover-bg" style={{ backgroundImage: `url("${photo}")` }} aria-hidden="true" />
-                <img src={photo} alt={name} />
-              </>
-            ) : <div className="cc-cover-empty"><Avatar url={null} initials={name.charAt(0).toUpperCase()} size={120} /></div>}
-          </div>
-          <div className="cc-front-body">
+          <div className="cc-head">
+            <div className="cc-cover">
+              {photo ? (
+                <>
+                  <div className="cc-cover-bg" style={{ backgroundImage: `url("${photo}")` }} aria-hidden="true" />
+                  <img src={photo} alt={name} />
+                </>
+              ) : <div className="cc-cover-empty"><Avatar url={null} initials={name.charAt(0).toUpperCase()} size={64} /></div>}
+            </div>
             <div className="cc-ident">
               <h2>{name}</h2>
               {c.location ? <p className="cc-loc">{c.location}</p> : null}
+              {c.experience_text ? <p className="cc-exp"><span>Experience</span><b>{c.experience_text}</b></p> : null}
             </div>
-            {c.experience_text ? <p className="cc-exp"><span>Experience</span><b>{c.experience_text}</b></p> : null}
+          </div>
+          <div className="cc-front-body">
             {c.bio ? <p className="cc-bio">{c.bio}</p> : <p className="cc-bio when">No bio yet.</p>}
             <button type="button" className="cc-flipbtn" onClick={() => setBack(true)}>{`See ${first}'s stats`} <span aria-hidden="true">↻</span></button>
             {c.id === me ? <CoverEditor c={c} /> : null}

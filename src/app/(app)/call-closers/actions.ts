@@ -98,7 +98,10 @@ export async function saveMyCard(_prev: ApplyState, form: FormData): Promise<App
   if (!supabase) return { error: "This needs the database." };
   if (cover && !cover.startsWith(`${SUPABASE_URL}/storage/v1/object/public/avatars/${session.user.id}/`)) return { error: "Your picture did not upload. Please try again." };
   const { error } = await supabase.rpc("save_my_closer_card", { p_cover: cover, p_location: location, p_experience: experienceText, p_bio: bio });
-  if (error) return { error: "We could not save that. Please try again." };
+  if (error) {
+    if (error.code === "PGRST202" || error.code === "42883") return { error: "Cover cards need a database update that has not been run yet. Ask Claude for the SQL step." };
+    return { error: "We could not save that. Please try again." };
+  }
   revalidatePath("/call-closers");
   return { error: "", sent: true };
 }
