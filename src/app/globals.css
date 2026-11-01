@@ -1660,7 +1660,7 @@ html { scrollbar-gutter: stable; }
 .ch-ask { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
 .ch-ask button { all: unset; cursor: pointer; color: var(--accent-deep); text-decoration: underline; }
 .ch-top .av { max-width: none; }
-@media (max-width: 900px) { .ch-top { grid-template-columns: minmax(0, 1fr); } }
+
 .ch-pause { display: grid; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--tint); }
 .ch-pause p { font-size: 13px; }
 .ch-pause .btn { justify-self: start; }
@@ -1852,3 +1852,10 @@ html { scrollbar-gutter: stable; }
 .dock-edited { font-size: 11px; opacity: .7; font-style: italic; margin-left: 4px; }
 .dock-editing { margin: 0; padding: 4px 12px; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .dock-editing .linkbtn { padding: 0 4px; font-size: 12.5px; }
+
+/* Call Closer page: three columns across, each a stack */
+.ch-col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.ch-top { grid-template-columns: minmax(0, 1fr); }
+.ch-top .av { max-width: none; }
+.ch-top .av-save { margin-top: 12px; }
+@media (min-width: 1101px) { .ch-top { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

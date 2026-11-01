@@ -28,7 +28,7 @@ export function AvailabilityForm({ hours, rules, tz, zones }: { hours: Hours[]; 
   };
   return (
     <form action={action} className="av">
-      <section className="av-card">
+      <section className="av-card av-weekly">
         <div className="av-head">
           <h2 className="qh">Weekly hours</h2>
           <button type="button" className="av-edit" onClick={() => { setEditing(!editing); setCopying(null); }}>{editing ? "Done" : "✎ Edit"}</button>
@@ -71,7 +71,7 @@ export function AvailabilityForm({ hours, rules, tz, zones }: { hours: Hours[]; 
         </ul>
       </section>
 
-      <section className="av-card">
+      <section className="av-card av-rulescard">
         <div className="av-head"><div><h2 className="qh">Booking rules</h2><p className="when">Control how and when calls can be booked.</p></div></div>
         <div className="av-rules">
           <label>Meeting duration<select name="call_minutes" defaultValue={rules.call_minutes}>{CALL_LENGTHS.map((m) => <option key={m} value={m}>{mins(m)}</option>)}</select></label>
@@ -82,9 +82,10 @@ export function AvailabilityForm({ hours, rules, tz, zones }: { hours: Hours[]; 
           <label>Post buffer time<select name="buffer_after" defaultValue={rules.buffer_after}>{BUFFERS.map((m) => <option key={m} value={m}>{m === 0 ? "None" : mins(m)}</option>)}</select></label>
           <label>Maximum bookings per day<select name="max_per_day" defaultValue={rules.max_per_day ?? ""}><option value="">No limit</option>{PER_DAY.map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
         </div>
-      </section>
       <div className="av-save"><button className="btn primary" type="submit" disabled={pending}>{pending ? "Saving…" : "Save my availability"}</button><span role="status" className="when">{state.saved ? "Saved." : ""}</span></div>
       <p className="err" role="alert" style={{ minHeight: 0, margin: 0 }}>{state.error}</p>
+      </section>
+
     </form>
   );
 }

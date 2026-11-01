@@ -32,44 +32,12 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
   const status = (c: HubCall) => c.outcome === null ? "Not recorded yet" : c.outcome === "no_show" ? "Did not take place" : owedOf(c) <= 0 && c.paid_at ? "Paid" : "Took place";
 
   return (
-    <div className="stack ch" style={{ maxWidth: 1160 }}>
+    <div className="stack ch" style={{ maxWidth: 1500 }}>
       <div className="ch-top">
-        <div>{availability}</div>
-      <div className="ch-side">
+        <div className="ch-col">{availability}</div>
+        <div className="ch-col">
         {clients}
-      <section className="card-s" aria-label="Upcoming calls">
-        <h2 className="qh" style={{ marginTop: 0 }}>{`Upcoming calls · ${upcoming.length}`}</h2>
-        {upcoming.length === 0 ? <p style={{ margin: 0 }}>No calls booked with you yet.</p> : (
-          <ul className="ch-list">
-            {upcoming.map((c) => (
-              <li key={c.id}>
-                <div><strong translate="no">{c.lead_name}</strong><br /><span className="when" translate="no">{formatInZone(new Date(c.starts_at))}</span></div>
-                <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>
-                {c.note ? <p className="when" style={{ margin: 0, flexBasis: "100%" }} translate="no">{c.note}</p> : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-      <section className="card-s" aria-label="Past calls">
-        <h2 className="qh" style={{ marginTop: 0 }}>Past calls</h2>
-        {past.length === 0 ? <p style={{ margin: 0 }}>Calls you have taken will show here.</p> : (
-          <ul className="ch-list">
-            {past.map((c) => (
-              <li key={c.id}>
-                <div><strong translate="no">{c.lead_name}</strong><br /><span className="when" translate="no">{formatInZone(new Date(c.starts_at))}</span></div>
-                <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>
-                <div className="ch-act">
-                  <span className={"tag" + (c.outcome === null ? "" : " tag-dark")}>{status(c)}</span>
-                  {c.outcome === "took_place" ? <span className="when">{money(totalOf(c), cur(c))}</span> : null}
-                  <button type="button" className="btn small" onClick={() => setEditing(c.id)}>{c.outcome === null ? "Record this call" : "Edit"}</button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-      <section className="card-s" aria-label="Money owed to you">
+      <section className="card-s ch-owed" aria-label="Money owed to you">
         <h2 className="qh" style={{ marginTop: 0 }}>Money owed to you</h2>
         {byMember.size === 0 ? <p style={{ margin: 0 }}>Nothing is owed to you right now.</p> : (
           <div style={{ display: "grid", gap: 16 }}>
@@ -101,6 +69,43 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
             ))}</ul></details>
         ) : null}
       </section>
+        </div>
+        <div className="ch-col">
+      <section className="card-s ch-upcoming" aria-label="Upcoming calls">
+        <h2 className="qh" style={{ marginTop: 0 }}>{`Upcoming calls · ${upcoming.length}`}</h2>
+        {upcoming.length === 0 ? <p style={{ margin: 0 }}>No calls booked with you yet.</p> : (
+          <ul className="ch-list">
+            {upcoming.map((c) => (
+              <li key={c.id}>
+                <div><strong translate="no">{c.lead_name}</strong><br /><span className="when" translate="no">{formatInZone(new Date(c.starts_at))}</span></div>
+                <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>
+                {c.note ? <p className="when" style={{ margin: 0, flexBasis: "100%" }} translate="no">{c.note}</p> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="card-s ch-past" aria-label="Past calls">
+        <h2 className="qh" style={{ marginTop: 0 }}>Past calls</h2>
+        {past.length === 0 ? <p style={{ margin: 0 }}>Calls you have taken will show here.</p> : (
+          <ul className="ch-list">
+            {past.map((c) => (
+              <li key={c.id}>
+                <div><strong translate="no">{c.lead_name}</strong><br /><span className="when" translate="no">{formatInZone(new Date(c.starts_at))}</span></div>
+                <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>
+                <div className="ch-act">
+                  <span className={"tag" + (c.outcome === null ? "" : " tag-dark")}>{status(c)}</span>
+                  {c.outcome === "took_place" ? <span className="when">{money(totalOf(c), cur(c))}</span> : null}
+                  <button type="button" className="btn small" onClick={() => setEditing(c.id)}>{c.outcome === null ? "Record this call" : "Edit"}</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+        </div>
+      </div>
+
       <section className="card-s" aria-label="Your stats">
         <h2 className="qh" style={{ marginTop: 0 }}>Your stats</h2>
         <div className="ch-stats">
@@ -111,12 +116,6 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
         </div>
         {stats.recorded > 0 ? <p className="when" style={{ margin: "10px 0 0" }}>{`From the calls you recorded here: ${stats.closed} of ${stats.recorded} led to a sale.`}</p> : null}
       </section>
-        </div>
-      </div>
-
-
-
-
 
       <section className="card-s" aria-label="How you are paid">
         <h2 className="qh" style={{ marginTop: 0 }}>How you are paid</h2>
