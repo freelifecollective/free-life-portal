@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { HireButton } from "./HireButton";
+import { HireButton, type ActiveHire } from "./HireButton";
 import { ProfileButton } from "@/components/people/ProfilePopup";
 import { closerName, dollars, type CloserCardData } from "@/lib/closers/types";
 
 /** One call closer, laid out like their profile popup: picture and name on top, their numbers in a white card, then two buttons. */
-export function CloserCard({ c, me }: { c: CloserCardData; me: string }) {
+export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hire: ActiveHire | null }) {
   const name = closerName(c);
   const stars = c.avg_rating ? "★".repeat(Math.round(c.avg_rating)) + "☆".repeat(5 - Math.round(c.avg_rating)) : null;
   const rows: { label: string; value: string; pre?: boolean }[] = [];
@@ -28,7 +28,7 @@ export function CloserCard({ c, me }: { c: CloserCardData; me: string }) {
           <div className="pc-row pc-plain" key={r.label}><div><small>{r.label}</small><span style={r.pre ? { whiteSpace: "pre-line" } : undefined}>{r.value}</span></div></div>
         ))}
       </div>
-      {c.id !== me ? <HireButton closerId={c.id} first={c.first_name ?? "them"} /> : null}
+      {c.id !== me ? <HireButton closerId={c.id} first={c.first_name ?? "them"} hire={hire?.closer_id === c.id ? hire : null} otherHire={!!hire && hire.closer_id !== c.id} /> : null}
       <div className="cc-tiles" style={{ gridTemplateColumns: canMessage ? "1fr 1fr" : "1fr" }}>
         <ProfileButton id={c.id} view="closer" className="pc-tile cc-tile">See profile and reviews</ProfileButton>
         {canMessage ? <Link className="pc-tile cc-tile" href={`/messages/${c.username}`} style={{ textDecoration: "none" }}>Message</Link> : null}

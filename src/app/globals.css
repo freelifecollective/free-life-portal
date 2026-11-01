@@ -1513,3 +1513,4 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .cc-tiles { display: grid; gap: 10px; }
 .cc-tile { text-align: center; justify-content: center; font-weight: 700; font-size: 14px; min-height: 52px; padding: 12px 8px; }
 .cc-hire { width: 100%; }
+.cc-hired { display: grid; gap: 8px; justify-items: start; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--accent); }

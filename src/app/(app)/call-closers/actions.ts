@@ -45,3 +45,29 @@ export async function withdrawApplication(id: string): Promise<{ ok: boolean }> 
   revalidatePath("/call-closers");
   return { ok: !error };
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Hire a call closer for one call, two calls, or every future call (calls: 1, 2 or 0 for every call). */
+export async function hireCloser(closerId: string, calls: number, note: string): Promise<{ ok: boolean; error?: string }> {
+  if (!UUID.test(closerId) || ![0, 1, 2].includes(calls)) return { ok: false, error: "Choose one call, two calls or all my future calls." };
+  const { session, supabase } = await requireMember();
+  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Hiring is for affiliates." };
+  const { error } = await supabase.rpc("hire_closer", { p_closer: closerId, p_calls: calls || null, p_note: note.trim().slice(0, 200) || null });
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "You already have a call closer hired. End that one first." };
+    return { ok: false, error: "We could not hire them. Please try again." };
+  }
+  revalidatePath("/call-closers");
+  return { ok: true };
+}
+
+/** Stops the current hire; new calls go back to the coach. */
+export async function endHire(id: string): Promise<{ ok: boolean }> {
+  if (!UUID.test(id)) return { ok: false };
+  const { supabase } = await requireMember();
+  if (!supabase) return { ok: false };
+  const { error } = await supabase.rpc("end_closer_hire", { p_id: id });
+  revalidatePath("/call-closers");
+  return { ok: !error };
+}
