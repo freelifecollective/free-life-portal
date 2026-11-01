@@ -44,7 +44,7 @@ export const TreeChart = forwardRef<SVGSVGElement, {
   };
   const editable = !!onPick;
   const gRef = useRef<SVGGElement>(null);
-  type Hit = { parentId: string | null; side: Side; x: number; y: number; w: number; h: number; place?: Place; line?: boolean };
+  type Hit = { parentId: string | null; side: Side; x: number; y: number; w: number; h: number; place?: Place; line?: boolean; from?: { x: number; y: number } };
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; over: Hit | null } | null>(null);
   const cleanup = useRef<(() => void) | null>(null);
   const justDragged = useRef(false);
@@ -81,7 +81,8 @@ export const TreeChart = forwardRef<SVGSVGElement, {
     for (const p of laid.placed) {
       if (skip.has(p.key)) continue;
       if (x >= p.x - bw / 2 - slack && x <= p.x + bw / 2 + slack && y >= p.y - bh / 2 - slack && y <= p.y + bh / 2 + slack) {
-        return { parentId: p.node?.id ?? null, side: x < p.x ? "left" : "right", x: p.x - bw / 2, y: p.y - bh / 2, w: bw, h: bh };
+        const left = x < p.x;
+        return { parentId: p.node?.id ?? null, side: left ? "left" : "right", x: p.x - bw / 2, y: p.y - bh / 2, w: bw, h: bh, place: left ? { first: true } : undefined };
       }
     }
     const pw = bw * 0.62, phh = bh * 0.8;
@@ -89,32 +90,24 @@ export const TreeChart = forwardRef<SVGSVGElement, {
       if (skip.has(ph.parentKey)) continue;
       if (x >= ph.x - pw / 2 - slack && x <= ph.x + pw / 2 + slack && y >= ph.y - phh / 2 - slack && y <= ph.y + phh / 2 + slack) return { parentId: ph.parentId, side: ph.side, x: ph.x - pw / 2, y: ph.y - phh / 2, w: pw, h: phh };
     }
-    /* empty white space beside a line (a "stick"): the bubble becomes a new branch of the account that line comes from, right where it is dropped */
-    const near = 34;
-    let best: { d: number; parentKey: string; side: Side | null; row: number } | null = null;
-    const seg = (ax: number, ay: number, bx: number, by: number) => {
-      const dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy || 1;
-      const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / len2));
-      return Math.hypot(x - (ax + t * dx), y - (ay + t * dy));
-    };
-    const consider = (parentKey: string, side: Side | null, px: number, py: number, cx: number, cy: number) => {
-      if (skip.has(parentKey)) return;
-      const midY = py + (cy - py) / 2;
-      const d = Math.min(seg(px, py, px, midY), seg(Math.min(px, cx), midY, Math.max(px, cx), midY), seg(cx, midY, cx, cy));
-      if (d <= near && (!best || d < best.d)) best = { d, parentKey, side, row: laid.row };
-    };
-    for (const p of laid.placed) if (p.parentKey) { const par = pos.get(p.parentKey); if (par) consider(p.parentKey, null, par.x, par.y + bh / 2, p.x, p.y - bh / 2); }
-    for (const ph of laid.phantoms) { const par = pos.get(ph.parentKey); if (par) consider(ph.parentKey, ph.side, par.x, par.y + bh / 2, ph.x, ph.y - (bh * 0.8) / 2); }
-    if (best) {
-      const b = best as { d: number; parentKey: string; side: Side | null; row: number };
-      const par = pos.get(b.parentKey)!;
-      const side: Side = b.side ?? (x < par.x ? "left" : "right");
-      const sibs = laid.placed.filter((p) => p.parentKey === b.parentKey && p.side === side && p.key !== draggedId).sort((a, c) => a.x - c.x);
-      const before = sibs.filter((p) => p.x < x);
-      const place: Place | undefined = sibs.length === 0 ? undefined : before.length === 0 ? { first: true } : before.length === sibs.length ? undefined : { after: before[before.length - 1].key };
-      return { parentId: par.node?.id ?? null, side, x: x - bw / 2, y: par.y + b.row - bh / 2, w: bw, h: bh, place, line: true };
+    /* empty white space, anywhere on the chart: the account whose natural spot for a new branch is closest becomes the parent,
+       and the new bubble goes right where it is dropped (a faded line shows where it will hang from) */
+    if (x + shift < 0 || x + shift > W || y + chartY < 0 || y + chartY > H) return null;
+    let parent: (typeof laid.placed)[number] | null = null;
+    let bestCost = Infinity;
+    for (const p of laid.placed) {
+      if (skip.has(p.key)) continue;
+      if (y < p.y + bh) continue;   /* the new bubble must sit below its parent */
+      const cost = Math.hypot(x - p.x, y - p.y - laid.row);
+      if (cost < bestCost) { bestCost = cost; parent = p; }
     }
-    return null;
+    if (!parent) parent = pos.get("root") ?? null;
+    if (!parent) return null;
+    const side: Side = x < parent.x ? "left" : "right";
+    const sibs = laid.placed.filter((p) => p.parentKey === parent!.key && p.key !== draggedId).sort((a, c) => a.x - c.x);
+    const before = sibs.filter((p) => p.x < x);
+    const place: Place | undefined = sibs.length === 0 ? undefined : before.length === 0 ? { first: true } : before.length === sibs.length ? undefined : { after: before[before.length - 1].key };
+    return { parentId: parent.node?.id ?? null, side, x: x - bw / 2, y: y - bh / 2, w: bw, h: bh, place, line: true, from: { x: parent.x, y: parent.y + bh / 2 } };
   };
   /** Press on an account: a mouse starts dragging after a few pixels, a finger after a short hold (so scrolling still works). */
   const startDrag = (e: React.PointerEvent, id: string) => {
@@ -242,9 +235,9 @@ export const TreeChart = forwardRef<SVGSVGElement, {
             <g pointerEvents="none">
               {over ? (
                 <g>
-                  {over.line
-                    ? <rect x={over.x} y={over.y} width={over.w} height={over.h} rx={8} fill="rgba(171,144,128,.15)" stroke="#AB9080" strokeWidth={3} strokeDasharray="7 5" />
-                    : <rect x={over.x - 4} y={over.y - 4} width={over.w + 8} height={over.h + 8} rx={11} fill="rgba(171,144,128,.15)" stroke="#AB9080" strokeWidth={3} />}
+                  {over.line && over.from ? (
+                    <path d={`M ${over.from.x} ${over.from.y} V ${over.from.y + (over.y - over.from.y) / 2} H ${over.x + over.w / 2} V ${over.y}`} fill="none" stroke="#AB9080" strokeOpacity={0.55} strokeWidth={3} strokeDasharray="7 5" />
+                  ) : <rect x={over.x - 4} y={over.y - 4} width={over.w + 8} height={over.h + 8} rx={11} fill="rgba(171,144,128,.15)" stroke="#AB9080" strokeWidth={3} />}
                   <text x={over.x + over.w / 2} y={over.y + over.h + 20} textAnchor="middle" fontSize={12} fontWeight={700} fill="#8D7364">{over.line ? "New branch here" : over.side === "left" ? "Drop to the left" : "Drop to the right"}</text>
                 </g>
               ) : null}

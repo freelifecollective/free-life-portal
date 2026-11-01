@@ -28,19 +28,19 @@ describe("family tree", () => {
     expect(by.get("c")!.x).toBeLessThan(by.get("d")!.x);
     expect(by.get("root")!.y).toBeLessThan(by.get("a")!.y);
   });
-  it("gives a bubble with one side an empty spot for the other", () => {
+  it("a bubble with one side only sits straight above its account (no empty spot is reserved)", () => {
     const l = layoutTree(buildTree([n("a", null, "left")]));
-    expect(l.phantoms.map((p) => p.side)).toEqual(["right"]);
-    expect(l.phantoms[0].x).toBeGreaterThan(l.placed.find((p) => p.node?.id === "a")!.x);
+    expect(l.phantoms).toHaveLength(0);
+    expect(l.placed.find((p) => p.node?.id === "a")!.x).toBeCloseTo(l.placed.find((p) => p.key === "root")!.x, 5);
   });
   it("flags a lopsided branch", () => {
     const l = layoutTree(buildTree([n("a", null, "left"), n("c", "a", "left"), n("e", "c", "left"), n("f", "e", "left")]));
     expect(l.placed.find((p) => p.node?.id === "a")!.lopsided).toBe(true);
   });
-  it("an empty tree has two empty spots", () => {
+  it("an empty tree is just the top bubble", () => {
     const l = layoutTree(buildTree([]));
     expect(l.placed).toHaveLength(1);
-    expect(l.phantoms.map((p) => p.side).sort()).toEqual(["left", "right"]);
+    expect(l.phantoms).toHaveLength(0);
   });
   it("bubbles shrink slowly as the tree grows", () => {
     expect(bubbleRadius(0)).toBe(54);
@@ -57,6 +57,7 @@ describe("family tree", () => {
     expect(c("6A2")).toBe("62");
     expect(c("6A2-2")).toBe("62-2");
     expect(c("6A2-3+")).toBe("62-3");
+    for (const r of ["6A2-3", "6A2-4", "6A2-5", "6A2-6", "6A2-7", "6A2-8"]) expect(c(r)).toBe("62-3");
     expect(c(null)).toBe("none");
     expect(c("6A2", true)).toBe("owned");
   });
@@ -64,7 +65,10 @@ describe("family tree", () => {
     const many = [n("a", null, "left"), n("b", null, "left"), n("c", null, "left"), n("d", null, "right"), n("e", "a", "left"), n("f", "a", "left"), n("g", "a", "right")];
     const root = buildTree(many);
     expect(countAll(root)).toBe(7);
-    expect(balanceOf(root)).toMatchObject({ left: 6, right: 1 });
+    const bal = balanceOf(root);
+    expect(bal.left + bal.right).toBe(7);
+    expect(bal.left).toBeGreaterThan(0);
+    expect(bal.right).toBeGreaterThan(0);
     const l = layoutTree(root);
     expect(l.placed).toHaveLength(8);
     for (const p of l.placed) for (const q of l.placed) if (p !== q && p.y === q.y) expect(Math.abs(p.x - q.x)).toBeGreaterThanOrEqual(2 * l.r + 4);
@@ -75,5 +79,21 @@ describe("family tree", () => {
     expect(by.get("e")!.y).toBeGreaterThan(by.get("a")!.y);
     /* the parent sits in the middle of its first and last account */
     expect(by.get("a")!.x).toBeCloseTo((by.get("e")!.x + by.get("g")!.x) / 2, 5);
+  });
+  it("counts left and right the way it looks on the screen, whatever the stored side says", () => {
+    /* all three were stored as "left" (for example after dragging them around), but they sit across the page */
+    const root = buildTree([n("a", null, "left"), n("b", null, "left"), n("c", null, "left"), n("d", "c", "left")]);
+    const bal = balanceOf(root);
+    expect(bal).toMatchObject({ left: 2, right: 2, lopsided: false });
+    const l = layoutTree(root);
+    const rootX = l.placed.find((p) => p.key === "root")!.x;
+    expect(l.placed.find((p) => p.key === "a")!.x).toBeLessThan(rootX);
+    expect(l.placed.find((p) => p.key === "c")!.x).toBeGreaterThan(rootX);
+  });
+  it("an account moved to the far side is counted there", () => {
+    const root = buildTree([n("a", null, "left"), n("b", null, "right"), n("c", null, "right"), n("d", null, "right")]);
+    const bal = balanceOf(root);
+    expect(bal.left + bal.right).toBe(4);
+    expect(Math.abs(bal.left - bal.right)).toBeLessThanOrEqual(2);
   });
 });

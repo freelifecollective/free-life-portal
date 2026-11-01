@@ -14,7 +14,7 @@ export type DialogTarget = { mode: "root"; label: string; rank: string } | { mod
 /** Add a bubble, or change or remove one. You can pick someone from the FLC community or just type a name or account name. */
 export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemoved, onAddSide, onRootSaved }: {
   chartId: string; charts: { id: string; name: string }[];
-  target: DialogTarget | null; onClose: () => void; onSaved: (n: TreeNode) => void; onRootSaved: (label: string, rank: string) => void; onRemoved: (id: string) => void; onAddSide: (parentId: string | null, side: Side) => void;
+  target: DialogTarget | null; onClose: () => void; onSaved: (n: TreeNode, side?: Side) => void; onRootSaved: (label: string, rank: string) => void; onRemoved: (id: string) => void; onAddSide: (parentId: string | null, side: Side) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [label, setLabel] = useState("");
@@ -34,7 +34,7 @@ export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemove
   useEffect(() => {
     if (!target) { dlg.current?.close(); return; }
     queueMicrotask(() => {
-      setLabel(target.mode === "edit" ? target.node.label : target.mode === "root" ? target.label : ""); setRank(target.mode === "edit" ? target.node.rank ?? "" : target.mode === "root" ? target.rank : "");
+      setLabel(target.mode === "edit" ? target.node.label : target.mode === "root" ? target.label : ""); setRank(target.mode === "edit" ? (target.node.rank === "6A2-3+" ? "6A2-3" : target.node.rank) ?? "" : target.mode === "root" ? target.rank : "");
       setLinked(target.mode === "edit" ? target.node.linked_member_id ?? "" : ""); setOwned(target.mode === "edit" ? !!target.node.owned : false); setError(""); setConfirm(false);
     });
     if (!dlg.current?.open) dlg.current?.showModal();
@@ -68,7 +68,7 @@ export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemove
         ? { id: target.node.id, chartId, parentId: target.node.parent_id, side: target.node.side, label, rank, linkedId: linked || null, owned }
         : { chartId, parentId: target.parentId, side: target.side, label, rank, linkedId: linked || null, owned });
       if (!r.ok) { setError(r.error); return; }
-      onSaved(r.node);
+      onSaved(r.node, target.mode === "add" ? target.side : undefined);
     });
   };
   const others = charts.filter((c) => c.id !== chartId);
@@ -100,22 +100,23 @@ export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemove
         <div className="field"><label htmlFor="ft-label">{target.mode === "root" ? "Your name or account name" : "Or type a name or account name"}</label>
           <input id="ft-label" type="text" required={target.mode !== "root"} maxLength={60} value={label} onChange={(e) => setLabel(e.target.value)} autoFocus /></div>
         <div className="field"><label htmlFor="ft-rank">Rank (optional)</label>
-          <select id="ft-rank" value={rank} onChange={(e) => setRank(e.target.value)}><option value="">Not set</option>{TREE_RANKS.map((r) => <option key={r} value={r}>{r === "6A2-3+" ? "6A2-3 and above" : r}</option>)}</select></div>
+          <select id="ft-rank" value={rank} onChange={(e) => setRank(e.target.value)}><option value="">Not set</option>{TREE_RANKS.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
         {target.mode !== "root" ? <label className="check" style={{ display: "flex", gap: 10, alignItems: "flex-start" }}><input type="checkbox" checked={owned} onChange={(e) => setOwned(e.target.checked)} style={{ marginTop: 4 }} /><span>I own this account</span></label> : <p className="when" style={{ margin: 0 }}>Leave the name empty to use your profile name.</p>}
         <p className="err" role="alert" style={{ minHeight: 0 }}>{error}</p>
         <div className="dlg-actions"><button className="btn" type="button" onClick={() => dlg.current?.close()}>Cancel</button><button className="btn primary" type="submit" disabled={pending}>{pending ? "Saving…" : target.mode === "add" ? "Add" : "Save changes"}</button></div>
         {target.mode === "root" ? (
           <div className="ft-more">
             <div className="rs-actions">
-              <button type="button" className="btn small" onClick={() => onAddSide(null, "left")}>Add another to the left</button>
-              <button type="button" className="btn small" onClick={() => onAddSide(null, "right")}>Add another to the right</button>
+              <button type="button" className="btn small" onClick={() => onAddSide(null, "left")}>Add to the left</button>
+              <button type="button" className="btn small" onClick={() => onAddSide(null, "right")}>Add to the right</button>
             </div>
           </div>
         ) : null}
-        {target.mode === "edit" && others.length > 0 ? (
+        {target.mode === "edit" ? (
           <div className="ft-copy">
             <strong>Copy to another chart</strong>
-            <div className="rs-actions" style={{ marginTop: 6, flexWrap: "wrap" }}>
+            {others.length === 0 ? <p className="when" style={{ margin: "4px 0 0" }}>You only have one chart so far. Use “+ New chart” above the chart to make another one, then you can copy bubbles into it.</p> : null}
+            {others.length > 0 ? <div className="rs-actions" style={{ marginTop: 6, flexWrap: "wrap" }}>
               <select value={copyTo} onChange={(e) => { setCopyTo(e.target.value); setCopied(""); }} aria-label="Which chart">
                 <option value="">Choose a chart</option>
                 {others.map((c) => <option key={c.id} value={c.id} data-i18n="skip">{c.name}</option>)}
@@ -124,8 +125,8 @@ export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemove
                 <option value="left">on the left</option><option value="right">on the right</option>
               </select>
               <button type="button" className="btn small" disabled={pending || !copyTo} onClick={copy}>Copy</button>
-            </div>
-            <label className="check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}><input type="checkbox" checked={copyBelow} onChange={(e) => setCopyBelow(e.target.checked)} /> <span>Include everything under it</span></label>
+            </div> : null}
+            {others.length > 0 ? <label className="check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}><input type="checkbox" checked={copyBelow} onChange={(e) => setCopyBelow(e.target.checked)} /> <span>Include everything under it</span></label> : null}
             {copied ? <p className="when" role="status" style={{ margin: "4px 0 0", color: "var(--ok)" }}>{copied}</p> : null}
           </div>
         ) : null}

@@ -1,17 +1,17 @@
 export type TreeNode = { id: string; parent_id: string | null; side: "left" | "right"; label: string; rank: string | null; linked_member_id?: string | null; owned?: boolean };
 export type Side = "left" | "right";
 
-/** One account with everything under it. The left side and the right side can each hold as many accounts as you like. The very top (the owner) has no node. */
-export type Built = { node: TreeNode | null; lefts: Built[]; rights: Built[] };
+/** One account with everything under it. Its accounts sit side by side in the order they were placed (the owner at the very top has no node). */
+export type Built = { node: TreeNode | null; kids: Built[] };
 
 export function buildTree(nodes: TreeNode[]): Built {
   const by = new Map<string, Built>();
-  for (const n of nodes) by.set(n.id, { node: n, lefts: [], rights: [] });
-  const root: Built = { node: null, lefts: [], rights: [] };
+  for (const n of nodes) by.set(n.id, { node: n, kids: [] });
+  const root: Built = { node: null, kids: [] };
   for (const n of nodes) {
     const b = by.get(n.id)!;
     const parent = n.parent_id ? by.get(n.parent_id) : root;
-    if (parent) parent[n.side === "left" ? "lefts" : "rights"].push(b);
+    if (parent) parent.kids.push(b);
   }
   return root;
 }
@@ -19,10 +19,8 @@ export function buildTree(nodes: TreeNode[]): Built {
 /** How many bubbles are in this branch, counting itself (the owner at the very top does not count). */
 export function countAll(b: Built | null): number {
   if (!b) return 0;
-  return (b.node ? 1 : 0) + countSide(b.lefts) + countSide(b.rights);
+  return (b.node ? 1 : 0) + b.kids.reduce((n, c) => n + countAll(c), 0);
 }
-/** How many accounts are in a whole side (a list of branches). */
-export function countSide(list: Built[]): number { return list.reduce((n, c) => n + countAll(c), 0); }
 
 /** Lopsided: one side has at least two more accounts and at least one and a half times as many as the other. */
 export function isLopsided(left: number, right: number): boolean {
@@ -31,8 +29,10 @@ export function isLopsided(left: number, right: number): boolean {
 }
 
 export type Balance = { left: number; right: number; lopsided: boolean; heavy: Side | null };
+/** The left and right sides of the top bubble, as they look on the screen: accounts drawn to its left are the left side, to its right the right side. */
 export function balanceOf(b: Built): Balance {
-  const left = countSide(b.lefts), right = countSide(b.rights);
+  const l = layoutTree(b).placed.find((p) => p.key === "root");
+  const left = l?.left ?? 0, right = l?.right ?? 0;
   const lopsided = isLopsided(left, right);
   return { left, right, lopsided, heavy: lopsided ? (left > right ? "left" : "right") : null };
 }
@@ -47,8 +47,9 @@ export function bubbleRadius(count: number): number {
 }
 
 /**
- * Lays the tree out: every bubble sits between its two sides. A bubble with only one side gets an empty spot on the other
- * (shown as a "+" in the editor), so branches never run into each other.
+ * Lays the tree out: an account's accounts sit side by side in order, and it sits in the middle of the first and the last.
+ * "Left" and "right" are worked out from where things end up on the screen: an account drawn to the left of its parent is on its
+ * left side, to the right on its right side, and one directly underneath joins whichever side has fewer.
  */
 export function layoutTree(root: Built): Laid {
   const r = bubbleRadius(countAll(root));
@@ -56,37 +57,43 @@ export function layoutTree(root: Built): Laid {
   const placed: Placed[] = [];
   const phantoms: Phantom[] = [];
   let maxDepth = 0;
-  function place(b: Built, depth: number, start: number, parentKey: string | null, side: Side | null): { x: number; next: number } {
+  const sizeOf = new Map<string, number>();
+  const measure = (b: Built): number => { const n = countAll(b); sizeOf.set(b.node?.id ?? "root", n); for (const c of b.kids) measure(c); return n; };
+  measure(root);
+  function place(b: Built, depth: number, start: number, parentKey: string | null): { x: number; next: number } {
     maxDepth = Math.max(maxDepth, depth);
     const key = b.node?.id ?? "root";
-    const hasKids = b.lefts.length > 0 || b.rights.length > 0 || b.node === null;
-    if (!hasKids) {
-      placed.push({ key, node: b.node, x: start + 0.5, y: depth * ROW, parentKey, side, lopsided: false, left: 0, right: 0 });
+    if (b.kids.length === 0) {
+      placed.push({ key, node: b.node, x: start + 0.5, y: depth * ROW, parentKey, side: null, lopsided: false, left: 0, right: 0 });
       return { x: start + 0.5, next: start + 1 };
     }
     let cursor = start;
     const xs: number[] = [];
-    /* each side holds its accounts side by side, or one empty spot (a "+") when it has none */
-    const group = (list: Built[], s: Side) => {
-      if (list.length) {
-        for (const c of list) { const r = place(c, depth + 1, cursor, key, s); xs.push(r.x); cursor = r.next; }
-      } else {
-        phantoms.push({ key: `${key}:${s}`, x: cursor + 0.5, y: (depth + 1) * ROW, parentKey: key, parentId: b.node?.id ?? null, side: s });
-        maxDepth = Math.max(maxDepth, depth + 1);
-        xs.push(cursor + 0.5); cursor += 1;
-      }
-    };
-    group(b.lefts, "left");
-    group(b.rights, "right");
-    const left = countSide(b.lefts), right = countSide(b.rights);
+    for (const c of b.kids) { const res = place(c, depth + 1, cursor, key); xs.push(res.x); cursor = res.next; }
     const x = (xs[0] + xs[xs.length - 1]) / 2;
-    placed.push({ key, node: b.node, x, y: depth * ROW, parentKey, side, lopsided: b.node ? left + right >= 3 && isLopsided(left, right) : false, left, right });
+    placed.push({ key, node: b.node, x, y: depth * ROW, parentKey, side: null, lopsided: false, left: 0, right: 0 });
     return { x, next: cursor };
   }
-  const end = place(root, 0, 0, null, null);
+  const end = place(root, 0, 0, null);
   const slots = Math.max(1, end.next);
   for (const p of placed) { p.x = p.x * SLOT + PAD; p.y += PAD; }
-  for (const p of phantoms) { p.x = p.x * SLOT + PAD; p.y += PAD; }
-  return { placed, phantoms, width: slots * SLOT + PAD * 2, height: maxDepth * ROW + PAD * 2 + 40, heavyRoot: balanceOf(root).heavy, r, row: ROW };
+  /* which side each account is on, and how many accounts each side holds, from where they ended up */
+  const by = new Map(placed.map((p) => [p.key, p]));
+  const kidsOf = new Map<string, Placed[]>();
+  for (const p of placed) if (p.parentKey) kidsOf.set(p.parentKey, [...(kidsOf.get(p.parentKey) ?? []), p]);
+  for (const [parentKey, kids] of kidsOf) {
+    const par = by.get(parentKey)!;
+    let left = 0, right = 0;
+    const middle: Placed[] = [];
+    for (const k of kids) {
+      const n = sizeOf.get(k.key) ?? 1;
+      if (k.x < par.x - 1) { k.side = "left"; left += n; } else if (k.x > par.x + 1) { k.side = "right"; right += n; } else middle.push(k);
+    }
+    for (const k of middle) { const n = sizeOf.get(k.key) ?? 1; if (left <= right) { k.side = "left"; left += n; } else { k.side = "right"; right += n; } }
+    par.left = left; par.right = right;
+    par.lopsided = !!par.node && left + right >= 3 && isLopsided(left, right);
+  }
+  const rootP = by.get("root");
+  const heavy: Side | null = rootP && isLopsided(rootP.left, rootP.right) ? (rootP.left > rootP.right ? "left" : "right") : null;
+  return { placed, phantoms, width: slots * SLOT + PAD * 2, height: maxDepth * ROW + PAD * 2 + 40, heavyRoot: heavy, r, row: ROW };
 }
-
