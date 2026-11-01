@@ -32,7 +32,7 @@ export function UserMenu({ url, initials, preview, label, showSubscription, show
         <div className="user-pop" role="menu">
           <Link href="/settings" role="menuitem">Profile</Link>
           {showCloser ? <Link href="/call-closer" role="menuitem">Call Closer</Link> : null}
-          {showSubscription ? <Link href="/settings/subscription" role="menuitem">My Subscription</Link> : null}
+          {showSubscription ? <Link href="/settings/subscription" role="menuitem">My Plan</Link> : null}
           <Link href="/settings/app" role="menuitem">Get the App</Link>
           <button type="button" role="menuitem" onClick={() => { setOpenAt(null); window.dispatchEvent(new Event("flc:tour")); }}>Take the tour</button>
           <button type="button" role="menuitem" onClick={() => { setOpenAt(null); logoutDialog.current?.showModal(); }}>Log out</button>
