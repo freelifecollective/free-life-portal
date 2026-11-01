@@ -1516,15 +1516,15 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .cc-face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
 .cc-front { background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 22px rgba(43,37,34,.08); grid-template-rows: auto 1fr; }
 .cc-back { background: var(--bg); border: 1px solid var(--line); transform: rotateY(180deg); padding: 22px 20px 18px; gap: 14px; cursor: pointer; }
-.cc-cover { position: relative; background: var(--tint); overflow: hidden; cursor: pointer; }
-.cc-cover:focus-visible { outline: 3px solid var(--accent-deep); outline-offset: -3px; }
-.cc-cover img { width: 100%; height: auto; max-height: 640px; object-fit: contain; display: block; }
-.cc-cover-empty { min-height: 320px; display: grid; place-items: center; }
-.cc-cover::after { content: ""; position: absolute; inset: 45% 0 0 0; background: linear-gradient(to top, rgba(31,26,23,.78), rgba(31,26,23,0)); pointer-events: none; }
-.cc-cover-text { position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 1; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
-.cc-cover-text h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.1; }
-.cc-loc { margin: 4px 0 0; font-size: 15px; opacity: .95; }
-.cc-loc::before { content: "📍 "; }
+.cc-cover { position: relative; aspect-ratio: 4 / 5; background: var(--tint); overflow: hidden; }
+.cc-cover-bg { position: absolute; inset: -30px; background-size: cover; background-position: center; filter: blur(26px) saturate(1.1); opacity: .55; }
+.cc-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.cc-cover-empty { height: 100%; display: grid; place-items: center; }
+.cc-front, .cc-front * { cursor: pointer; }
+.cc-front .cc-edit, .cc-front dialog, .cc-front dialog * { cursor: auto; }
+.cc-front .cc-edit { cursor: pointer; }
+.cc-ident h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 28px; line-height: 1.1; }
+.cc-ident .cc-loc { margin: 6px 0 0; font-size: 15px; color: var(--muted); }
 .cc-front-body { padding: 16px 18px 18px; display: grid; gap: 12px; align-content: start; }
 .cc-exp { margin: 0; display: inline-flex; align-items: baseline; gap: 8px; justify-self: start; padding: 6px 12px; border-radius: 999px; background: var(--tint); font-size: 14px; }
 .cc-exp span { color: var(--muted); }
@@ -1547,3 +1547,4 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .hire-prices { display: grid; gap: 6px; padding: 10px 12px; border-radius: 12px; background: var(--tint); }
 .hire-prices p { margin: 0; display: grid; gap: 1px; }
 .hire-prices small { color: var(--muted); }
+.cc-loc::before { content: "📍 "; }
