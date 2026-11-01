@@ -110,7 +110,7 @@ export type Voice = { url: string; secs: number };
 
 export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null, image: string | null = null, voice: Voice | null = null): Promise<Result> {
   if (image && !GIF.test(image)) return { ok: false, error: "That GIF did not work." };
-  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 600))) return { ok: false, error: "That voice note did not work." };
+  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 3600))) return { ok: false, error: "That voice note did not work." };
   const text = voice ? "Voice note" : image ? "GIF" : String(body ?? "").trim();
   if (!UUID.test(chatId) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };
@@ -164,4 +164,15 @@ export async function searchMessages(kind: "chat" | "group", target: string, q: 
   const { data: cards } = ids.length ? await supabase.from("profile_cards").select("id, first_name, last_name").in("id", ids) : { data: [] };
   const names = new Map(((cards ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).map((c) => [c.id, [c.first_name, c.last_name].filter(Boolean).join(" ") || "Member"]));
   return rows.map((r) => ({ id: r.id, name: (r.author_id && names.get(r.author_id)) || "Member", body: r.body, created_at: r.created_at }));
+}
+
+/** A voice note posted in a feed-style chat (the recording has already been uploaded). */
+export async function postVoice(chatId: string, slug: string, url: string, secs: number): Promise<Result> {
+  if (!UUID.test(chatId) || !VOICE.test(url) || !(secs >= 1 && secs <= 3600)) return { ok: false, error: "That voice note did not work." };
+  const { session, supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
+  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: "Voice note", audio_url: url, audio_secs: Math.round(secs) });
+  if (error) return { ok: false, error: "We could not post that. Please try again." };
+  refresh(slug);
+  return { ok: true };
 }

@@ -31,7 +31,7 @@ const VOICE = /^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/voice-notes\
 
 /** Sends a voice note that has already been uploaded. */
 export async function sendVoiceMessage(otherId: string, url: string, secs: number): Promise<{ ok: boolean; error?: string }> {
-  if (!UUID.test(otherId) || !VOICE.test(url) || !(secs >= 1 && secs <= 600)) return { ok: false, error: "That voice note did not work." };
+  if (!UUID.test(otherId) || !VOICE.test(url) || !(secs >= 1 && secs <= 3600)) return { ok: false, error: "That voice note did not work." };
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Messages need the database." };
   const { error } = await supabase.from("direct_messages").insert({ sender_id: session.user.id, recipient_id: otherId, body: "", audio_url: url, audio_secs: Math.round(secs) });

@@ -63,7 +63,7 @@ const VOICE = /^https:\/\/[a-z0-9.-]+\/storage\/v1\/object\/public\/voice-notes\
 
 export async function sendGroupMessage(group: string, body: string, replyTo: string | null, image: string | null = null, voice: { url: string; secs: number } | null = null): Promise<R> {
   if (image && !/^https:\/\/media\d*\.giphy\.com\//.test(image)) return { ok: false, error: "That GIF did not work." };
-  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 600))) return { ok: false, error: "That voice note did not work." };
+  if (voice && (!VOICE.test(voice.url) || !(voice.secs >= 1 && voice.secs <= 3600))) return { ok: false, error: "That voice note did not work." };
   const text = voice ? "Voice note" : image ? "GIF" : String(body ?? "").trim();
   if (!UUID.test(group) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };

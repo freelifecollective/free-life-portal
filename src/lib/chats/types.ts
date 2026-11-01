@@ -15,6 +15,8 @@ export type PostView = {
   body: string;
   created_at: string;
   edited: boolean;
+  audio_url?: string | null;
+  audio_secs?: number | null;
   pinned: boolean;
   mine: boolean;
   comments: CommentView[];

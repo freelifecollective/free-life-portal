@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const MAX_SECS = 300;
-const mmss = (n: number) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+const MAX_SECS = 3600;   /* one hour */
+const mmss = (n: number) => (n >= 3600 ? `${Math.floor(n / 3600)}:${String(Math.floor(n / 60) % 60).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}` : `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`);
 /** The recording format this browser can make (Safari makes mp4, most others webm). */
 function pickType(): { mime: string; ext: string } | null {
   if (typeof MediaRecorder === "undefined") return null;
@@ -40,7 +40,7 @@ export function VoiceRecorder({ onSend, disabled = false }: { onSend: (url: stri
     } catch { setError("Allow the microphone to record a voice note."); return; }
     chunks.current = [];
     keep.current = true;
-    const r = new MediaRecorder(stream.current, { mimeType: type.mime });
+    const r = new MediaRecorder(stream.current, { mimeType: type.mime, audioBitsPerSecond: 32000 });   /* voice only, so files stay small */
     r.ondataavailable = (e) => { if (e.data.size) chunks.current.push(e.data); };
     r.onstop = () => { void finish(type.ext, type.mime.split(";")[0]); };
     rec.current = r;
@@ -72,7 +72,7 @@ export function VoiceRecorder({ onSend, disabled = false }: { onSend: (url: stri
       const path = `${u.user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: up } = await supabase.storage.from("voice-notes").upload(path, new Blob(chunks.current, { type: mime }), { contentType: mime, cacheControl: "3600" });
       if (up) throw up;
-      await onSend(supabase.storage.from("voice-notes").getPublicUrl(path).data.publicUrl, Math.min(length, 600));
+      await onSend(supabase.storage.from("voice-notes").getPublicUrl(path).data.publicUrl, Math.min(length, 3600));
     } catch { setError("We could not send that voice note. Please try again."); }
     setState("idle");
   }

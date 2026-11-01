@@ -5,6 +5,7 @@ import { useActionState, useEffect, useOptimistic, useRef, useState, useTransiti
 import { addComment, deleteComment, deletePost, pinPost, toggleVote, type ChatFormState } from "@/app/(app)/chats/actions";
 import { Avatar } from "@/components/Avatar";
 import { UserText } from "@/components/UserText";
+import { VoiceNote } from "@/components/voice/VoiceNote";
 import { COMMENT_MAX, type Author, type PostView } from "@/lib/chats/types";
 import { Reactions } from "./Reactions";
 import { formatInZone } from "@/lib/time";
@@ -50,7 +51,8 @@ export function PostCard({ post, slug, voting, isAdmin, canReply = true, showVie
         <Who a={post.author} />
         <span className="when-wrap"><When iso={post.created_at} />{post.edited ? " (edited)" : ""}</span>
       </header>
-      <p className="post-body"><UserText text={post.body} /></p>
+      {post.audio_url ? <p className="post-body"><VoiceNote src={post.audio_url} secs={post.audio_secs} /></p> : null}
+      {post.audio_url && post.body === "Voice note" ? null : <p className="post-body"><UserText text={post.body} /></p>}
       <div className="post-actions">
         <Reactions postId={post.id} slug={slug} reactions={post.reactions} mine={post.myReaction} onError={setError} />
         {voting && !post.mine ? (
