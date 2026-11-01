@@ -138,4 +138,5 @@ export const conversations: readonly Entry[] = [
   ["That kind of file can't be sent. Pictures, PDFs, Office files, text and zip files work.", "Ese tipo de archivo no se puede enviar. Funcionan imágenes, PDF, archivos de Office, texto y zip.", "Ce type de fichier ne peut pas être envoyé. Les images, PDF, fichiers Office, texte et zip fonctionnent.", "Questo tipo di file non può essere inviato. Funzionano immagini, PDF, file Office, testo e zip.", "Diese Dateiart kann nicht gesendet werden. Bilder, PDFs, Office-Dateien, Text und Zip-Dateien funktionieren."],
   ["We could not post that reply. Please try again.", "No pudimos publicar esa respuesta. Inténtalo de nuevo.", "Nous n'avons pas pu publier cette réponse. Réessaie.", "Non siamo riusciti a pubblicare la risposta. Riprova.", "Wir konnten die Antwort nicht posten. Versuch es bitte nochmal."],
   ["📎 File", "📎 Archivo", "📎 Fichier", "📎 File", "📎 Datei"],
+  ["Frequently used", "Usados con frecuencia", "Utilisés fréquemment", "Usati di frequente", "Häufig verwendet"],
 ];
