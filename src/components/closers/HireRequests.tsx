@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { endHire, respondHire } from "@/app/(app)/call-closers/actions";
+import { respondHire } from "@/app/(app)/call-closers/actions";
 import { PersonLink } from "@/components/people/ProfilePopup";
 import { Avatar } from "@/components/Avatar";
 
@@ -16,9 +16,8 @@ export function HireRequests({ requests }: { requests: Request[] }) {
   const [pending, start] = useTransition();
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
-  if (requests.length === 0) return null;
+  if (!requests.some((r) => r.status === "pending")) return null;
   const waiting = requests.filter((r) => r.status === "pending");
-  const active = requests.filter((r) => r.status === "active");
   const answer = (id: string, accept: boolean) => start(async () => {
     setError("");
     const r = await respondHire(id, accept, notes[id] ?? "");
@@ -38,13 +37,6 @@ export function HireRequests({ requests }: { requests: Request[] }) {
             <button type="button" className="btn small primary" disabled={pending} onClick={() => answer(r.id, true)}>Accept</button>
             <button type="button" className="btn small" disabled={pending} onClick={() => answer(r.id, false)}>Decline</button>
           </div>
-        </div>
-      ))}
-      {active.length ? <h2 className="qh" style={{ margin: 0 }}>You are taking calls for</h2> : null}
-      {active.map((r) => (
-        <div key={r.id} style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", borderTop: "1px solid var(--line)", paddingTop: 12 }}>
-          <div style={{ display: "grid", gap: 4 }}>{person(r)}<span className="when">{r.calls_total === null ? "All their future calls" : `${r.calls_total - r.calls_used} of ${r.calls_total} calls left`}</span></div>
-          <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await endHire(r.id); router.refresh(); })}>Stop taking their calls</button>
         </div>
       ))}
       {error ? <p className="err" role="alert" style={{ minHeight: 0, margin: 0 }}>{error}</p> : null}

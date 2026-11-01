@@ -8,9 +8,10 @@ const MAX = 4000;
 type R = { ok: true; id?: string } | { ok: false; error: string };
 const ids = (xs: string[]) => [...new Set((xs ?? []).filter((x) => UUID.test(x)))].slice(0, 49);
 
-async function db() {
+/** Leads can be in groups and write in them, but cannot create or manage them. */
+async function db(allowLead = false) {
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return null;
+  if (!supabase || (session.profile.role === "lead" && !allowLead)) return null;
   return { me: session.user.id, supabase };
 }
 
@@ -38,7 +39,7 @@ export async function addMembers(group: string, members: string[]): Promise<R> {
 /** The owner removes someone, or you leave (user = yourself). */
 export async function removeMember(group: string, user: string): Promise<R> {
   if (!UUID.test(group) || !UUID.test(user)) return { ok: false, error: "Something went wrong." };
-  const c = await db();
+  const c = await db(true);
   if (!c) return { ok: false, error: "Private groups are for affiliates." };
   const { error } = await c.supabase.rpc("remove_group_member", { p_group: group, p_user: user });
   if (error) return { ok: false, error: "We could not do that." };
@@ -64,7 +65,7 @@ export async function sendGroupMessage(group: string, body: string, replyTo: str
   if (!UUID.test(group) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };
   if (text.length > MAX) return { ok: false, error: `Please keep messages under ${MAX} characters.` };
-  const c = await db();
+  const c = await db(true);
   if (!c) return { ok: false, error: "Private groups are for affiliates." };
   const { error } = await c.supabase.from("group_messages").insert({ group_id: group, author_id: c.me, body: text, ...(image ? { image_url: image } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
   if (error) return { ok: false, error: "We could not send that. Please try again." };
@@ -74,7 +75,7 @@ export async function sendGroupMessage(group: string, body: string, replyTo: str
 
 export async function deleteGroupMessage(id: string): Promise<R> {
   if (!UUID.test(id)) return { ok: false, error: "Something went wrong." };
-  const c = await db();
+  const c = await db(true);
   if (!c) return { ok: false, error: "Private groups are for affiliates." };
   const { error } = await c.supabase.from("group_messages").delete().eq("id", id);
   if (error) return { ok: false, error: "We could not delete that." };
@@ -83,6 +84,6 @@ export async function deleteGroupMessage(id: string): Promise<R> {
 
 export async function markRead(group: string): Promise<void> {
   if (!UUID.test(group)) return;
-  const c = await db();
+  const c = await db(true);
   if (c) await c.supabase.rpc("mark_group_read", { p_group: group });
 }

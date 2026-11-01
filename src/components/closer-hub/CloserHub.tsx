@@ -18,7 +18,7 @@ const who = (p: Person | undefined) => p?.name ?? "A member";
 const PersonChip = ({ p, id }: { p: Person | undefined; id: string }) => <PersonLink id={id} name={who(p)} className="who"><Avatar url={p?.avatar_url ?? null} initials={who(p).charAt(0).toUpperCase()} size={32} /><span className="who-name"><strong>{who(p)}</strong></span></PersonLink>;
 
 /** The call closer's own area. */
-export function CloserHub({ availability, paused, calls, people, rules, stats, price, now }: { availability?: ReactNode; now: number; paused: boolean; calls: HubCall[]; people: Record<string, Person>; rules: PayRule[]; stats: Stats; price: number | null }) {
+export function CloserHub({ availability, clients, paused, calls, people, rules, stats, price, now }: { availability?: ReactNode; clients?: ReactNode; now: number; paused: boolean; calls: HubCall[]; people: Record<string, Person>; rules: PayRule[]; stats: Stats; price: number | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState<string | null>(null);
@@ -32,9 +32,10 @@ export function CloserHub({ availability, paused, calls, people, rules, stats, p
   const status = (c: HubCall) => c.outcome === null ? "Not recorded yet" : c.outcome === "no_show" ? "Did not take place" : owedOf(c) <= 0 && c.paid_at ? "Paid" : "Took place";
 
   return (
-    <div className="stack ch" style={{ maxWidth: 860 }}>
+    <div className="stack ch" style={{ maxWidth: 1160 }}>
       <div className="ch-top">
         <div>{availability}</div>
+      <div className="ch-side">
       <section className="card-s ch-pause" aria-label="New clients">
           <div>
             <h2 className="qh" style={{ margin: 0 }}>{paused ? "You are not taking new clients" : "You are taking new clients"}</h2>
@@ -42,6 +43,8 @@ export function CloserHub({ availability, paused, calls, people, rules, stats, p
           </div>
           <button type="button" className={"btn" + (paused ? " primary" : "")} disabled={pending} onClick={() => start(async () => { await setPaused(!paused); router.refresh(); })}>{paused ? "Start taking clients again" : "Pause new clients"}</button>
         </section>
+        {clients}
+        </div>
       </div>
 
       <section className="card-s" aria-label="Your stats">
