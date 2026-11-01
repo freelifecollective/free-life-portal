@@ -1558,3 +1558,26 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .cc-back { position: absolute; top: 0; left: 0; right: 0; }
 .cc-flip.flipped .cc-back { position: relative; }
 .cc-flip.flipped .cc-front { position: absolute; top: 0; left: 0; right: 0; }
+
+/* Family tree */
+.ft { display: grid; gap: 14px; }
+.ft-balance { display: grid; gap: 4px; border-left: 5px solid #5E9C76; }
+.ft-balance.lopsided { border-left-color: #D9962B; background: #FFF8EA; }
+.ft-counts { margin: 0; font-weight: 700; }
+.ft-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.ft-share input { flex: 1 1 260px; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; }
+.ft-scroll { overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 8px; max-width: 100%; }
+.ft-svg { display: block; margin: 0 auto; max-width: none; }
+.ft-bubble:hover circle:not([stroke-dasharray]) { stroke-width: 4; }
+.ft-bubble:focus-visible, .ft-plus:focus-visible { outline: none; }
+.ft-bubble:focus-visible circle { stroke: var(--accent-deep); stroke-width: 4; }
+.ft-more { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.ft-print-title { display: none; }
+@media print {
+  body * { visibility: hidden !important; }
+  .ft-print, .ft-print * { visibility: visible !important; }
+  .ft-print { position: absolute; left: 0; top: 0; width: 100%; }
+  .ft-print-title { display: block; text-align: center; font-family: var(--font-display); margin: 0 0 12px; }
+  .ft-scroll { overflow: visible; border: 0; }
+  .ft-svg { width: 100% !important; height: auto !important; }
+}

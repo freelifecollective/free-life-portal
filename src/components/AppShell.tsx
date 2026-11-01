@@ -35,6 +35,7 @@ const NAV: NavItem[] = [
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
   { label: "Earnings Estimator", href: "/calculator", min: "member", group: "Placing Sales" },
   { label: "Graphic maker", min: "member" },
+  { label: "Family Tree", href: "/family-tree", min: "member" },
   { label: "Tasks", href: "/tasks", min: "member" },
   { label: "Water Share Map", href: "/water-map", min: "member" },
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
