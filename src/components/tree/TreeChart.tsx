@@ -32,7 +32,9 @@ export const TreeChart = forwardRef<SVGSVGElement, {
   onPick?: (id: string) => void; onPickRoot?: () => void; onAdd?: (parentId: string | null, side: Side) => void;
   /** Drag an account (and everything under it) onto another account, the top box, or a "+" spot. */
   onMove?: (id: string, parentId: string | null, side: Side, place?: Place) => void;
-}>(function TreeChart({ nodes, ownerName, ownerRank, keyPos = "left", availW = 0, leftLabel, rightLabel, onPick, onPickRoot, onAdd, onMove }, ref) {
+  /** Right-click a bubble. */
+  onMenu?: (id: string, x: number, y: number) => void;
+}>(function TreeChart({ nodes, ownerName, ownerRank, keyPos = "left", availW = 0, leftLabel, rightLabel, onPick, onPickRoot, onAdd, onMove, onMenu }, ref) {
   const laid = useMemo(() => layoutTree(buildTree(nodes)), [nodes]);
   const R = laid.r;
   const pos = new Map(laid.placed.map((p) => [p.key, p]));
@@ -60,7 +62,7 @@ export const TreeChart = forwardRef<SVGSVGElement, {
   const chartH = laid.height - R * 0.6;
   const sideW = vertical ? colW + 28 : 0, bandH = vertical ? 0 : 38;
   const W = Math.max(laid.width + sideW, (vertical ? 0 : rowW + 40), 460, availW);
-  const H = Math.max(chartH + bandH, vertical ? colH + 32 : 0);
+  const H = Math.max(chartH + bandH, vertical ? colH + 32 : 0, 460);
   const shift = (W - sideW - laid.width) / 2 + (keyPos === "left" ? sideW : 0);
   const chartY = keyPos === "top" ? bandH : 0;
   /* the key hugs its edge of the white space and its colours are spread out to fill it */
@@ -214,6 +216,7 @@ export const TreeChart = forwardRef<SVGSVGElement, {
             <g key={p.key} className={click ? "ft-bubble" : undefined} role={click ? "button" : undefined} tabIndex={click ? 0 : undefined}
               aria-label={isRoot ? ownerName : p.node!.label} style={click ? { cursor: onMove && !isRoot ? "grab" : "pointer", opacity: dim ? 0.3 : 1 } : undefined}
               onPointerDown={!isRoot && onMove ? (e) => startDrag(e, p.node!.id) : undefined}
+              onContextMenu={!isRoot && onMenu ? (e) => { e.preventDefault(); onMenu(p.node!.id, e.clientX, e.clientY); } : undefined}
               onClick={click} onKeyDown={click ? (e) => key(e, click) : undefined}>
               <title>{isRoot ? ownerName : p.lopsided ? `${p.node!.label} (${p.left} · ${p.right})` : p.node!.label}</title>
               {p.lopsided ? <rect x={x0 - 7} y={y0 - 7} width={bw + 14} height={bh + 14} rx={12} fill="none" stroke={AMBER} strokeWidth={3} strokeDasharray="4 4" /> : null}

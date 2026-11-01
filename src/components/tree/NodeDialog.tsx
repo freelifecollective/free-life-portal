@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { copyNode, removeNode, saveNode, saveRoot } from "@/app/(app)/family-tree/actions";
+import { removeNode, saveNode, saveRoot } from "@/app/(app)/family-tree/actions";
 import { createClient } from "@/lib/supabase/client";
 import { TREE_RANKS } from "@/lib/tree/colors";
 import type { Side, TreeNode } from "@/lib/tree/layout";
@@ -12,8 +12,8 @@ const nameOf = (p: Person) => [p.first_name, p.last_name].filter(Boolean).join("
 export type DialogTarget = { mode: "root"; label: string; rank: string } | { mode: "add"; parentId: string | null; side: Side } | { mode: "edit"; node: TreeNode; hasLeft: boolean; hasRight: boolean; branch: number };
 
 /** Add a bubble, or change or remove one. You can pick someone from the FLC community or just type a name or account name. */
-export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemoved, onAddSide, onRootSaved }: {
-  chartId: string; charts: { id: string; name: string }[];
+export function NodeDialog({ chartId, target, onClose, onSaved, onRemoved, onAddSide, onRootSaved }: {
+  chartId: string;
   target: DialogTarget | null; onClose: () => void; onSaved: (n: TreeNode, side?: Side) => void; onRootSaved: (label: string, rank: string) => void; onRemoved: (id: string) => void; onAddSide: (parentId: string | null, side: Side) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
@@ -25,10 +25,6 @@ export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemove
   const [error, setError] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [pending, start] = useTransition();
-  const [copyTo, setCopyTo] = useState("");
-  const [copySide, setCopySide] = useState<"left" | "right">("left");
-  const [copyBelow, setCopyBelow] = useState(true);
-  const [copied, setCopied] = useState("");
   const key = target ? (target.mode === "edit" ? target.node.id : target.mode === "root" ? "root" : `${target.parentId}:${target.side}`) : "";
 
   useEffect(() => {
@@ -71,14 +67,6 @@ export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemove
       onSaved(r.node, target.mode === "add" ? target.side : undefined);
     });
   };
-  const others = charts.filter((c) => c.id !== chartId);
-  const copy = () => start(async () => {
-    if (target.mode !== "edit" || !copyTo) return;
-    setError(""); setCopied("");
-    const r = await copyNode(target.node.id, copyTo, copySide, copyBelow);
-    if (!r.ok) { setError(r.error); return; }
-    setCopied(`Copied to “${others.find((c) => c.id === copyTo)?.name ?? "that chart"}”.`);
-  });
   const remove = () => start(async () => {
     if (target.mode !== "edit") return;
     const r = await removeNode(target.node.id);
@@ -110,24 +98,6 @@ export function NodeDialog({ chartId, charts, target, onClose, onSaved, onRemove
               <button type="button" className="btn small" onClick={() => onAddSide(null, "left")}>Add to the left</button>
               <button type="button" className="btn small" onClick={() => onAddSide(null, "right")}>Add to the right</button>
             </div>
-          </div>
-        ) : null}
-        {target.mode === "edit" ? (
-          <div className="ft-copy">
-            <strong>Copy to another chart</strong>
-            {others.length === 0 ? <p className="when" style={{ margin: "4px 0 0" }}>You only have one chart so far. Use “+ New chart” above the chart to make another one, then you can copy bubbles into it.</p> : null}
-            {others.length > 0 ? <div className="rs-actions" style={{ marginTop: 6, flexWrap: "wrap" }}>
-              <select value={copyTo} onChange={(e) => { setCopyTo(e.target.value); setCopied(""); }} aria-label="Which chart">
-                <option value="">Choose a chart</option>
-                {others.map((c) => <option key={c.id} value={c.id} data-i18n="skip">{c.name}</option>)}
-              </select>
-              <select value={copySide} onChange={(e) => setCopySide(e.target.value as "left" | "right")} aria-label="Which side">
-                <option value="left">on the left</option><option value="right">on the right</option>
-              </select>
-              <button type="button" className="btn small" disabled={pending || !copyTo} onClick={copy}>Copy</button>
-            </div> : null}
-            {others.length > 0 ? <label className="check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}><input type="checkbox" checked={copyBelow} onChange={(e) => setCopyBelow(e.target.checked)} /> <span>Include everything under it</span></label> : null}
-            {copied ? <p className="when" role="status" style={{ margin: "4px 0 0", color: "var(--ok)" }}>{copied}</p> : null}
           </div>
         ) : null}
         {target.mode === "edit" ? (
