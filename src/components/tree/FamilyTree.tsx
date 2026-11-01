@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-import { moveNode, setSharing } from "@/app/(app)/family-tree/actions";
+import { createChart, deleteChart, moveNode, renameChart, setSharing } from "@/app/(app)/family-tree/actions";
 import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
-import { TreeChart } from "./TreeChart";
+import { TreeChart, type Place } from "./TreeChart";
 import { KEY_POSITIONS, useKeyPos } from "./useKeyPos";
 import { useWidth } from "./useWidth";
 
@@ -16,7 +18,8 @@ function find(b: Built, id: string): Built | null {
 }
 
 /** Your Organization (the family tree): add, change and remove bubbles, see how even the two sides are, share a read-only link, and download or print it. */
-export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }: { initial: TreeNode[]; ownerName: string; ownerRank: string | null; token: string | null; rootEdited: boolean }) {
+export function FamilyTree({ chartId, chartName, charts, initial, ownerName, ownerRank, token, rootEdited }: { chartId: string; chartName: string; charts: { id: string; name: string }[]; initial: TreeNode[]; ownerName: string; ownerRank: string | null; token: string | null; rootEdited: boolean }) {
+  const router = useRouter();
   const [nodes, setNodes] = useState<TreeNode[]>(initial);
   const [top, setTop] = useState({ name: ownerName, rank: ownerRank ?? "" });
   const [keyPos, setKeyPos] = useKeyPos();
@@ -41,14 +44,21 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
     while (grew) { grew = false; for (const n of nodes) if (n.parent_id && dead.has(n.parent_id) && !dead.has(n.id)) { dead.add(n.id); grew = true; } }
     setNodes(nodes.filter((n) => !dead.has(n.id)));
   };
-  const onMove = (id: string, parentId: string | null, side: Side) => {
+  const onMove = (id: string, parentId: string | null, side: Side, place?: Place) => {
     const cur = nodes.find((n) => n.id === id);
-    if (!cur || (cur.parent_id === parentId && cur.side === side)) return;
+    if (!cur || (cur.parent_id === parentId && cur.side === side && !place)) return;
     const before = nodes;
-    setNodes([...nodes.filter((n) => n.id !== id), { ...cur, parent_id: parentId, side }]);   /* it joins the end of its new side */
+    /* it goes where it was dropped among the others on that side: first, right after one of them, or at the end */
+    const rest = nodes.filter((n) => n.id !== id);
+    const moved = { ...cur, parent_id: parentId, side };
+    const same = (n: TreeNode) => n.parent_id === parentId && n.side === side;
+    let at = rest.length;
+    if (place?.first) { const f = rest.findIndex(same); if (f >= 0) at = f; }
+    else if (place?.after) { const a = rest.findIndex((n) => n.id === place.after); if (a >= 0) at = a + 1; }
+    setNodes([...rest.slice(0, at), moved, ...rest.slice(at)]);
     setMsg("");
     start(async () => {
-      const r = await moveNode(id, parentId, side);
+      const r = await moveNode(id, parentId, side, place);
       if (!r.ok) { setNodes(before); setMsg(r.error); }
     });
   };
@@ -58,32 +68,95 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
     try { await downloadSvgAsPng(svg.current, "your-organization.png"); } catch { setMsg("We could not make the picture. Try Print instead."); }
   };
   const share = (on: boolean) => start(async () => {
-    const r = await setSharing(on);
+    const r = await setSharing(chartId, on);
     if (!r.ok) { setMsg(r.error); return; }
     setTok(r.token); setMsg("");
   });
+  const [newOpen, setNewOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newCopy, setNewCopy] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameTo, setRenameTo] = useState(chartName);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const makeChart = () => start(async () => {
+    setMsg("");
+    const r = await createChart(newName, newCopy ? chartId : null);
+    if (!r.ok) { setMsg(r.error); return; }
+    setNewOpen(false); setNewName(""); setNewCopy(false);
+    router.push(`/family-tree?chart=${r.id}`);
+  });
+  const doRename = () => start(async () => {
+    setMsg("");
+    const r = await renameChart(chartId, renameTo);
+    if (!r.ok) { setMsg(r.error); return; }
+    setRenaming(false); router.refresh();
+  });
+  const doDelete = () => start(async () => {
+    setMsg("");
+    const r = await deleteChart(chartId);
+    if (!r.ok) { setMsg(r.error); return; }
+    setConfirmDel(false); router.push("/family-tree");
+  });
   const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { setMsg("Copy the link by hand."); } };
 
+  const status = nodes.length === 0 ? "Add your first accounts" : bal.lopsided ? `Lopsided: add to the ${bal.heavy === "left" ? "right" : "left"}` : "Balanced";
+  const advice = nodes.length === 0 ? "Add your first accounts to see how balanced your tree is."
+    : bal.lopsided ? `Your tree is lopsided: your ${bal.heavy} side has more accounts. Add your next accounts on the ${bal.heavy === "left" ? "right" : "left"} side to even it out. The orange side is the heavier one, and bubbles with a dashed orange ring have an uneven branch under them.`
+    : "Nicely balanced! Keep stacking evenly.";
   return (
     <div className="ft">
-      <section className={"card-s ft-balance" + (bal.lopsided ? " lopsided" : "")} role="status">
-        <p className="ft-counts">{`Left side: ${bal.left} · Right side: ${bal.right}`}</p>
-        <p style={{ margin: 0 }}>
-          {nodes.length === 0 ? "Add your first accounts to see how balanced your tree is."
-            : bal.lopsided ? (bal.heavy === "left" ? "Your tree is lopsided: your left side has more accounts. Add your next accounts on the right side to even it out." : "Your tree is lopsided: your right side has more accounts. Add your next accounts on the left side to even it out.")
-            : "Nicely balanced! Keep stacking evenly."}
-        </p>
-        {bal.lopsided ? <p className="when" style={{ margin: 0 }}>The orange side is the heavier one. Bubbles with a dashed orange ring have an uneven branch under them.</p> : null}
-      </section>
+      <div className="ft-charts" role="tablist" aria-label="Your charts">
+        {charts.map((c) => <Link key={c.id} href={`/family-tree?chart=${c.id}`} role="tab" aria-selected={c.id === chartId} className={c.id === chartId ? "on" : ""} scroll={false} translate="no">{c.name}</Link>)}
+        <button type="button" className="ft-newchart" onClick={() => setNewOpen(true)}>+ New chart</button>
+      </div>
+      {newOpen ? (
+        <form className="card-s ft-newform" onSubmit={(e) => { e.preventDefault(); makeChart(); }}>
+          <label htmlFor="ft-newname" className="when">Name your new chart, for example “Vision board”</label>
+          <div className="rs-actions" style={{ marginTop: 6, flexWrap: "wrap" }}>
+            <input id="ft-newname" type="text" maxLength={60} required autoFocus value={newName} onChange={(e) => setNewName(e.target.value)} />
+            <button type="submit" className="btn small primary" disabled={pending}>Create</button>
+            <button type="button" className="btn small" onClick={() => setNewOpen(false)}>Cancel</button>
+          </div>
+          <label className="check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}><input type="checkbox" checked={newCopy} onChange={(e) => setNewCopy(e.target.checked)} /> <span>Start it as a copy of “{chartName}”</span></label>
+        </form>
+      ) : null}
+
+      <div className="ft-print">
+        <h2 className="ft-print-title">{`${top.name}'s organization`}</h2>
+        <div className="ft-chartbox">
+          <p className={"ft-mini" + (bal.lopsided ? " lopsided" : "")} role="status" title={advice}><b>{`Left ${bal.left} · Right ${bal.right}`}</b><span>{status}</span></p>
+          <div className="ft-scroll" ref={box}>
+            <TreeChart ref={svg} keyPos={keyPos} availW={Math.max(0, boxW - 18)} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
+              onPick={openEdit} onMove={onMove} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
+          </div>
+        </div>
+      </div>
 
       <div className="ft-tools">
         <button type="button" className="btn small" onClick={download}>Download picture</button>
         <button type="button" className="btn small" onClick={() => window.print()}>Print or save as PDF</button>
         {tok ? <button type="button" className="btn small" disabled={pending} onClick={() => share(false)}>Stop sharing</button> : <button type="button" className="btn small" disabled={pending} onClick={() => share(true)}>Share a link</button>}
       </div>
+      <div className="ft-keypos no-print" role="group" aria-label="Where the colour key sits">
+        <span className="when">Colour key:</span>
+        {KEY_POSITIONS.map((k) => <button key={k.id} type="button" className={keyPos === k.id ? "on" : ""} aria-pressed={keyPos === k.id} onClick={() => setKeyPos(k.id)}>{k.label}</button>)}
+      </div>
+      <div className="ft-keypos no-print" role="group" aria-label="This chart">
+        <span className="when" translate="no">{`“${chartName}”:`}</span>
+        {renaming ? (
+          <form className="rs-actions" style={{ margin: 0 }} onSubmit={(e) => { e.preventDefault(); doRename(); }}>
+            <input type="text" maxLength={60} required value={renameTo} onChange={(e) => setRenameTo(e.target.value)} aria-label="Chart name" />
+            <button type="submit" className="btn small primary" disabled={pending}>Save</button>
+            <button type="button" className="btn small" onClick={() => setRenaming(false)}>Cancel</button>
+          </form>
+        ) : <button type="button" onClick={() => { setRenameTo(chartName); setRenaming(true); }}>Rename</button>}
+        {charts.length > 1 ? (confirmDel
+          ? <span className="ft-confirm">Delete this chart and everything in it? <button type="button" className="danger" disabled={pending} onClick={doDelete}>Yes, delete</button> <button type="button" onClick={() => setConfirmDel(false)}>No</button></span>
+          : <button type="button" onClick={() => setConfirmDel(true)}>Delete chart</button>) : null}
+      </div>
       {tok ? (
         <div className="card-s ft-share">
-          <label htmlFor="ft-link" className="when">Anyone with this link can look at your tree (they cannot change it). Stop sharing and the link stops working.</label>
+          <label htmlFor="ft-link" className="when">Anyone with this link can look at this chart (they cannot change it). Stop sharing and the link stops working.</label>
           <div className="rs-actions" style={{ marginTop: 6 }}>
             <input id="ft-link" type="text" readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
             <button type="button" className="btn small" onClick={copy}>{copied ? "Copied" : "Copy link"}</button>
@@ -91,21 +164,9 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
         </div>
       ) : null}
       {msg ? <p className="err" role="alert" style={{ minHeight: 0 }}>{msg}</p> : null}
+      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side. Tap the top bubble to change your own name or rank. To move a bubble (and everything under it), drag it onto another bubble, the top bubble or a +, or drop it in the white space next to a line to start a new branch right there. On a phone, press and hold first.</p>
 
-      <div className="ft-print">
-        <h2 className="ft-print-title">{`${top.name}'s organization`}</h2>
-        <div className="ft-keypos no-print" role="group" aria-label="Where the colour key sits">
-          <span className="when">Colour key:</span>
-          {KEY_POSITIONS.map((k) => <button key={k.id} type="button" className={keyPos === k.id ? "on" : ""} aria-pressed={keyPos === k.id} onClick={() => setKeyPos(k.id)}>{k.label}</button>)}
-        </div>
-        <div className="ft-scroll" ref={box}>
-          <TreeChart ref={svg} keyPos={keyPos} availW={Math.max(0, boxW - 18)} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
-            onPick={openEdit} onMove={onMove} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
-        </div>
-      </div>
-      <p className="when">Tap a bubble to change it or add more under it. Tap a + to add someone on that side. Tap the top bubble to change your own name or rank. To move a bubble (and everything under it), drag it onto another bubble, the top bubble or a +. On a phone, press and hold first.</p>
-
-      <NodeDialog target={target} onClose={() => setTarget(null)}
+      <NodeDialog chartId={chartId} charts={charts} target={target} onClose={() => setTarget(null)}
         onRootSaved={(label, rank) => { setTop({ name: label || ownerName, rank: rank || (label ? "" : ownerRank ?? "") }); setTarget(null); }}
         onSaved={(n) => { setNodes((cur) => (cur.some((x) => x.id === n.id) ? cur.map((x) => (x.id === n.id ? n : x)) : [...cur, n])); setTarget(null); }}
         onRemoved={(id) => { gone(id); setTarget(null); }}
