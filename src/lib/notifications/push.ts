@@ -9,7 +9,7 @@ const SUBJECT = process.env.VAPID_SUBJECT ?? "mailto:freelifeplatform11@gmail.co
 
 export const pushConfigured = Boolean(PUBLIC && PRIVATE);
 
-type Row = { id: string; user_id: string; title: string; body: string | null; url: string | null };
+type Row = { id: string; user_id: string; kind: string; title: string; body: string | null; url: string | null };
 
 /** Sends the phone/desktop push for notifications that were just stored. Returns how many pushes went out. */
 export async function sendPushForNotifications(ids: string[]): Promise<number> {
@@ -17,7 +17,7 @@ export async function sendPushForNotifications(ids: string[]): Promise<number> {
   if (!db || !pushConfigured || ids.length === 0) return 0;
   webpush.setVapidDetails(SUBJECT, PUBLIC, PRIVATE);
 
-  const { data: rows } = await db.from("notifications").select("id, user_id, title, body, url").in("id", ids).is("pushed_at", null);
+  const { data: rows } = await db.from("notifications").select("id, user_id, kind, title, body, url").in("id", ids).is("pushed_at", null);
   const list = (rows ?? []) as Row[];
   if (list.length === 0) return 0;
   const users = [...new Set(list.map((r) => r.user_id))];
@@ -47,5 +47,8 @@ export async function sendPushForNotifications(ids: string[]): Promise<number> {
   })));
   if (dead.length) await db.from("push_subscriptions").delete().in("id", dead);
   await db.from("notifications").update({ pushed_at: new Date().toISOString() }).in("id", list.map((n) => n.id));
+  /* chat messages are only stored to be pushed: once sent they are not kept */
+  const chatIds = list.filter((n) => n.kind === "chat_message").map((n) => n.id);
+  if (chatIds.length) await db.from("notifications").delete().in("id", chatIds);
   return sent;
 }

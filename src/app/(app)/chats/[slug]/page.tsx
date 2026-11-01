@@ -11,6 +11,7 @@ import { SubmitResource } from "@/components/chats/SubmitResource";
 import { requireMember } from "@/lib/auth/guards";
 import { mySubmissions } from "@/lib/resources/queries";
 import { getChat, listChatSections, listPosts } from "@/lib/chats/queries";
+import { activeMutes } from "@/lib/chats/mutes";
 import { listConversation } from "@/lib/chats/conversation";
 import { ConversationView } from "@/components/conversation/ConversationView";
 
@@ -30,13 +31,14 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
   const chat = await getChat(supabase, slug);
   if (!chat) notFound();
   const role = session.profile.role;
+  const muted = await activeMutes(supabase);
   if (!canSee(role, chat.min_role)) {
     const sections = await listChatSections(supabase);
     return (
       <>
         <div className="chats">
           <div className="chats-head"><PageHeading>{chat.name}</PageHeading></div>
-          <ChatList sections={sections} current={slug} role={role} />
+          <ChatList sections={sections} current={slug} role={role} muted={muted} />
           <section className="card-s" style={{ maxWidth: 520 }}>
             <h2 className="qh" style={{ marginTop: 0 }}>This chat is for affiliates</h2>
             <p style={{ margin: 0 }}>It unlocks when you join the Free Life Collective as an affiliate. Until then, you are welcome in the New Members chats.</p>
@@ -52,7 +54,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     return (
       <div className="chats">
         <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
-        <ChatList sections={sections} current={slug} role={role} />
+        <ChatList sections={sections} current={slug} role={role} muted={muted} />
         <div className="chat-main">
           <LiveRefresh />
           {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
@@ -72,7 +74,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     <>
       <div className="chats">
         <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
-        <ChatList sections={sections} current={slug} role={role} />
+        <ChatList sections={sections} current={slug} role={role} muted={muted} />
         <div className="chat-main">
           <LiveRefresh />
           {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
