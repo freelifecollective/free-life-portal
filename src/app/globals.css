@@ -1510,10 +1510,10 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .closer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 400px)); gap: 22px; justify-content: start; }
 /* the flipping card: front is the cover, back is the numbers */
 .cc-flip { perspective: 1400px; }
-.cc-inner { display: grid; position: relative; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.3, .7, .2, 1); }
+.cc-inner { display: block; position: relative; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.3, .7, .2, 1); }
 .cc-flip.flipped .cc-inner { transform: rotateY(180deg); }
 @media (prefers-reduced-motion: reduce) { .cc-inner { transition: none; } }
-.cc-face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
+.cc-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 22px; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
 .cc-front { background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 22px rgba(43,37,34,.08); grid-template-rows: auto 1fr; align-content: start; }
 .cc-back { background: var(--bg); border: 1px solid var(--line); transform: rotateY(180deg); padding: 22px 20px 18px; gap: 14px; cursor: pointer; }
 .cc-head { display: flex; gap: 16px; align-items: center; padding: 18px 18px 0; }
@@ -1535,7 +1535,10 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .cc-flipbtn:hover { background: var(--tint); }
 .cc-flipbtn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
 .cc-edit { justify-self: center; font-size: 13px; }
-.cc-back-top { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cc-back-top { display: flex; align-items: center; gap: 14px; }
+.cc-back-id { min-width: 0; display: grid; gap: 2px; justify-items: start; }
+.cc-back-id .pc-name { margin: 0; text-align: left; font-size: 24px; overflow-wrap: anywhere; }
+.cc-back-id .pc-sub { text-align: left; margin: 0; }
 .cc-stars { color: var(--accent-deep); letter-spacing: 2px; }
 .cc-msg { justify-self: center; font-weight: 600; }
 .cc-tapback { margin: 0; text-align: center; font-size: 12px; }
@@ -1550,3 +1553,8 @@ select:not([multiple]):not([size]):disabled { opacity: .55; }
 .hire-prices p { margin: 0; display: grid; gap: 1px; }
 .hire-prices small { color: var(--muted); }
 .cc-loc::before { content: "📍 "; }
+
+/* the card is only as tall as the side showing: the side that is turned away waits on top of it without adding height */
+.cc-back { position: absolute; top: 0; left: 0; right: 0; }
+.cc-flip.flipped .cc-back { position: relative; }
+.cc-flip.flipped .cc-front { position: absolute; top: 0; left: 0; right: 0; }

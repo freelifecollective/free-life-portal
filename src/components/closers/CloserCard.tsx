@@ -66,10 +66,12 @@ export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hir
         </div>
         <div className="cc-face cc-back" aria-hidden={!back} inert={!back} onClick={backPress}>
           <div className="cc-back-top">
-            <Avatar url={c.avatar_url} initials={name.charAt(0).toUpperCase()} size={84} />
-            <h2 className="pc-name">{name}</h2>
-            <p className="pc-sub">Call closer</p>
-            {stars ? <p className="pc-sub cc-stars" aria-label={`${c.avg_rating} out of 5`}>{stars}</p> : null}
+            <Avatar url={c.avatar_url} initials={name.charAt(0).toUpperCase()} size={72} />
+            <div className="cc-back-id">
+              <h2 className="pc-name">{name}</h2>
+              <p className="pc-sub">Call closer</p>
+              {stars ? <p className="pc-sub cc-stars" aria-label={`${c.avg_rating} out of 5`}>{stars}</p> : null}
+            </div>
           </div>
           <div className="pc-card">
             <div className="pc-row pc-plain">
