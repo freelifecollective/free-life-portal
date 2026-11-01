@@ -79,7 +79,7 @@ export function FamilyTree({ initial, ownerName, ownerRank, token, rootEdited }:
       <div className="ft-print">
         <h2 className="ft-print-title">{`${top.name}'s organization`}</h2>
         <div className="ft-scroll">
-          <TreeChart ref={svg} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} youLabel="YOU" leftLabel="Left" rightLabel="Right"
+          <TreeChart ref={svg} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
             onPick={openEdit} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
         </div>
       </div>

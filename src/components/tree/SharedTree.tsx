@@ -17,7 +17,7 @@ export function SharedTree({ ownerName, ownerRank, nodes }: { ownerName: string;
         <button type="button" className="btn small" onClick={() => svg.current && void downloadSvgAsPng(svg.current, "your-organization.png")}>Download picture</button>
         <button type="button" className="btn small" onClick={() => window.print()}>Print or save as PDF</button>
       </div>
-      <div className="ft-print"><div className="ft-scroll"><TreeChart ref={svg} nodes={nodes} ownerName={ownerName} ownerRank={ownerRank} youLabel="" leftLabel="Left" rightLabel="Right" /></div></div>
+      <div className="ft-print"><div className="ft-scroll"><TreeChart ref={svg} nodes={nodes} ownerName={ownerName} ownerRank={ownerRank} leftLabel="Left" rightLabel="Right" /></div></div>
     </main>
   );
 }

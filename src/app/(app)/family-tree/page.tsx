@@ -23,7 +23,7 @@ export default async function FamilyTreePage() {
   const name = t?.root_label || [p.first_name, p.last_name].filter(Boolean).join(" ") || "You";
   return (
     <>
-      <PageHeading lede="Map out your organization and vision-board your way to higher ranks. Add as many accounts as you like, change it any time, and keep both sides stacked evenly.">Your Organization</PageHeading>
+      <PageHeading lede="Map out your current organization or use this feature to vision-board your way to higher ranks. Add as many accounts as you like, change it any time, and keep both sides stacked evenly.">Your Organization</PageHeading>
       <FamilyTree initial={(nodes ?? []) as TreeNode[]} ownerName={name} ownerRank={t?.root_rank || (rankId ? ranks[rankId - 1] ?? null : null)} token={t?.share_token ?? null} rootEdited={!!t?.root_label} />
     </>
   );
