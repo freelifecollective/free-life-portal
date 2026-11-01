@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { ApplyForm } from "@/components/closers/ApplyForm";
 import { CloserCard } from "@/components/closers/CloserCard";
+import { OpenHoursCard } from "@/components/booking/OpenHoursCard";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
 import type { ActiveHire } from "@/components/closers/HireButton";
@@ -31,6 +32,7 @@ export default async function CallClosersPage() {
   const requests: Request[] = inc.map((r) => ({ ...r, name: people.get(r.member_id)?.name ?? "A member", avatar_url: people.get(r.member_id)?.avatar_url ?? null }));
   return (
     <>
+      <OpenHoursCard />
       <PageHeading lede="Hire an experienced closer to take your coaching calls for you for one or two calls or hire them indefinitely going forward.">Call Closers for Hire</PageHeading>
       <div className="stack">
         <HireRequests requests={requests} />

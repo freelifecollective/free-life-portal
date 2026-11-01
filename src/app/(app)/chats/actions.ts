@@ -103,15 +103,25 @@ export async function markSeen(postIds: string[]): Promise<void> {
 }
 
 /** Sends a message in a conversation chat, optionally quoting an earlier message. */
-export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null): Promise<Result> {
-  const text = String(body ?? "").trim();
+const GIF = /^https:\/\/media\d*\.giphy\.com\//;
+
+export async function sendMessage(chatId: string, slug: string, body: string, replyTo: string | null, image: string | null = null): Promise<Result> {
+  if (image && !GIF.test(image)) return { ok: false, error: "That GIF did not work." };
+  const text = image ? "GIF" : String(body ?? "").trim();
   if (!UUID.test(chatId) || (replyTo && !UUID.test(replyTo))) return { ok: false, error: "Something went wrong." };
   if (!text) return { ok: false, error: "Write something first." };
   if (text.length > POST_MAX) return { ok: false, error: `Please keep messages under ${POST_MAX} characters.` };
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Chats need the database, which preview mode does not have." };
-  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: text, ...(replyTo ? { reply_to: replyTo } : {}) });
+  const { error } = await supabase.from("chat_posts").insert({ chat_id: chatId, author_id: session.user.id, body: text, ...(image ? { image_url: image } : {}), ...(replyTo ? { reply_to: replyTo } : {}) });
   if (error) return { ok: false, error: "We could not send that. Please try again." };
   refresh(slug);
   return { ok: true };
+}
+
+/** Tells the portal I have read this chat up to now (so its unread number goes away). */
+export async function markChatRead(chatId: string): Promise<void> {
+  if (!UUID.test(chatId)) return;
+  const { supabase } = await requireMember();
+  await supabase?.rpc("mark_chat_read", { p_chat: chatId });
 }

@@ -10,6 +10,10 @@ export type Msg = {
   canDelete: boolean;
   /** an older reply from before chats became conversations: it can be read and deleted but not reacted to */
   legacy?: boolean;
+  /** a GIF sent with (or instead of) the text */
+  image_url?: string | null;
+  /** people who have seen my message, and when (only filled in for my own messages) */
+  readers?: { id: string; name: string; avatar_url: string | null; at: string }[];
   replyTo: { id: string; name: string; body: string } | null;
   reactions?: PostView["reactions"];
   myReaction?: string | null;

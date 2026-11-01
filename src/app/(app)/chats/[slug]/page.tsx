@@ -10,8 +10,10 @@ import { canSee } from "@/lib/roles";
 import { SubmitResource } from "@/components/chats/SubmitResource";
 import { requireMember } from "@/lib/auth/guards";
 import { mySubmissions } from "@/lib/resources/queries";
-import { getChat, listChatSections, listPosts } from "@/lib/chats/queries";
-import { activeMutes } from "@/lib/chats/mutes";
+import { getChat, listPosts } from "@/lib/chats/queries";
+import { loadSidebar } from "@/lib/chats/sidebar";
+import { attachReaders } from "@/lib/chats/receipts";
+import { MarkRead } from "@/components/conversation/MarkRead";
 import { listConversation } from "@/lib/chats/conversation";
 import { ConversationView } from "@/components/conversation/ConversationView";
 
@@ -31,14 +33,14 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
   const chat = await getChat(supabase, slug);
   if (!chat) notFound();
   const role = session.profile.role;
-  const muted = await activeMutes(supabase);
+  const side = await loadSidebar(supabase);
+  const sections = side.sections;
   if (!canSee(role, chat.min_role)) {
-    const sections = await listChatSections(supabase);
     return (
       <>
         <div className="chats">
           <div className="chats-head"><PageHeading>{chat.name}</PageHeading></div>
-          <ChatList sections={sections} current={slug} role={role} muted={muted} />
+          <ChatList sections={sections} current={slug} role={role} muted={side.muted} unread={side.unread} groups={side.groups} />
           <section className="card-s" style={{ maxWidth: 520 }}>
             <h2 className="qh" style={{ marginTop: 0 }}>This chat is for affiliates</h2>
             <p style={{ margin: 0 }}>It unlocks when you join the Free Life Collective as an affiliate. Until then, you are welcome in the New Members chats.</p>
@@ -49,22 +51,23 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
   }
   const limit = Math.min(300, Math.max(PAGE, Number(Array.isArray(sp.limit) ? sp.limit[0] : sp.limit) || PAGE));
   if (chat.mode === "conversation") {
-    const [sections, { messages, more }] = await Promise.all([listChatSections(supabase), listConversation(supabase, chat, session.user.id, session.profile.role === "admin", limit)]);
+    const { messages, more } = await listConversation(supabase, chat, session.user.id, session.profile.role === "admin", limit);
+    await attachReaders(supabase, "chat", chat.id, messages);
     const admin = session.profile.role === "admin";
     return (
       <div className="chats">
         <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
-        <ChatList sections={sections} current={slug} role={role} muted={muted} />
+        <ChatList sections={sections} current={slug} role={role} muted={side.muted} unread={side.unread} groups={side.groups} />
         <div className="chat-main">
           <LiveRefresh />
+          <MarkRead kind="chat" groupId={chat.id} lastId={messages[messages.length - 1]?.id ?? null} unread={side.unread[chat.id] ?? 0} />
           {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
           <ConversationView messages={messages} kind="chat" targetId={chat.id} slug={slug} canPost={chat.posting === "all" || admin} placeholder="Write a message…" moreHref={more ? `/chats/${slug}?limit=${limit + PAGE}` : undefined} nowIso={new Date().toISOString()} readOnlyText="Only admins can post here." />
         </div>
       </div>
     );
   }
-  const [sections, { posts, more }, { posts: pinned }] = await Promise.all([
-    listChatSections(supabase),
+  const [{ posts, more }, { posts: pinned }] = await Promise.all([
     listPosts(supabase, chat, session.user.id, limit),
     listPosts(supabase, chat, session.user.id, limit, true),
   ]);
@@ -74,9 +77,10 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     <>
       <div className="chats">
         <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
-        <ChatList sections={sections} current={slug} role={role} muted={muted} />
+        <ChatList sections={sections} current={slug} role={role} muted={side.muted} unread={side.unread} groups={side.groups} />
         <div className="chat-main">
           <LiveRefresh />
+          <MarkRead kind="chat" groupId={chat.id} lastId={posts[0]?.id ?? null} unread={side.unread[chat.id] ?? 0} />
           {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
           {chat.posting === "all" || isAdmin ? <Composer chatId={chat.id} slug={slug} placeholder={chat.votes_on ? "Suggest how to respond…" : "Write a post…"} /> : <p className="when" style={{ margin: 0 }}>Only admins can post here. You can react to updates.</p>}
           {chat.show_views ? <SeenReporter ids={[...pinned, ...posts].map((p) => p.id)} /> : null}
