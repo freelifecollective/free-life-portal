@@ -62,7 +62,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
         style: {
           version: 8,
           glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-          sources: { land: { type: "geojson", data: land } },
+          sources: { land: { type: "geojson", data: `${location.origin}/world-countries.geojson` } },
           layers: [
             { id: "sea", type: "background", paint: { "background-color": "#cfe3ee" } },
             { id: "land", type: "fill", source: "land", paint: { "fill-color": "#f3efe6" } },
@@ -81,14 +81,13 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
             for (const [id, src] of Object.entries(st.sources)) { if (!m.getSource(id)) m.addSource(id, src); }
             const field = ["coalesce", ["get", `name:${lang}`], ["get", `name_${lang}`], ["get", "name:latin"], ["get", "name"]] as ExpressionSpecification;
             for (const l of st.layers) {
-              if (l.type === "background") continue;
               if (l.type === "symbol") {
                 /* only town and city names (country names are drawn above); nothing that needs the map's own icon sheet */
                 if (!/^label_(city|town|village|other)/.test(l.id) || l.layout?.["icon-image"]) continue;
                 l.layout = { ...l.layout, "text-field": field };
               }
-              /* the street detail only takes over once you are zoomed in; the world view is always the bundled country map */
-              m.addLayer({ ...l, minzoom: Math.max(l.minzoom ?? 0, 5) } as LayerSpecification);
+              /* the open map's own land, water and roads sit on top of the bundled country map (which stays underneath as a backup) */
+              try { m.addLayer(l, l.type === "background" ? "land" : undefined); } catch { /* skip a layer this map cannot draw */ }
             }
           } catch { /* no street detail; the country map stays */ }
         })();
