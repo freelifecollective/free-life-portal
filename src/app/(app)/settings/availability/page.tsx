@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AvailabilityPanel } from "@/components/booking/AvailabilityPanel";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "My Availability" };
@@ -10,7 +11,7 @@ export const metadata = { title: "My Availability" };
 export default async function AvailabilityPage(props: PageProps<"/settings/availability">) {
   const sp = await props.searchParams;
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/");
+  if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>My Availability</PageHeading><p className="page-lede">This needs the database.</p></>;
   return (
     <>

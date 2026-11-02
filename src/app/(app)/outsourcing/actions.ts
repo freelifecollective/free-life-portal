@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { OFFERINGS, VA_LENGTHS } from "@/lib/outsourcing/tasks";
+import { isAffiliate } from "@/lib/roles";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export type ListingState = { error: string; saved?: boolean };
@@ -22,7 +23,7 @@ export async function saveListing(_prev: ListingState, form: FormData): Promise<
   if (va === "yes" && !(VA_LENGTHS as readonly string[]).includes(vaLength)) return { error: "Please choose how long you have worked as a VA." };
   if (!Number.isFinite(rate) || rate < 100 || rate > 100000) return { error: "Enter an hourly rate between $1 and $1,000." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { error: "Only affiliates can list themselves." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { error: "Only affiliates can list themselves." };
   const { error } = await supabase.from("outsourcing_profiles").upsert(
     { member_id: session.user.id, headline: null, about: about || null, tasks, hourly_rate_cents: rate, listed, va_experience: va === "yes", va_experience_length: va === "yes" ? vaLength : null, updated_at: new Date().toISOString() }, { onConflict: "member_id" });
   if (error) return { error: "We could not save that. Please try again." };

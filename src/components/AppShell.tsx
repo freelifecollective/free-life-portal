@@ -17,21 +17,22 @@ import { PresenceBeat } from "./PresenceBeat";
 import { RankCelebration } from "./RankCelebration";
 import { UserMenu } from "./UserMenu";
 import { ProfilePopupProvider } from "./people/ProfilePopup";
+import { isAffiliate } from "@/lib/roles";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean; downline?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
-  { label: "Home", href: "/", min: "lead" },
-  { label: "Calendar", href: "/calendar", min: "lead", group: "FLC Calls" },
+  { label: "Home", href: "/", min: "lead", downline: true },
+  { label: "Calendar", href: "/calendar", min: "lead", downline: true, group: "FLC Calls" },
   { label: "Outsourcing", href: "/outsourcing", min: "member" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
-  { label: "Chats", href: "/chats", min: "lead" },
+  { label: "Chats", href: "/chats", min: "lead", downline: true },
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
   { label: "Courses", href: "/classroom", min: "lead" },
   { label: "Calls", href: "/calls", min: "lead", group: "FLC Calls" },
-  { label: "FLC Calls", min: "lead", heading: true, group: "FLC Calls" },
-  { label: "Documents", href: "/documents", min: "lead" },
+  { label: "FLC Calls", min: "lead", downline: true, heading: true, group: "FLC Calls" },
+  { label: "Documents", href: "/documents", min: "lead", downline: true },
   { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
   { label: "Earnings Estimator", href: "/calculator", min: "member", group: "Placing Sales" },
@@ -39,7 +40,7 @@ const NAV: NavItem[] = [
   { label: "Your Organization", href: "/family-tree", min: "member", group: "Placing Sales" },
   { label: "Tasks", href: "/tasks", min: "member" },
   { label: "Book a Call", href: "/book", min: "lead", leadOnly: true },
-  { label: "Water Share Map", href: "/water-map", min: "member" },
+  { label: "Water Share Map", href: "/water-map", min: "member", downline: true },
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
   { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
@@ -100,15 +101,15 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
             </Link>
           )}
           {session.mode === "supabase" ? <NotificationBell count={unread} userId={session.user.id} /> : null}
-          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={p.role !== "lead"} showCloser={!!p.call_closer} />
+          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={isAffiliate(p.role)} showCloser={!!p.call_closer} />
         </div>
         </div>
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min) && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => (canSee(p.role, n.min) || (!!n.downline && p.role === "downline")) && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
-        <main className="main" id="main">{session.mode === "supabase" && p.role !== "lead" ? <BirthdayBanner /> : null}{children}</main>
+        <main className="main" id="main">{session.mode === "supabase" && isAffiliate(p.role) ? <BirthdayBanner /> : null}{children}</main>
       </div>
     </div>
     <Tour show={showTour} />

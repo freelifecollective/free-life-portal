@@ -10,6 +10,7 @@ import { translateFor } from "@/i18n/server";
 import { isQuoteStyle, quoteFor, type QuoteStyle } from "@/lib/quotes";
 import { listUpcomingCalls, pickFeatured, rsvpSummary } from "@/lib/calls/queries";
 import { formatInZone, nowMs, toZonedInput } from "@/lib/time";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false; // renders per signed-in member
 export const metadata = { title: "Home" };
@@ -25,7 +26,7 @@ export default async function HomePage(props: PageProps<"/">) {
   const { session, supabase } = await requireMember();
   const { profile } = session;
   const now = nowMs();
-  const affiliate = profile.role !== "lead";
+  const affiliate = isAffiliate(profile.role);
   const upcoming = supabase ? await listUpcomingCalls(supabase, now) : [];
   /* Affiliates promote the next call that is open to leads; leads just see the next call. */
   const next = (affiliate ? upcoming.find((c) => c.audience === "leads_open") : null) ?? pickFeatured(upcoming);

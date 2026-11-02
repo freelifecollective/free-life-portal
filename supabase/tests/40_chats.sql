@@ -47,8 +47,8 @@ do $$ begin
   perform tests.eq('a lead sees both sections', (select count(*) from public.chat_sections), 2::bigint);
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a1');
-  perform tests.eq('a member sees all eleven chats', (select count(*) from public.chats), 11::bigint);
-  perform tests.eq('a member sees both sections', (select count(*) from public.chat_sections), 2::bigint);
+  perform tests.eq('a member sees the eleven affiliate chats and Main Discussion', (select count(*) from public.chats), 12::bigint);
+  perform tests.eq('a member sees both sections and the Main Discussion one', (select count(*) from public.chat_sections), 3::bigint);
   perform tests.logout();
   perform tests.login(null, 'anon');
   perform tests.eq('visitors see no chats', (select count(*) from public.chats), 0::bigint);

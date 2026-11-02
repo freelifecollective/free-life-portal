@@ -9,6 +9,7 @@ import { AVATAR_KINDS, type AvatarKind } from "@/lib/profile/types";
 import { currentRank, rankUp } from "@/lib/buddy/rank";
 import { isQuoteStyle } from "@/lib/quotes";
 import { checkUsernameFormat } from "@/lib/username";
+import { isAffiliate } from "@/lib/roles";
 
 export type SettingsState = { error: string; saved?: boolean; rankUp?: string };
 
@@ -32,7 +33,7 @@ export async function saveSettings(_prev: SettingsState, form: FormData): Promis
 
   const { session, supabase } = await requireMember();
   if (!supabase) return { error: "Settings need the database, which preview mode does not have." };
-  const isMember = session.profile.role !== "lead";
+  const isMember = isAffiliate(session.profile.role);
   let rankChange: string | undefined;
   const patch: Record<string, unknown> = { first_name: first, last_name: last, username, country: countryRaw || null };
   if (isMember) {

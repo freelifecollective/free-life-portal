@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { getTz } from "@/lib/tasks/queries";
 import { zonedToUtc } from "@/lib/time";
+import { isAffiliate } from "@/lib/roles";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Result = { ok: true } | { ok: false; error: string };
@@ -13,7 +14,7 @@ export async function addBookedCall(input: { lead: string; when: string; closer:
   const lead = String(input.lead ?? "").trim();
   if (!lead || lead.length > 80) return { ok: false, error: "Enter the lead's name." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Calls booked are for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Calls booked are for affiliates." };
   const at = zonedToUtc(String(input.when ?? ""), await getTz(supabase));
   if (!at) return { ok: false, error: "Choose the date and time of the call." };
   const closer = UUID.test(input.closer ?? "") ? input.closer : null;

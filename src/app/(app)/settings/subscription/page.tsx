@@ -4,13 +4,14 @@ import { CancelSubscription } from "@/components/settings/CancelSubscription";
 import { requireMember } from "@/lib/auth/guards";
 import { formatMoney, type Payment } from "@/lib/payments/receipt";
 import { formatInZone } from "@/lib/time";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "My Plan" };
 
 export default async function SubscriptionPage() {
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/settings");
+  if (!isAffiliate(session.profile.role)) redirect("/settings");
   if (!supabase) return <><PageHeading>My Plan</PageHeading><p className="page-lede">This needs the database.</p></>;
   const { data } = await supabase.from("payments")
     .select("id, receipt_no, amount_cents, currency, description, status, paid_at")

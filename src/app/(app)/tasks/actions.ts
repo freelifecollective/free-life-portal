@@ -4,6 +4,7 @@ import { requireMember } from "@/lib/auth/guards";
 import { tagOf } from "@/lib/badges/defs";
 import { complete, REPEATS, split, undo, type Area, type Repeat, type Task } from "@/lib/tasks/schedule";
 import { getTz, listTasks, todayIn, validZone } from "@/lib/tasks/queries";
+import { isAffiliate } from "@/lib/roles";
 
 export type TaskInput = { area: string; title: string; note: string; repeat: string; due_on: string };
 type Result = { ok: true; tasks: Task[]; badges?: string[] } | { ok: false; error: string; tasks?: Task[] };
@@ -28,7 +29,7 @@ function parse(i: TaskInput): { ok: true; v: { area: Area; title: string; note: 
 
 async function ctx() {
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return null;
+  if (!supabase || !isAffiliate(session.profile.role)) return null;
   const tz = await getTz(supabase);
   return { supabase, me: session.user.id, today: todayIn(tz) };
 }

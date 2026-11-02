@@ -8,13 +8,14 @@ import type { ActiveHire } from "@/components/closers/HireButton";
 import { HireRequests, type Request } from "@/components/closers/HireRequests";
 import { authorsById } from "@/lib/chats/queries";
 import type { Application, CloserCardData } from "@/lib/closers/types";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Call Closers for Hire" };
 
 export default async function CallClosersPage() {
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/");
+  if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Call Closers for Hire</PageHeading><p className="page-lede">This needs the database.</p></>;
   const [{ data: list }, { data: apps }, { data: me }, { data: hires }, { data: incoming }] = await Promise.all([
     supabase.rpc("call_closers_directory"),

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { validAttach, type Attach } from "@/lib/chats/attach";
+import { isAffiliate } from "@/lib/roles";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX = 4000;
@@ -12,7 +13,7 @@ const ids = (xs: string[]) => [...new Set((xs ?? []).filter((x) => UUID.test(x))
 /** Leads can be in groups and write in them, but cannot create or manage them. */
 async function db(allowLead = false) {
   const { session, supabase } = await requireMember();
-  if (!supabase || (session.profile.role === "lead" && !allowLead)) return null;
+  if (!supabase || (!isAffiliate(session.profile.role) && !(allowLead && session.profile.role === "lead"))) return null;
   return { me: session.user.id, supabase };
 }
 

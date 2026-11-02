@@ -1,6 +1,6 @@
 export const CALL_KINDS = ["community", "masterclass", "other"] as const;
 export type CallKind = (typeof CALL_KINDS)[number];
-export const AUDIENCES = ["leads_open", "affiliates_only"] as const;
+export const AUDIENCES = ["leads_open", "downline_open", "affiliates_only"] as const;
 export type Audience = (typeof AUDIENCES)[number];
 export type RsvpMode = "live" | "recording";
 
@@ -35,7 +35,7 @@ export const KIND_LABEL: Record<CallKind, string> = { community: "Community call
 export const SELECTABLE_KINDS: CallKind[] = ["community", "masterclass"];
 /** The heading on the next-call card, by what kind of call it is. */
 export const NEXT_LABEL: Record<CallKind, string> = { community: "Next Community Call", masterclass: "Next Mastermind Call", other: "Next Call" };
-export const AUDIENCE_LABEL: Record<Audience, string> = { leads_open: "Open to leads", affiliates_only: "Affiliates only" };
+export const AUDIENCE_LABEL: Record<Audience, string> = { leads_open: "Open to Leads", downline_open: "Open to Lacey's Downline", affiliates_only: "Open to FLC Only" };
 
 /** Mastermind calls are for affiliates; community calls are open. The admin can still change it per call. */
 export function defaultAudience(kind: CallKind): Audience {

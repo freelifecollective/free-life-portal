@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
 import { authorsById } from "@/lib/chats/queries";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Verbiage + Objections" };
@@ -11,7 +12,7 @@ type Row = { id: string; author_id: string; body: string; votes: number };
 
 export default async function ResponsesPage() {
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/chats");
+  if (!isAffiliate(session.profile.role)) redirect("/chats");
   if (!supabase) return <><PageHeading>Verbiage + Objections</PageHeading><p className="page-lede">This needs the database.</p></>;
   const { data } = await supabase.from("top_responses").select("id, author_id, body, votes").order("votes", { ascending: false });
   const rows = (data ?? []) as Row[];

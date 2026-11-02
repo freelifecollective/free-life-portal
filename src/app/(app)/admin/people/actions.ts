@@ -29,7 +29,7 @@ export async function inviteEmail(_prev: InviteState, form: FormData): Promise<I
   const role = String(form.get("role") ?? "");
   const note = String(form.get("note") ?? "").trim().slice(0, 200);
   if (!EMAIL.test(email) || email.length > 254) return { error: "Enter a valid email address.", done: "" };
-  if (role !== "lead" && role !== "member") return { error: "Choose lead or member.", done: "" };
+  if (role !== "lead" && role !== "member" && role !== "downline") return { error: "Choose lead, member or downline.", done: "" };
   const { error } = await supabase.from("signup_allowlist").insert({ email, role, note: note || null, created_by: session.user.id });
   if (error) return { error: error.code === "23505" ? "That email is already on the list." : "We could not add that email. Please try again.", done: "" };
   revalidatePath("/admin/people");
@@ -52,7 +52,7 @@ export async function setRole(form: FormData): Promise<void> {
   const id = String(form.get("id") ?? "");
   const role = String(form.get("role") ?? "");
   if (!UUID.test(id) || id === session.user.id) return;
-  if (role !== "lead" && role !== "member" && role !== "admin") return;
+  if (role !== "downline" && role !== "lead" && role !== "member" && role !== "admin") return;
   await supabase.from("profiles").update({ role }).eq("id", id);
   revalidatePath("/admin/people");
 }

@@ -4,13 +4,14 @@ import { TaskBoard } from "@/components/tasks/TaskBoard";
 import { newestFirst, type BadgeState } from "@/lib/badges/defs";
 import { requireMember } from "@/lib/auth/guards";
 import { getTz, listTasks, todayIn } from "@/lib/tasks/queries";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Tasks" };
 
 export default async function TasksPage() {
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/");
+  if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Tasks</PageHeading><p className="page-lede">Tasks need the database, which preview mode does not have.</p></>;
   const tz = await getTz(supabase);
   const [tasks, { data: badgeData }] = await Promise.all([listTasks(supabase), supabase.rpc("badge_state")]);
