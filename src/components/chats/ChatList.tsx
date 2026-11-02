@@ -59,7 +59,7 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
 
       <div className="chat-bar-row">
         {here ? (
-          <ul className="chat-pills" aria-label={here.name}>
+          <ul className="chat-pills" aria-label={here.name} style={{ "--n": here.chats.length } as React.CSSProperties}>
             {here.chats.map((c) => {
               const open = canSee(role, c.min_role);
               const isMuted = !!muted?.has(`chat:${c.id}`);
@@ -74,7 +74,7 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
           </ul>
         ) : null}
         {active === "groups" && groups ? (
-          <ul className="chat-pills" aria-label="Group Chats">
+          <ul className="chat-pills" aria-label="Group Chats" style={{ "--n": groups.length + (isAffiliate(role) ? 1 : 0) || 1 } as React.CSSProperties}>
             {groups.map((g) => (
               <li key={g.id}>
                 <MuteMenu kind="group" id={g.id} muted={!!muted?.has(`group:${g.id}`)}>

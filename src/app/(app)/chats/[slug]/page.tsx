@@ -50,7 +50,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
       </>
     );
   }
-  const mk = kindOf(chat.name);
+  const mk = kindOf(sections.find((x) => x.chats.some((c) => c.slug === slug))?.name ?? chat.name);
   const members = mk && isAffiliate(role)
     ? <span className="chat-members"><MemberList kind={mk} title={mk === "affiliates" ? "FLC Members" : "New Members"} canMessage>{mk === "affiliates" ? "See FLC Members" : "See New Members"}</MemberList></span>
     : null;
