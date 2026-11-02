@@ -145,7 +145,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
                     <label className="rt-item">
                       <input type="checkbox" checked={picks.includes(i)} onChange={(e) => setPicks(e.target.checked ? [...picks, i] : picks.filter((x) => x !== i))} />
                       <span className="rt-box" aria-hidden="true">✓</span>
-                      <span className="rt-text"><span className="rt-title">{r.title}</span>{r.repeat === "weekly" ? <span className="rt-tag">weekly</span> : null}{r.note ? <span className="rt-note">{r.note}</span> : null}</span>
+                      <span className="rt-text"><span className="rt-line"><span className="rt-title">{r.title}</span>{r.repeat === "weekly" ? <span className="rt-tag">weekly</span> : null}</span>{r.note ? <span className="rt-note">{r.note}</span> : null}</span>
                     </label>
                   </li>
                 ))}

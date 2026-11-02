@@ -2130,7 +2130,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .rt-item input:focus-visible + .rt-box { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
 .rt-text { display: grid; gap: 2px; line-height: 24px; }
 .rt-title { font-weight: 400; color: var(--ink); }
-.rt-tag { justify-self: start; margin-top: 2px; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font-size: 12px; font-weight: 700; }
+.rt-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rt-tag { margin: 0; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font-size: 12px; font-weight: 700; }
 .rt-note { color: var(--muted); font-size: 14px; line-height: 1.4; }
 
 /* balanced chat pills: BalancedPills closes each row so rows are even (8 chats become 4 + 4, never 7 + 1) without changing the pill size */
