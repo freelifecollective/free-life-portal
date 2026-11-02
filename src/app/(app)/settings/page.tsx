@@ -52,14 +52,16 @@ export default async function SettingsPage() {
   let coachOptions: CoachOption[] = [];
   let coachNow = "";
   let coachFound: string | null = null;
+  let coachOutside = "";
   if (supabase && isMember) {
     const [{ data: dir }, { data: me }, { data: ppl }] = await Promise.all([
       supabase.rpc("member_directory", { p_kind: "affiliates" }),
-      supabase.from("profiles").select("coach_id").eq("id", session.user.id).maybeSingle(),
+      supabase.from("profiles").select("coach_id, outside_coach_name").eq("id", session.user.id).maybeSingle(),
       supabase.rpc("my_support_people"),
     ]);
     coachOptions = ((dir ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).filter((x) => x.id !== session.user.id).map((x) => ({ id: x.id, name: [x.first_name, x.last_name].filter(Boolean).join(" ") || "A member" }));
     coachNow = (me as { coach_id: string | null } | null)?.coach_id ?? "";
+    coachOutside = (me as { outside_coach_name: string | null } | null)?.outside_coach_name ?? "";
     const c = ((ppl ?? []) as { role: string; first_name: string | null; last_name: string | null }[]).find((x) => x.role === "coach");
     coachFound = !coachNow && c ? [c.first_name, c.last_name].filter(Boolean).join(" ") : null;
   }
@@ -103,7 +105,7 @@ export default async function SettingsPage() {
           <section className="card-s">
             <h2 className="qh" style={{ marginTop: 0 }}>My coach</h2>
             <p className="when" style={{ margin: "0 0 12px" }}>Choose who your coach is, so the portal knows who belongs to whom and can open the right conversation when you want to talk to them.</p>
-            <MyCoach options={coachOptions} current={coachNow} found={coachFound} />
+            <MyCoach options={coachOptions} current={coachNow} found={coachFound} outside={coachOutside} />
           </section>
         ) : null}
 

@@ -113,6 +113,11 @@ begin
   perform tests.eq('found from the chart that has you in it', (select id from public.my_support_people() where role = 'coach'), max);
   perform public.set_my_coach(ada);
   perform tests.eq('a chosen coach wins', (select id from public.my_support_people() where role = 'coach'), ada);
+  perform public.set_my_coach(null, '  Pastor Sam  ');
+  perform tests.eq('a coach outside FLC is remembered', (select outside_coach_name from public.profiles where id = mia), 'Pastor Sam');
+  perform tests.eq('and then there is no portal coach to message', (select count(*) from public.my_support_people() where role = 'coach'), 0::bigint);
+  perform public.set_my_coach(ada);
+  perform tests.eq('choosing someone in FLC clears it', (select outside_coach_name is null from public.profiles where id = mia), true);
   perform tests.fails('you cannot be your own coach', format('select public.set_my_coach(%L)', mia), '22023');
   perform tests.logout();
   perform tests.login(lena);
