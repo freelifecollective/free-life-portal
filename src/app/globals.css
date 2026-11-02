@@ -2129,7 +2129,7 @@ html, body { max-width: 100%; overflow-x: clip; }
 .rt-item input:checked + .rt-box { background: var(--accent); color: #fff; }
 .rt-item input:focus-visible + .rt-box { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
 .rt-text { display: grid; gap: 2px; line-height: 24px; }
-.rt-title { font-weight: 600; color: var(--ink); }
+.rt-title { font-weight: 400; color: var(--ink); }
 .rt-tag { justify-self: start; margin-top: 2px; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font-size: 12px; font-weight: 700; }
 .rt-note { color: var(--muted); font-size: 14px; line-height: 1.4; }
 
