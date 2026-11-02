@@ -113,16 +113,19 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
     <div className="tasks-layout">
     <div className="tasks">
       <div className="tasks-top">
+        <button type="button" className="btn primary tasks-add" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
         <div className="tasks-progress" aria-label={`${doneToday.length} of ${total} done today`}>
           <div className="tasks-count"><strong>{doneToday.length}</strong> of {total} done today</div>
+          <p className="routine-links">
+            <button type="button" className="linkbtn" onClick={() => openRoutine("faith")}>{ROUTINES.faith.label}</button>
+            <span aria-hidden="true"> · </span>
+            <button type="button" className="linkbtn" onClick={() => openRoutine("spiritual")}>{ROUTINES.spiritual.label}</button>
+          </p>
           <div className="tasks-bar"><i style={{ width: total ? `${(doneToday.length / total) * 100}%` : "0%" }} /></div>
           {streaks ? <StreakLine streaks={streaks} /> : null}
         </div>
         <div className="tasks-actions">
           {todayList.length > 1 ? <button type="button" className="btn" onClick={() => setSuggestion(suggestOrder(todayList, today))}>Suggest the best order</button> : null}
-          <button type="button" className="btn" onClick={() => openRoutine("faith")}>{ROUTINES.faith.label}</button>
-          <button type="button" className="btn" onClick={() => openRoutine("spiritual")}>{ROUTINES.spiritual.label}</button>
-          <button type="button" className="btn primary" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
         </div>
       </div>
 
@@ -257,7 +260,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
       {newBadges.length ? <BadgeToast keys={newBadges} onClose={() => setNewBadges([])} /> : null}
     </div>
-    {badgeKeys.length ? <aside className="tasks-badges" aria-label="Your badges"><h2 className="qh" style={{ margin: "0 0 10px", fontSize: 18 }}>Your badges</h2><BadgeStrip keys={badgeKeys} /></aside> : null}
+    {badgeKeys.length ? <aside className="tasks-badges" aria-label="Your badges"><BadgeStrip keys={badgeKeys} /></aside> : null}
     </div>
   );
 }
