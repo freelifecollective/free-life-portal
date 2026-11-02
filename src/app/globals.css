@@ -2004,3 +2004,4 @@ html, body { max-width: 100%; overflow-x: clip; }
 .ft-hist button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.92); color: var(--ink); cursor: pointer; }
 .ft-hist button:hover:not(:disabled) { background: var(--tint); }
 .ft-hist button:disabled { opacity: .35; cursor: default; }
+.ft-paste { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-left: 5px solid #AB9080; background: #FBF6F1; }
