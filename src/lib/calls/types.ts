@@ -1,6 +1,6 @@
 export const CALL_KINDS = ["community", "masterclass", "other"] as const;
 export type CallKind = (typeof CALL_KINDS)[number];
-export const AUDIENCES = ["leads_open", "downline_open", "affiliates_only"] as const;
+export const AUDIENCES = ["leads_open", "affiliates_only"] as const;
 export type Audience = (typeof AUDIENCES)[number];
 export type RsvpMode = "live" | "recording";
 
@@ -10,6 +10,8 @@ export type Call = {
   description: string | null;
   kind: CallKind;
   audience: Audience;
+  /** also open to Lacey's downline (FLC members always see every call) */
+  downline_open: boolean;
   starts_at: string;
   duration_minutes: number;
   pinned: boolean;
@@ -35,11 +37,20 @@ export const KIND_LABEL: Record<CallKind, string> = { community: "Community call
 export const SELECTABLE_KINDS: CallKind[] = ["community", "masterclass"];
 /** The heading on the next-call card, by what kind of call it is. */
 export const NEXT_LABEL: Record<CallKind, string> = { community: "Next Community Call", masterclass: "Next Mastermind Call", other: "Next Call" };
-export const AUDIENCE_LABEL: Record<Audience, string> = { leads_open: "Open to Leads", downline_open: "Open to Lacey's Downline", affiliates_only: "Open to FLC Only" };
+export const AUDIENCE_LABEL: Record<Audience, string> = { leads_open: "Open to Leads", affiliates_only: "Open to FLC Only" };
+export const DOWNLINE_LABEL = "Open to Lacey's Downline";
+
+/** The "open to ..." tags for a call: leads and/or the downline, or FLC only. */
+export function audienceTags(call: Pick<Call, "audience" | "downline_open">): { label: string; dark: boolean }[] {
+  const tags: { label: string; dark: boolean }[] = [];
+  if (call.audience === "leads_open") tags.push({ label: AUDIENCE_LABEL.leads_open, dark: false });
+  if (call.downline_open) tags.push({ label: DOWNLINE_LABEL, dark: false });
+  return tags.length ? tags : [{ label: AUDIENCE_LABEL.affiliates_only, dark: true }];
+}
 
 /** Mastermind calls are for affiliates; community calls are open. The admin can still change it per call. */
 export function defaultAudience(kind: CallKind): Audience {
   return kind === "masterclass" ? "affiliates_only" : "leads_open";
 }
 
-export const CALL_COLUMNS = "id, title, description, kind, audience, starts_at, duration_minutes, pinned, join_url, host, length_label, call_speakers(name, photo_url, position, member_id)";
+export const CALL_COLUMNS = "id, title, description, kind, audience, downline_open, starts_at, duration_minutes, pinned, join_url, host, length_label, call_speakers(name, photo_url, position, member_id)";

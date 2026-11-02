@@ -22,12 +22,14 @@ export async function listConversation(supabase: SupabaseClient, chat: ChatInfo,
   const more = all.length > limit;
   const page = all.slice(0, limit).reverse();
   const ids = page.map((p) => p.id);
-  const [{ data: comments }, { data: reactions }] = ids.length
+  const [{ data: comments }, { data: reactions }, { data: voteRows }] = ids.length
     ? await Promise.all([
         supabase.from("chat_comments").select("id, post_id, author_id, body, created_at").in("post_id", ids).order("created_at"),
         supabase.from("chat_reactions").select("post_id, user_id, kind, created_at").in("post_id", ids),
+        chat.votes_on ? supabase.from("chat_votes").select("post_id, user_id").in("post_id", ids) : Promise.resolve({ data: [] }),
       ])
-    : [{ data: [] }, { data: [] }];
+    : [{ data: [] }, { data: [] }, { data: [] }];
+  const votes = (voteRows ?? []) as { post_id: string; user_id: string }[];
   /* posts that are quoted by a reply but are not in this page */
   const quotedIds = [...new Set(page.map((p) => p.reply_to).filter((x): x is string => !!x && !ids.includes(x)))];
   const { data: quoted } = quotedIds.length ? await supabase.from("chat_posts").select("id, author_id, body").in("id", quotedIds) : { data: [] };
@@ -47,6 +49,7 @@ export async function listConversation(supabase: SupabaseClient, chat: ChatInfo,
       id: p.id, author: who(p.author_id), body: p.body, image_url: p.image_url, audio_url: p.audio_url, audio_secs: p.audio_secs, attach_url: p.attach_url, attach_name: p.attach_name, attach_type: p.attach_type, attach_size: p.attach_size, forwarded_from: p.forwarded_from, edited_at: p.edited_at, pinned: !!p.pinned_at, created_at: p.created_at, mine: p.author_id === me, canDelete: p.author_id === me || isAdmin, replyTo: quote(p.reply_to),
       reactions: [...by.entries()].map(([emoji, people]) => ({ emoji, count: people.length, people })).sort((a, b) => b.count - a.count),
       myReaction: rx.find((r) => r.user_id === me)?.kind ?? null,
+      ...(chat.votes_on ? { votes: votes.filter((v) => v.post_id === p.id).length, voted: votes.some((v) => v.post_id === p.id && v.user_id === me) } : {}),
     };
   });
   const legacy: Msg[] = cs.map((c) => ({ id: c.id, legacy: true, author: who(c.author_id), body: c.body, created_at: c.created_at, mine: c.author_id === me, canDelete: c.author_id === me || isAdmin, replyTo: quote(c.post_id) }));

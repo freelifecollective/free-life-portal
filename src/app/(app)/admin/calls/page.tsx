@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
 import { CallForm } from "@/components/admin/CallForm";
 import { requireAdmin } from "@/lib/auth/guards";
-import { AUDIENCE_LABEL, CALL_COLUMNS, KIND_LABEL, type Call } from "@/lib/calls/types";
+import { audienceTags, CALL_COLUMNS, KIND_LABEL, type Call } from "@/lib/calls/types";
 import { formatInZone, nowMs } from "@/lib/time";
 import { listAffiliates } from "@/lib/calls/affiliates";
 import { createCall } from "./actions";
@@ -19,7 +19,7 @@ function CallList({ items }: { items: Row[] }) {
         <li key={c.id}>
           <div>
             <strong>{c.title}</strong>{c.pinned ? <span className="tag tag-pin" style={{ marginLeft: 8 }}>Pinned</span> : null}
-            <div className="muted-line">{formatInZone(new Date(c.starts_at))} · {KIND_LABEL[c.kind]} · {AUDIENCE_LABEL[c.audience]}
+            <div className="muted-line">{formatInZone(new Date(c.starts_at))} · {KIND_LABEL[c.kind]} · {audienceTags(c).map((t) => t.label).join(" + ")}
               {c.audience === "leads_open" ? ` · ${c.registrations?.[0]?.count ?? 0} registered` : ""}</div>
           </div>
           <Link className="linkbtn" href={`/admin/calls/${c.id}`}>Edit</Link>

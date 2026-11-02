@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/guards";
-import { AUDIENCES, CALL_KINDS, type Audience, type CallKind } from "@/lib/calls/types";
+import { CALL_KINDS, type Audience, type CallKind } from "@/lib/calls/types";
 import { SUPABASE_URL } from "@/lib/env";
 import { lengthById } from "@/lib/calls/length";
 import { zonedToUtc } from "@/lib/time";
@@ -15,7 +15,7 @@ type Parsed = { ok: true; value: Record<string, unknown> } | { ok: false; error:
 function parse(form: FormData): Parsed {
   const title = String(form.get("title") ?? "").trim();
   const kind = String(form.get("kind") ?? "") as CallKind;
-  const audience = String(form.get("audience") ?? "") as Audience;
+  const who = new Set(form.getAll("who").map(String));
   const starts = zonedToUtc(String(form.get("starts") ?? ""));
   const lengthId = String(form.get("length") ?? "");
   const length = lengthById(lengthId);
@@ -23,14 +23,17 @@ function parse(form: FormData): Parsed {
   const joinUrl = String(form.get("join_url") ?? "").trim();
   if (!title || title.length > 120) return { ok: false, error: "Give the call a title of up to 120 characters." };
   if (!CALL_KINDS.includes(kind)) return { ok: false, error: "Choose what kind of call it is." };
-  if (!AUDIENCES.includes(audience)) return { ok: false, error: "Choose who the call is for." };
+  if (![...who].length || [...who].some((w) => w !== "leads" && w !== "downline" && w !== "flc")) return { ok: false, error: "Choose who the call is for." };
+  const flcOnly = who.has("flc");
+  const audience: Audience = !flcOnly && who.has("leads") ? "leads_open" : "affiliates_only";
+  const downlineOpen = !flcOnly && who.has("downline");
   if (!starts) return { ok: false, error: "Enter a start date and time. If you did, that time does not exist because the clocks change (try an hour later)." };
   if (!length && lengthId !== "keep") return { ok: false, error: "Choose how long the call is." };
   if (description.length > 2000) return { ok: false, error: "Keep the description under 2000 characters." };
   if (joinUrl && !/^https:\/\/\S+$/.test(joinUrl)) return { ok: false, error: "The join link must start with https://" };
   return {
     ok: true,
-    value: { title, kind, audience, starts_at: starts.toISOString(), ...(length ? { duration_minutes: length.minutes, length_label: length.label } : {}), description: description || null, join_url: joinUrl || null, pinned: form.get("pinned") === "on" },
+    value: { title, kind, audience, downline_open: downlineOpen, starts_at: starts.toISOString(), ...(length ? { duration_minutes: length.minutes, length_label: length.label } : {}), description: description || null, join_url: joinUrl || null, pinned: form.get("pinned") === "on" },
   };
 }
 

@@ -1990,3 +1990,4 @@ html, body { max-width: 100%; overflow-x: clip; }
 .lead-warn { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: #FDECEA; border-left: 4px solid #C0261C; color: #7a1a13; font-size: 14px; line-height: 1.4; }
 .dock-win .lead-warn { margin: 0; border-radius: 0; font-size: 12px; padding: 8px 10px; }
 .pc-owner { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.cv-vote.on { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }

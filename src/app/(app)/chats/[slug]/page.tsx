@@ -56,13 +56,13 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     const admin = session.profile.role === "admin";
     return (
       <div className="chats">
-        <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
+        <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={((role === "lead" || role === "downline") ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
         <ChatList sections={sections} current={slug} role={role} muted={side.muted} unread={side.unread} groups={side.groups} />
         <div className="chat-main">
           <LiveRefresh />
           <MarkRead kind="chat" groupId={chat.id} lastId={messages[messages.length - 1]?.id ?? null} unread={side.unread[chat.id] ?? 0} />
           {slug === "resources" ? <SubmitResource userId={session.user.id} name={[session.profile.first_name, session.profile.last_name].filter(Boolean).join(" ")} avatarUrl={session.profile.avatar_url} initials={((session.profile.first_name ?? "").charAt(0) + (session.profile.last_name ?? "").charAt(0)).toUpperCase()} mine={await mySubmissions(supabase)} /> : null}
-          <ConversationView me={session.user.id} messages={messages} kind="chat" targetId={chat.id} slug={slug} canPost={chat.posting === "all" || admin} placeholder="Write a message…" basePath={`/chats/${slug}`} canPin={admin} jumpTo={typeof sp.jump === "string" ? sp.jump : undefined} moreHref={more ? `/chats/${slug}?limit=${limit + PAGE}` : undefined} nowIso={new Date().toISOString()} readOnlyText="Only admins can post here." />
+          <ConversationView me={session.user.id} messages={messages} kind="chat" targetId={chat.id} slug={slug} canPost={chat.posting === "all" || admin} placeholder="Write a message…" basePath={`/chats/${slug}`} canPin={admin} jumpTo={typeof sp.jump === "string" ? sp.jump : undefined} moreHref={more ? `/chats/${slug}?limit=${limit + PAGE}` : undefined} nowIso={new Date().toISOString()} readOnlyText="Only admins can post here." voting={chat.votes_on} />
         </div>
       </div>
     );
@@ -76,7 +76,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
   return (
     <>
       <div className="chats">
-        <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={(role === "lead" ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
+        <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={((role === "lead" || role === "downline") ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
         <ChatList sections={sections} current={slug} role={role} muted={side.muted} unread={side.unread} groups={side.groups} />
         <div className="chat-main">
           <LiveRefresh />

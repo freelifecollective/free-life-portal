@@ -80,8 +80,8 @@ do $$ declare cid uuid; n integer; first_slot timestamptz; bid uuid; hid uuid; b
   perform tests.logout();
   perform tests.login('00000000-0000-0000-0000-0000000000a3');
   perform tests.eq('the lead is now booking with the closer', (select with_closer from public.booking_info()), true);
-  select min(slot) into first_slot from public.open_slots(14);
-  perform tests.eq('and the closer own hours are offered (17:00 UTC)', extract(hour from first_slot at time zone 'UTC')::int, 17);
+  select min(slot) into first_slot from public.open_slots(14) where slot > now() + interval '30 hours';
+  perform tests.eq('and the closer own hours are offered (12:00 Eastern)', extract(hour from first_slot at time zone 'America/New_York')::int, 12);
   bid := public.book_coaching_call(first_slot);
   perform tests.eq('the call is assigned to the closer', (select closer_id from public.booked_calls where id = bid), '00000000-0000-0000-0000-0000000000a5'::uuid);
   perform tests.logout();

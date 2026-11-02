@@ -4,19 +4,26 @@ import { useActionState, useState } from "react";
 import type { CallFormState } from "@/app/(app)/admin/calls/actions";
 import { LENGTHS } from "@/lib/calls/length";
 import { SpeakersField, type Affiliate, type SpeakerValue } from "./SpeakersField";
-import { AUDIENCE_LABEL, KIND_LABEL, SELECTABLE_KINDS, defaultAudience, type Audience, type CallKind } from "@/lib/calls/types";
+import { AUDIENCE_LABEL, DOWNLINE_LABEL, KIND_LABEL, SELECTABLE_KINDS, defaultAudience, type Audience, type CallKind } from "@/lib/calls/types";
 
 export type CallFormValues = {
-  title: string; kind: CallKind; audience: Audience; starts: string; length: string; description: string; join_url: string; pinned: boolean; speakers: SpeakerValue[];
+  title: string; kind: CallKind; audience: Audience; downline_open: boolean; starts: string; length: string; description: string; join_url: string; pinned: boolean; speakers: SpeakerValue[];
 };
-export const EMPTY_CALL: CallFormValues = { title: "", kind: "community", audience: "leads_open", starts: "", length: "1h", description: "", join_url: "", pinned: false, speakers: [] };
+export const EMPTY_CALL: CallFormValues = { title: "", kind: "community", audience: "leads_open", downline_open: false, starts: "", length: "1h", description: "", join_url: "", pinned: false, speakers: [] };
 
 export function CallForm({ action, initial = EMPTY_CALL, submitLabel, affiliates = [] }: {
   action: (prev: CallFormState, form: FormData) => Promise<CallFormState>; initial?: CallFormValues; submitLabel: string; affiliates?: Affiliate[];
 }) {
   const [state, run, pending] = useActionState(action, { error: "" });
   const [kind, setKind] = useState<CallKind>(initial.kind);
-  const [audience, setAudience] = useState<Audience>(initial.audience);
+  /* who can see it: leads and/or Lacey's downline, or FLC members only (FLC members always see every call) */
+  const [who, setWho] = useState({ leads: initial.audience === "leads_open", downline: initial.downline_open, flc: initial.audience !== "leads_open" && !initial.downline_open });
+  const setAudience = (a: Audience) => setWho({ leads: a === "leads_open", downline: false, flc: a === "affiliates_only" });
+  const toggle = (k: "leads" | "downline" | "flc") => setWho((w) => {
+    if (k === "flc") return { leads: false, downline: false, flc: true };
+    const next = { ...w, [k]: !w[k], flc: false };
+    return next.leads || next.downline ? next : { leads: false, downline: false, flc: true };
+  });
 
   return (
     <form action={run} className="admin-form" noValidate>
@@ -28,10 +35,12 @@ export function CallForm({ action, initial = EMPTY_CALL, submitLabel, affiliates
           <select id="kind" name="kind" value={kind} onChange={(e) => { const k = e.target.value as CallKind; setKind(k); setAudience(defaultAudience(k)); }}>
             {(initial.kind === "other" ? [...SELECTABLE_KINDS, "other" as CallKind] : SELECTABLE_KINDS).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}
           </select></div>
-        <div className="field"><label htmlFor="audience">Who can see it</label>
-          <select id="audience" name="audience" value={audience} onChange={(e) => setAudience(e.target.value as Audience)}>
-            {Object.entries(AUDIENCE_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
-          </select></div>
+        <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
+          <legend style={{ fontWeight: 600, marginBottom: 6 }}>Who can see it (pick one or more)</legend>
+          <label className="check"><input type="checkbox" name="who" value="leads" checked={who.leads} onChange={() => toggle("leads")} /> {AUDIENCE_LABEL.leads_open}</label>
+          <label className="check"><input type="checkbox" name="who" value="downline" checked={who.downline} onChange={() => toggle("downline")} /> {DOWNLINE_LABEL}</label>
+          <label className="check"><input type="checkbox" name="who" value="flc" checked={who.flc} onChange={() => toggle("flc")} /> {AUDIENCE_LABEL.affiliates_only}</label>
+        </fieldset>
       </div>
       <div className="row">
         <div className="field"><label htmlFor="starts">Starts (Eastern time)</label>
