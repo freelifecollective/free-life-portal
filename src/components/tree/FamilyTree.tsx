@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { copyNode, copyTop, createChart, deleteChart, moveNode, renameChart, setSharing } from "@/app/(app)/family-tree/actions";
+import { copyNode, copyTop, createChart, deleteChart, removeNode, moveNode, renameChart, setSharing } from "@/app/(app)/family-tree/actions";
 import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
@@ -102,6 +102,17 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
     window.addEventListener("keydown", esc);
     return () => { window.removeEventListener("mousedown", close); window.removeEventListener("scroll", close, true); window.removeEventListener("resize", close); window.removeEventListener("keydown", esc); };
   }, [bmenu]);
+  /* right-click a bubble, "Delete this bubble", then a popup asks "are you sure" */
+  const [delNode, setDelNode] = useState<string | null>(null);
+  const delDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => { const d = delDialog.current; if (!d) return; if (delNode && !d.open) d.showModal(); else if (!delNode && d.open) d.close(); }, [delNode]);
+  const doDeleteNode = () => start(async () => {
+    if (!delNode) return;
+    setMsg("");
+    const r = await removeNode(delNode);
+    if (!r.ok) { setMsg(r.error); setDelNode(null); return; }
+    gone(delNode); setDelNode(null);
+  });
   const doCopy = () => start(async () => {
     if (!copyFor || !copyFor.to) return;
     setMsg("");
@@ -160,6 +171,7 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
         <div className="mute-menu" role="menu" style={{ left: Math.min(bmenu.x, window.innerWidth - 240), top: Math.min(bmenu.y, window.innerHeight - 110) }} onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
           <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: false, to: otherCharts[0]?.id ?? "", side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble only</button>
           <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: true, to: otherCharts[0]?.id ?? "", side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble + all below</button>
+          {bmenu.id !== "root" ? <button type="button" role="menuitem" onClick={() => { setDelNode(bmenu.id); setBmenu(null); }}>Delete this bubble</button> : null}
         </div>
       ) : null}
       {copyFor ? (
@@ -180,6 +192,14 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
           </div>
         </form>
       ) : null}
+      <dialog ref={delDialog} className="rs-dialog" aria-labelledby="ft-del-title" onClose={() => setDelNode(null)}>
+        <h2 id="ft-del-title" className="qh" style={{ marginTop: 0 }}>Delete this bubble</h2>
+        <p>Remove this bubble and everything under it?</p>
+        <div className="dlg-actions">
+          <button type="button" className="btn" onClick={() => setDelNode(null)}>No</button>
+          <button type="button" className="btn danger-fill" disabled={pending} onClick={doDeleteNode}>Yes, remove</button>
+        </div>
+      </dialog>
       {copiedMsg ? <p className="when" role="status" style={{ margin: 0, color: "var(--ok)" }}>{copiedMsg}</p> : null}
       {renameFor ? (
         <form className="card-s ft-newform" onSubmit={(e) => { e.preventDefault(); doRename(); }}>
@@ -255,7 +275,6 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
           });
           setTarget(null);
         }}
-        onRemoved={(id) => { gone(id); setTarget(null); }}
         onAddSide={(parentId, side: Side) => setTarget({ mode: "add", parentId, side })} />
     </div>
   );

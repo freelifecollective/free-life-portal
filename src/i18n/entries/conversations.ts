@@ -163,6 +163,7 @@ export const conversations: readonly Entry[] = [
   ["Copy just this bubble to another chart", "Copia solo esta burbuja a otro gráfico", "Copie seulement cette bulle vers un autre graphique", "Copia solo questa bolla in un altro grafico", "Nur diese Blase in ein anderes Diagramm kopieren"],
   ["Copy", "Copiar", "Copier", "Copia", "Kopieren"],
   ["My Plan", "Mi plan", "Mon forfait", "Il mio piano", "Mein Tarif"],
+  ["Delete this bubble", "Eliminar esta burbuja", "Supprimer cette bulle", "Elimina questa bolla", "Diese Blase löschen"],
   ["Balanced", "Equilibrado", "Équilibré", "Bilanciato", "Ausgeglichen"],
   ["Add your first accounts", "Añade tus primeras cuentas", "Ajoute tes premiers comptes", "Aggiungi i tuoi primi account", "Füge deine ersten Konten hinzu"],
   ["Anyone with this link can look at this chart (they cannot change it). Stop sharing and the link stops working.", "Cualquiera con este enlace puede ver este gráfico (no puede cambiarlo). Deja de compartir y el enlace deja de funcionar.", "Toute personne avec ce lien peut voir ce graphique (sans pouvoir le modifier). Arrête le partage et le lien ne fonctionne plus.", "Chiunque abbia questo link può vedere questo grafico (senza modificarlo). Interrompi la condivisione e il link smette di funzionare.", "Jeder mit diesem Link kann dieses Diagramm ansehen (aber nicht ändern). Beende das Teilen und der Link funktioniert nicht mehr."],

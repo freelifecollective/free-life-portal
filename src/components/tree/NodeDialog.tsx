@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { removeNode, saveNode, saveRoot } from "@/app/(app)/family-tree/actions";
+import { saveNode, saveRoot } from "@/app/(app)/family-tree/actions";
 import { createClient } from "@/lib/supabase/client";
 import { TREE_RANKS } from "@/lib/tree/colors";
 import type { Side, TreeNode } from "@/lib/tree/layout";
@@ -12,9 +12,9 @@ const nameOf = (p: Person) => [p.first_name, p.last_name].filter(Boolean).join("
 export type DialogTarget = { mode: "root"; label: string; rank: string } | { mode: "add"; parentId: string | null; side: Side } | { mode: "edit"; node: TreeNode; hasLeft: boolean; hasRight: boolean; branch: number };
 
 /** Add a bubble, or change or remove one. You can pick someone from the FLC community or just type a name or account name. */
-export function NodeDialog({ chartId, target, onClose, onSaved, onRemoved, onAddSide, onRootSaved }: {
+export function NodeDialog({ chartId, target, onClose, onSaved, onAddSide, onRootSaved }: {
   chartId: string;
-  target: DialogTarget | null; onClose: () => void; onSaved: (n: TreeNode, side?: Side) => void; onRootSaved: (label: string, rank: string) => void; onRemoved: (id: string) => void; onAddSide: (parentId: string | null, side: Side) => void;
+  target: DialogTarget | null; onClose: () => void; onSaved: (n: TreeNode, side?: Side) => void; onRootSaved: (label: string, rank: string) => void; onAddSide: (parentId: string | null, side: Side) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [label, setLabel] = useState("");
@@ -23,7 +23,6 @@ export function NodeDialog({ chartId, target, onClose, onSaved, onRemoved, onAdd
   const [owned, setOwned] = useState(false);
   const [people, setPeople] = useState<Person[] | null>(null);
   const [error, setError] = useState("");
-  const [confirm, setConfirm] = useState(false);
   const [pending, start] = useTransition();
   const key = target ? (target.mode === "edit" ? target.node.id : target.mode === "root" ? "root" : `${target.parentId}:${target.side}`) : "";
 
@@ -31,7 +30,7 @@ export function NodeDialog({ chartId, target, onClose, onSaved, onRemoved, onAdd
     if (!target) { dlg.current?.close(); return; }
     queueMicrotask(() => {
       setLabel(target.mode === "edit" ? target.node.label : target.mode === "root" ? target.label : ""); setRank(target.mode === "edit" ? (target.node.rank === "6A2-3+" ? "6A2-3" : target.node.rank) ?? "" : target.mode === "root" ? target.rank : "");
-      setLinked(target.mode === "edit" ? target.node.linked_member_id ?? "" : ""); setOwned(target.mode === "edit" ? !!target.node.owned : false); setError(""); setConfirm(false);
+      setLinked(target.mode === "edit" ? target.node.linked_member_id ?? "" : ""); setOwned(target.mode === "edit" ? !!target.node.owned : false); setError("");
     });
     if (!dlg.current?.open) dlg.current?.showModal();
     if (!people && target.mode !== "root") {
@@ -67,12 +66,6 @@ export function NodeDialog({ chartId, target, onClose, onSaved, onRemoved, onAdd
       onSaved(r.node, target.mode === "add" ? target.side : undefined);
     });
   };
-  const remove = () => start(async () => {
-    if (target.mode !== "edit") return;
-    const r = await removeNode(target.node.id);
-    if (!r.ok) { setError(r.error); return; }
-    onRemoved(target.node.id);
-  });
 
   return (
     <dialog ref={dlg} className="rs-dialog" aria-label="Your Organization bubble" onClose={onClose} onClick={(e) => { if (e.target === dlg.current) dlg.current?.close(); }}>
@@ -106,9 +99,6 @@ export function NodeDialog({ chartId, target, onClose, onSaved, onRemoved, onAdd
               <button type="button" className="btn small" onClick={() => onAddSide(target.node.id, "left")}>{target.hasLeft ? "Add another to the left" : "Add to the left"}</button>
               <button type="button" className="btn small" onClick={() => onAddSide(target.node.id, "right")}>{target.hasRight ? "Add another to the right" : "Add to the right"}</button>
             </div>
-            {confirm ? (
-              <p className="err" style={{ minHeight: 0, margin: 0 }}>Remove this bubble and everything under it? <button type="button" className="linkbtn danger" disabled={pending} onClick={remove}>Yes, remove</button> <button type="button" className="linkbtn" onClick={() => setConfirm(false)}>No</button></p>
-            ) : <button type="button" className="linkbtn danger" onClick={() => setConfirm(true)}>Remove this bubble</button>}
           </div>
         ) : null}
       </form>
