@@ -57,12 +57,43 @@ begin
   perform tests.login(lena);
   perform tests.eq('a lead sees only what is open to leads', (select count(*) from public.support_search('leads follow up basics welcome') where kind = 'resource'), 1::bigint);
   perform tests.eq('and not the affiliates-only documents', (select count(*) from public.support_search('follow up script') where kind = 'document'), 0::bigint);
-  insert into public.support_questions (user_id, question, found) values (lena, 'I cannot get started', 0);
-  perform tests.fails('no asking as someone else', format('insert into public.support_questions (user_id, question) values (%L, %L)', mia, 'hi'), '42501');
-  perform tests.eq('a lead cannot read the questions', (select count(*) from public.support_questions), 0::bigint);
   perform tests.logout();
-  perform tests.login(ada);
-  perform tests.eq('the admin reads the questions', (select count(*) from public.support_questions), 1::bigint);
+end $$;
+
+do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1'; max uuid := '00000000-0000-0000-0000-0000000000a5'; r1 uuid; r2 uuid; r3 uuid; c1 uuid; c2 uuid;
+begin
+  update public.profiles set coach_id = max where id = mia;
+  insert into public.recordings (title, description, vimeo_id, topics, published, recorded_at, thumb_url) values
+    ('Old mindset call', 'staying strong', '700000001', array['Belief + Mindset'], true, now() - interval '30 days', 'https://example.com/a.jpg') returning id into r1;
+  insert into public.recordings (title, description, vimeo_id, topics, published, recorded_at) values ('New mindset call', 'belief', '700000002', array['Belief + Mindset'], true, now() - interval '2 days') returning id into r2;
+  insert into public.recordings (title, vimeo_id, topics, published, recorded_at) values ('Ads call', '700000003', array['Ads'], true, now() - interval '1 day') returning id into r3;
+  insert into public.calls (title, starts_at) values ('Feedback call', now() - interval '40 days') returning id into c1;
+  update public.recordings set call_id = c1 where id = r1;
+  insert into public.call_feedback (call_id, user_id, thoughts, favourite, takeaway) values (c1, max, 'x', 'x', 'x');
+  perform tests.login(mia);
+  perform tests.eq('wanting to quit is understood', (select count(*) from public.support_intent('I want to quit my business') where theme = 'Wanting to quit' and checkin), 1::bigint);
+  perform tests.eq('and so is a mindset question', (select count(*) from public.support_intent('I''m struggling with my mindset right now') where checkin), 1::bigint);
+  perform tests.eq('a leads question does not ask the check in', (select count(*) from public.support_intent('my leads ghost me') where checkin), 0::bigint);
+  perform tests.eq('quitting finds the mindset calls, not business sheets', (select count(*) from public.support_search('I want to quit my business') where kind = 'recording' and title like '%mindset%'), 2::bigint);
+  perform tests.eq('the call with a review comes first', (select title from public.support_search('I want to quit my business') where kind = 'recording' limit 1), 'Old mindset call');
+  perform tests.eq('the review count is shown', (select reviews from public.support_search('I want to quit my business') where title = 'Old mindset call'), 1);
+  perform tests.eq('the picture comes with it', (select thumb from public.support_search('I want to quit my business') where title = 'Old mindset call'), 'https://example.com/a.jpg');
+  perform tests.eq('the ads call is not offered for quitting', (select count(*) from public.support_search('I want to quit my business') where title = 'Ads call'), 0::bigint);
+  perform tests.eq('filler words alone find nothing', (select count(*) from public.support_search('right now')), 0::bigint);
+  perform tests.eq('the coach is found', (select count(*) from public.my_support_people() where role = 'coach'), 1::bigint);
+  -- what people ask is kept anonymously: themes and words only, and admins only see needs that keep coming up
+  perform public.log_support_ask('I want to quit my business', 0);
+  perform public.log_support_ask('I want to quit and give up on this', 0);
+  perform public.log_support_ask('so ready to quit right now', 1);
+  perform public.log_support_ask('how do I run ads', 2);
+  perform tests.eq('a member cannot read the asks', (select count(*) from public.support_suggestions()), 0::bigint);
+  perform tests.fails('and has no direct access to the table', 'select * from public.support_asks', '42501');
+  perform tests.logout();
+  perform tests.login('00000000-0000-0000-0000-0000000000a4');
+  perform tests.eq('the admin sees the recurring theme', (select asked from public.support_suggestions() where label = 'Wanting to quit' and kind = 'theme'), 3);
+  perform tests.eq('and how often nothing was found', (select nothing_found from public.support_suggestions() where label = 'Wanting to quit' and kind = 'theme'), 2);
+  perform tests.eq('a one-off question is not shown', (select count(*) from public.support_suggestions() where label in ('ads', 'Ads')), 0::bigint);
+  perform tests.eq('the stored ask holds no names or question text', (select count(*) from information_schema.columns where table_name = 'support_asks' and column_name in ('user_id', 'question', 'member_id')), 0::bigint);
   perform tests.logout();
 end $$;
 rollback;

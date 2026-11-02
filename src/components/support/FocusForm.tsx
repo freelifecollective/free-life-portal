@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { findSupport, type FocusState } from "@/app/(app)/support/actions";
-import { GROUPS, hrefOf, KIND_LABEL, type ResourceKind, type SupportHit } from "@/lib/support/types";
+import { GROUPS, hrefOf, KIND_LABEL, type ResourceKind, type SupportHit, type SupportPeople, type SupportPerson } from "@/lib/support/types";
 
-const initial: FocusState = { q: "", hits: null, error: "" };
+const initial: FocusState = { q: "", hits: null, error: "", checkin: false, people: { coach: null, buddy: null } };
+const nameOf = (p: SupportPerson) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "them";
 
 function Hit({ h }: { h: SupportHit }) {
   const href = hrefOf(h);
@@ -23,37 +24,109 @@ function Hit({ h }: { h: SupportHit }) {
   );
 }
 
+/** A past call, shown with its picture. */
+function CallCard({ h }: { h: SupportHit }) {
+  return (
+    <li className="rv-card">
+      <Link href={`/calls/${h.id}`} className="rv-link">
+        <span className="rv-thumb">
+          {h.thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={h.thumb} alt="" loading="lazy" />
+          ) : <span className="rv-fallback" aria-hidden="true">▶</span>}
+        </span>
+        <span className="rv-body">
+          <span className="rv-title" translate="no">{h.title}</span>
+          {h.at ? <span className="rv-meta">{new Date(h.at).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" })}</span> : null}
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+function Results({ hits }: { hits: SupportHit[] }) {
+  return GROUPS.map((g) => {
+    const list = hits.filter((h) => h.kind === g.kind);
+    if (!list.length) return null;
+    return (
+      <section key={g.kind}>
+        <h2 className="qh">{g.title}</h2>
+        {g.kind === "recording"
+          ? <ul className="rv-grid">{list.map((h) => <CallCard key={h.id} h={h} />)}</ul>
+          : <ul className="sup-list">{list.map((h) => <Hit key={h.kind + h.id} h={h} />)}</ul>}
+      </section>
+    );
+  });
+}
+
+type Ans = "yes" | "no" | "skip" | null;
+
+/** For a hard moment: have you reached out to your buddy or coach? */
+function CheckIn({ people, buddy, coach, setBuddy, setCoach }: { people: SupportPeople; buddy: Ans; coach: Ans; setBuddy: (a: Ans) => void; setCoach: (a: Ans) => void }) {
+  const row = (label: string, value: Ans, set: (a: Ans) => void) => (
+    <div className="sup-q">
+      <span>{label}</span>
+      <span className="sup-yn" role="group" aria-label={label}>
+        <button type="button" className={value === "yes" ? "on" : ""} aria-pressed={value === "yes"} onClick={() => set("yes")}>Yes</button>
+        <button type="button" className={value === "no" ? "on" : ""} aria-pressed={value === "no"} onClick={() => set("no")}>No</button>
+      </span>
+    </div>
+  );
+  return (
+    <section className="card-s sup-check">
+      <h2 className="qh" style={{ marginTop: 0 }}>First, a quick check-in</h2>
+      <p style={{ margin: "0 0 12px" }}>It sounds like this is a hard moment, and that is completely okay. Before anything else:</p>
+      {row("Have you reached out to your accountability buddy?", buddy, setBuddy)}
+      {row("Have you reached out to your coach?", coach, setCoach)}
+      {buddy === "no" && coach === "no" ? (
+        <div className="sup-reach" role="note">
+          <p style={{ margin: "0 0 10px" }}><b>Please reach out to one of them first.</b> They want to hear from you, and a real conversation will do more than anything on this page.</p>
+          <div className="rs-actions" style={{ marginTop: 0 }}>
+            {people.buddy?.username ? <Link className="btn small primary" href={`/messages/${people.buddy.username}`}>{`Message ${nameOf(people.buddy)}, my buddy`}</Link> : <Link className="btn small primary" href="/buddy">Find an accountability buddy</Link>}
+            {people.coach?.username ? <Link className="btn small primary" href={`/messages/${people.coach.username}`}>{`Message ${nameOf(people.coach)}, my coach`}</Link> : <Link className="btn small" href="/chats">Ask in the chats who your coach is</Link>}
+          </div>
+        </div>
+      ) : null}
+      {buddy === "yes" || coach === "yes" ? <p className="when" style={{ margin: "10px 0 0" }}>That is the best first step. Here are some things that may help too.</p> : null}
+      {buddy === null || coach === null ? <p style={{ margin: "10px 0 0" }}><button type="button" className="linkbtn" onClick={() => { setBuddy("skip"); setCoach("skip"); }}>Just show me resources</button></p> : null}
+    </section>
+  );
+}
+
 /** "What is your focus this week?": type it in, and we suggest what can help. */
 export function FocusForm() {
   const [state, action, pending] = useActionState(findSupport, initial);
+  /* the check-in answers belong to one search: a new search starts them over */
+  const [answers, setAnswers] = useState<{ q: string; buddy: Ans; coach: Ans }>({ q: "", buddy: null, coach: null });
+  const mine = answers.q === state.q ? answers : { q: state.q, buddy: null as Ans, coach: null as Ans };
+  const setBuddy = (a: Ans) => setAnswers({ ...mine, q: state.q, buddy: a });
+  const setCoach = (a: Ans) => setAnswers({ ...mine, q: state.q, coach: a });
+  const answered = mine.buddy !== null && mine.coach !== null;
+  const showResults = !!state.hits && (!state.checkin || answered);
+  const bothNo = state.checkin && mine.buddy === "no" && mine.coach === "no";
   return (
     <div className="sup">
       <form action={action} className="card-s sup-form">
         <label htmlFor="sup-q" className="sr-only">What is your focus this week?</label>
         <textarea id="sup-q" name="q" rows={3} maxLength={500} required placeholder="For example: following up with leads, handling objections, staying consistent…" defaultValue={state.q} />
         <div className="rs-actions" style={{ marginTop: 8 }}><button type="submit" className="btn primary" disabled={pending}>{pending ? "Looking…" : "Show me what can help"}</button></div>
-        <p className="when" style={{ margin: "8px 0 0" }}>We keep what you type so the team can see what everyone is working on and add more help.</p>
+        <p className="when" style={{ margin: "8px 0 0" }}>Whatever you type is completely anonymous, and no one will ever see that you typed it. Recurring questions get added as a suggestion to admins to help improve the system but no names or specific questions are ever shared.</p>
         {state.error ? <p className="err" role="alert" style={{ margin: "6px 0 0" }}>{state.error}</p> : null}
       </form>
-      {state.hits ? (
-        state.hits.length === 0 ? (
+      {state.hits && state.checkin ? <CheckIn people={state.people} buddy={mine.buddy} coach={mine.coach} setBuddy={setBuddy} setCoach={setCoach} /> : null}
+      {showResults ? (
+        state.hits!.length === 0 ? (
           <section className="card-s">
             <p style={{ margin: 0 }}>We do not have a perfect match for that yet. Try a few different words, or ask in the chats. People are glad to help.</p>
             <p style={{ margin: "10px 0 0" }}><Link className="btn small" href="/chats">Go to the chats</Link></p>
           </section>
         ) : (
-          GROUPS.map((g) => {
-            const list = state.hits!.filter((h) => h.kind === g.kind);
-            return list.length ? (
-              <section key={g.kind}>
-                <h2 className="qh">{g.title}</h2>
-                <ul className="sup-list">{list.map((h) => <Hit key={h.kind + h.id} h={h} />)}</ul>
-              </section>
-            ) : null;
-          })
+          <>
+            {bothNo ? <h2 className="qh" style={{ margin: "8px 0 0" }}>These may help you as well</h2> : null}
+            <Results hits={state.hits!} />
+          </>
         )
       ) : null}
     </div>
   );
 }
-
