@@ -72,4 +72,21 @@ begin
   perform tests.eq('a member cannot read the leads list', (select count(*) from public.admin_leads_with_owner()), 0::bigint);
   perform tests.eq('a member cannot read an affiliate''s people list', (select count(*) from public.admin_affiliate_people(mia)), 0::bigint);
 end $$;
+
+do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1'; max uuid := '00000000-0000-0000-0000-0000000000a5'; ada uuid := '00000000-0000-0000-0000-0000000000a4'; c uuid;
+begin
+  perform tests.logout();
+  insert into public.signup_allowlist (email, role, created_by) values ('invited.one@example.com', 'lead', mia);
+  insert into public.calls (title, starts_at, audience) values ('Leads list call', now() + interval '2 days', 'leads_open') returning id into c;
+  insert into public.registrations (call_id, name, email, first_name, referrer_id) values (c, 'Form Person', 'form.person@example.com', 'Form', max);
+  insert into public.registrations (call_id, name, email, first_name, referrer_id) values (c, 'Invited One', 'invited.one@example.com', 'Invited', max);
+  perform tests.login(ada);
+  perform tests.eq('the invited person is listed once, as invited by Mia', (select count(*) from public.admin_all_leads() where email = 'invited.one@example.com' and source = 'invited' and owner_id = mia), 1::bigint);
+  perform tests.eq('the person who filled in a form is listed with their affiliate', (select count(*) from public.admin_all_leads() where email = 'form.person@example.com' and source = 'form' and owner_id = max), 1::bigint);
+  perform tests.eq('nobody is listed twice', (select count(*) from public.admin_all_leads() where email = 'invited.one@example.com'), 1::bigint);
+  perform tests.logout();
+  perform tests.login(max);
+  perform tests.eq('a member cannot read it', (select count(*) from public.admin_all_leads()), 0::bigint);
+  perform tests.logout();
+end $$;
 rollback;
