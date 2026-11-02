@@ -1,3 +1,4 @@
+import { BirthdayBanner } from "@/components/birthday/BirthdayBanner";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { NotificationBell } from "./notifications/NotificationBell";
@@ -105,7 +106,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
         <NavPanel>
           <NavLinks items={ordered(NAV.filter((n) => canSee(p.role, n.min) && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
-        <main className="main" id="main">{children}</main>
+        <main className="main" id="main">{session.mode === "supabase" && p.role !== "lead" ? <BirthdayBanner /> : null}{children}</main>
       </div>
     </div>
     <Tour show={showTour} />
