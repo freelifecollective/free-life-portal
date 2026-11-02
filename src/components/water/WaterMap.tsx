@@ -71,6 +71,15 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
         },
       });
       m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
+      /* TEMPORARY: show what the map reports, so a missing-land problem can be seen from a screenshot */
+      const diag = document.createElement("pre");
+      diag.style.cssText = "position:absolute;left:8px;bottom:8px;max-width:70%;max-height:40%;overflow:auto;margin:0;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.92);font:11px/1.3 monospace;z-index:5;white-space:pre-wrap";
+      diag.setAttribute("translate", "no");
+      box.current.appendChild(diag);
+      const say = (t: string) => { if (diag.textContent!.length < 1500) diag.textContent += t + "\n"; };
+      m.on("error", (e) => say("error: " + String((e as unknown as { error?: { message?: string } }).error?.message ?? e).slice(0, 200)));
+      m.on("load", () => say("loaded; layers=" + m.getStyle().layers.length));
+      m.on("idle", () => { try { say("idle; land features drawn=" + m.queryRenderedFeatures({ layers: ["land"] }).length + "; zoom=" + m.getZoom().toFixed(1)); } catch (e) { say("idle query failed " + e); } });
       /* Street-level detail (water, roads, towns) from OpenFreeMap is added on top when it answers. If it does not, the map above still works. */
       m.once("load", () => {
         void (async () => {
