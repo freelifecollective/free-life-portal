@@ -2119,3 +2119,18 @@ html, body { max-width: 100%; overflow-x: clip; }
 .gl-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
 .gl-last { color: var(--muted); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chats .chats-head > .page-heading { margin-bottom: 10px; }
+
+/* recommended routine picker: brand-coloured round boxes lined up with the first line of each item */
+.rt-group { margin-top: 18px; }
+.rt-h { margin: 0 0 8px; font-family: var(--font-display, inherit); font-size: 18px; color: var(--ink); padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.rt-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rt-item { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: start; padding: 8px 10px; border-radius: 10px; cursor: pointer; position: relative; }
+.rt-item:hover { background: var(--tint); }
+.rt-item input { position: absolute; opacity: 0; width: 24px; height: 24px; margin: 0; cursor: pointer; }
+.rt-box { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--accent); background: #fff; color: transparent; display: grid; place-items: center; font-size: 14px; font-weight: 700; box-sizing: border-box; }
+.rt-item input:checked + .rt-box { background: var(--accent); color: #fff; }
+.rt-item input:focus-visible + .rt-box { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+.rt-text { display: grid; gap: 2px; line-height: 24px; }
+.rt-title { font-weight: 600; color: var(--ink); }
+.rt-tag { justify-self: start; margin-top: 2px; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font-size: 12px; font-weight: 700; }
+.rt-note { color: var(--muted); font-size: 14px; line-height: 1.4; }

@@ -128,16 +128,22 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
       {routineOpen ? (
         <section className="card-s" aria-label="Recommended daily routine">
           <h2 className="qh" style={{ margin: "0 0 4px", fontSize: 20 }}>Our recommended routine</h2>
-          <p className="muted-line" style={{ margin: "0 0 10px" }}>A simple routine to build on: daily habits plus a few weekly ones. Untick anything you do not want. Once added, you can rename, reorder, delete or add to any of it.</p>
+          <div className="muted-line" style={{ margin: "0 0 10px", textAlign: "center", display: "grid", gap: 14 }}>
+            <p style={{ margin: 0 }}>In the beginning of your business, we recommend picking 1 activity from each category to do every day for a total of 4 daily activities.<br />Do those same 4 activities every day until it becomes a routine for you.</p>
+            <p style={{ margin: 0 }}>{"Once you're used to that routine, add another activity from each section, bringing you to a total of 8 daily activities."}<br />{"Continue adding activities in as you become accustomed to your new routine until you're performing every activity on this list daily."}</p>
+            <p style={{ margin: 0 }}>{"If you miss an activity or a day, don't beat yourself up, just carry on the next day with your routine."}<br />Focus on your <strong>WINS</strong> not on your <strong>MISSES</strong>. Good energy attracts more good energy! ✨</p>
+            <p style={{ margin: 0 }}>We recommend doing this 7 days a week until it becomes second nature for you and your business is creating results.<br />Remember you <em>get</em> to do these activities daily, you don&apos;t <em>have</em> to.</p>
+          </div>
           {[...new Set(DAILY_ROUTINE.map((r) => r.group))].map((g) => (
-            <div key={g} style={{ marginTop: 12 }}>
-              <h3 style={{ margin: "0 0 6px", fontSize: 16 }}>{g}</h3>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }}>
+            <div key={g} className="rt-group">
+              <h3 className="rt-h">{g}</h3>
+              <ul className="rt-list">
                 {DAILY_ROUTINE.map((r, i) => r.group !== g ? null : (
                   <li key={r.title}>
-                    <label style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <label className="rt-item">
                       <input type="checkbox" checked={picks.includes(i)} onChange={(e) => setPicks(e.target.checked ? [...picks, i] : picks.filter((x) => x !== i))} />
-                      <span><strong>{r.title}</strong>{r.repeat === "weekly" ? <span className="muted-line"> (weekly)</span> : null}{r.note ? <><br /><span className="muted-line">{r.note}</span></> : null}</span>
+                      <span className="rt-box" aria-hidden="true">✓</span>
+                      <span className="rt-text"><span className="rt-title">{r.title}</span>{r.repeat === "weekly" ? <span className="rt-tag">weekly</span> : null}{r.note ? <span className="rt-note">{r.note}</span> : null}</span>
                     </label>
                   </li>
                 ))}
