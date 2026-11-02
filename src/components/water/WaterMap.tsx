@@ -77,7 +77,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
         try { layers = m.getStyle().layers ?? []; } catch { return; }
         /* state and province borders and names start to show from a wide view (the map's own style keeps them for when you are zoomed well in) */
         for (const l of layers) {
-          if (!/(boundary|label).*(state|province)/i.test(l.id)) continue;
+          if (!/(boundary|label).*(state|province)/i.test(l.id) && !/^boundary_(3|4|state|county|region)/i.test(l.id)) continue;
           try { m.setLayerZoomRange(l.id, Math.min(l.minzoom ?? 3, 3), l.maxzoom ?? 24); } catch { /* leave it as the map has it */ }
         }
         for (const l of layers) {
