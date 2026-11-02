@@ -2075,6 +2075,7 @@ html, body { max-width: 100%; overflow-x: clip; }
 .doc-grid.sup-docs { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .sup-docs .doc-card-name { font-size: 13px; }
 .main .sup .sup-form, .sup .card-s.sup-form { max-width: 720px; }
+.main .sup .sup-check, .sup .card-s.sup-check { max-width: 760px; }
 
 /* ---- chats as tabs: sections across the top, the chats in that section below them, and the conversation using the whole width ---- */
 .chats { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "list" "head" "main"; gap: 0; max-width: none; align-items: start; }
