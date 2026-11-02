@@ -141,13 +141,20 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
     if (!r.ok) { setMsg(r.error); setDelNode(null); return; }
     record(); gone(delNode); setDelNode(null);
   });
+  /* copies into this chart at once; the copy lands under the top bubble, ready to drag where you want it */
+  const copyHere = (id: string, below: boolean) => start(async () => {
+    setMsg(""); setCopiedMsg("");
+    const r = id === "root" ? await copyTop(chartId, chartId, "right", below) : await copyNode(id, chartId, "right", below);
+    if (!r.ok) { setMsg(r.error); return; }
+    record(); setNodes(r.nodes);
+    setCopiedMsg("Copied. Drag the copy to where you want it.");
+  });
   const doCopy = () => start(async () => {
     if (!copyFor || !copyFor.to) return;
     setMsg("");
     const r = copyFor.id === "root" ? await copyTop(chartId, copyFor.to, copyFor.side, copyFor.below) : await copyNode(copyFor.id, copyFor.to, copyFor.side, copyFor.below);
     if (!r.ok) { setMsg(r.error); return; }
-    if (copyFor.to === chartId) { record(); setNodes(r.nodes); setCopiedMsg("Copied. Drag the copy to where you want it."); }
-    else setCopiedMsg(`Copied to “${charts.find((c) => c.id === copyFor.to)?.name ?? "that chart"}”.`);
+    setCopiedMsg(`Copied to “${charts.find((c) => c.id === copyFor.to)?.name ?? "that chart"}”.`);
     setCopyFor(null);
   });
   const makeChart = () => start(async () => {
@@ -198,17 +205,18 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
       ) : null}
       {bmenu ? (
         <div className="mute-menu" role="menu" style={{ left: Math.min(bmenu.x, window.innerWidth - 240), top: Math.min(bmenu.y, window.innerHeight - 110) }} onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
-          <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: false, to: otherCharts[0]?.id ?? chartId, side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble only</button>
-          <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: true, to: otherCharts[0]?.id ?? chartId, side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble + all below</button>
+          <button type="button" role="menuitem" onClick={() => { const id = bmenu.id; setBmenu(null); copyHere(id, false); }}>Copy this bubble only</button>
+          <button type="button" role="menuitem" onClick={() => { const id = bmenu.id; setBmenu(null); copyHere(id, true); }}>Copy this bubble + all below</button>
+          {otherCharts.length > 0 ? <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: true, to: otherCharts[0].id, side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy to another chart…</button> : null}
           {bmenu.id !== "root" ? <button type="button" role="menuitem" onClick={() => { setDelNode(bmenu.id); setBmenu(null); }}>Delete this bubble</button> : null}
         </div>
       ) : null}
       {copyFor ? (
         <form className="card-s ft-newform" onSubmit={(e) => { e.preventDefault(); doCopy(); }}>
-          <p className="when" style={{ margin: 0 }}>{copyFor.below ? "Copy this bubble and everything under it" : "Copy just this bubble"}</p>
+          <p className="when" style={{ margin: 0 }}>Copy to another chart</p>
           <div className="rs-actions" style={{ marginTop: 6, flexWrap: "wrap" }}>
             <select value={copyFor.to} onChange={(e) => setCopyFor({ ...copyFor, to: e.target.value })} aria-label="Which chart">
-              {charts.map((c) => c.id === chartId ? <option key={c.id} value={c.id}>This chart</option> : <option key={c.id} value={c.id} data-i18n="skip">{c.name}</option>)}
+              {otherCharts.map((c) => <option key={c.id} value={c.id} data-i18n="skip">{c.name}</option>)}
             </select>
             <select value={copyFor.side} onChange={(e) => setCopyFor({ ...copyFor, side: e.target.value as Side })} aria-label="Which side">
               <option value="left">on the left</option><option value="right">on the right</option>
@@ -216,6 +224,7 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
             <button type="submit" className="btn small primary" disabled={pending || !copyFor.to}>Copy</button>
             <button type="button" className="btn small" onClick={() => setCopyFor(null)}>Cancel</button>
           </div>
+          <label className="check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}><input type="checkbox" checked={copyFor.below} onChange={(e) => setCopyFor({ ...copyFor, below: e.target.checked })} /> <span>Include everything under it</span></label>
         </form>
       ) : null}
       <dialog ref={delDialog} className="rs-dialog" aria-labelledby="ft-del-title" onClose={() => setDelNode(null)}>
@@ -261,7 +270,13 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
       <div className="ft-print">
         <h2 className="ft-print-title">{`${top.name}'s organization`}</h2>
         <div className="ft-chartbox">
-          <p className={"ft-mini" + (bal.lopsided ? " lopsided" : "")} role="status" title={advice}><b>{`Left ${bal.left} · Right ${bal.right}`}</b><span>{status}</span></p>
+          <div className="ft-top no-print">
+            <div className="ft-hist" role="group" aria-label="Undo and redo">
+              <button type="button" disabled={pending || hist.past.length === 0} onClick={undo} aria-label="Undo" title="Undo (Ctrl+Z)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg></button>
+              <button type="button" disabled={pending || hist.future.length === 0} onClick={redo} aria-label="Redo" title="Redo (Ctrl+Shift+Z)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>
+            </div>
+            <p className={"ft-mini" + (bal.lopsided ? " lopsided" : "")} role="status" title={advice}><b>{`Left ${bal.left} · Right ${bal.right}`}</b><span>{status}</span></p>
+          </div>
           <div className="ft-scroll" ref={box}>
             <TreeChart ref={svg} keyPos={keyPos} availW={Math.max(0, boxW - 18)} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
               onPick={openEdit} onMove={onMove} onMenu={(id, x, y) => setBmenu({ id, x, y })} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
@@ -270,8 +285,6 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
       </div>
 
       <div className="ft-tools">
-        <button type="button" className="btn small" disabled={pending || hist.past.length === 0} onClick={undo} title="Undo (Ctrl+Z)">↶ Undo</button>
-        <button type="button" className="btn small" disabled={pending || hist.future.length === 0} onClick={redo} title="Redo (Ctrl+Shift+Z)">↷ Redo</button>
         <button type="button" className="btn small" onClick={download}>Download picture</button>
         <button type="button" className="btn small" onClick={() => window.print()}>Print or save as PDF</button>
         {tok ? <button type="button" className="btn small" disabled={pending} onClick={() => share(false)}>Stop sharing</button> : <button type="button" className="btn small" disabled={pending} onClick={() => share(true)}>Share a link</button>}
