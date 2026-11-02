@@ -49,7 +49,7 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
           })}
           {showGroups ? (
             <li>
-              <Link href={groups![0] ? `/groups/${groups![0].id}` : "/groups"} className={"chat-tab" + (active === "groups" ? " on" : "")} aria-current={active === "groups" ? "true" : undefined}>
+              <Link href="/groups" className={"chat-tab" + (active === "groups" ? " on" : "")} aria-current={active === "groups" ? "true" : undefined}>
                 Group Chats{active !== "groups" ? <Badge n={groupWaiting || undefined} /> : null}
               </Link>
             </li>
