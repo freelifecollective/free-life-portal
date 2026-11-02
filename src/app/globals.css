@@ -2004,3 +2004,9 @@ html, body { max-width: 100%; overflow-x: clip; }
 .ft-hist button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.92); color: var(--ink); cursor: pointer; }
 .ft-hist button:hover:not(:disabled) { background: var(--tint); }
 .ft-hist button:disabled { opacity: .35; cursor: default; }
+/* weekly focus */
+.sup { display: grid; gap: 18px; max-width: 760px; }
+.sup-form textarea { width: 100%; font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; resize: vertical; box-sizing: border-box; }
+.sup-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.sup-hit a { text-decoration: none; }
+.sup-hit a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
