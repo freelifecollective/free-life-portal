@@ -8,7 +8,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { removeInvite, setRole, setStanding } from "./actions";
 
 export const instant = false;
-export const metadata = { title: "People and invites" };
+export const metadata = { title: "Members and Leads" };
 
 type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; email: string | null; role: "downline" | "lead" | "member" | "admin"; onboarded_at: string | null; unpaid_since: string | null; removed_at: string | null };
 type Invite = { email: string; role: string; note: string | null; claimed_at: string | null; created_at: string };
@@ -124,7 +124,7 @@ const VIEWS: [View, string][] = [["people", "Invites and roles"], ["current", "C
 function PeopleShell({ view, children }: { view: View; children: React.ReactNode }) {
   return (
     <>
-      <PageHeading lede="Everyone in the portal in one place: who is invited, who is a member, who is a lead, and where people live.">People</PageHeading>
+      <PageHeading lede="Everyone in the portal in one place: who is invited, who is a member, who is a lead, and where people live.">Members and Leads</PageHeading>
       <nav className="lead-tabs" aria-label="Which view">
         {VIEWS.map(([v, label]) => <Link key={v} className={"chip" + (view === v ? " on" : "")} href={v === "people" ? "/admin/people" : `/admin/people?view=${v}`}>{label}</Link>)}
       </nav>
