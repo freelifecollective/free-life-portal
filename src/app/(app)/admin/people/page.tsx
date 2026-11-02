@@ -1,6 +1,7 @@
 import { PageHeading } from "@/components/PageHeading";
 import { InviteForm } from "@/components/admin/InviteForm";
 import { AffiliatesView } from "@/components/admin/AffiliatesView";
+import { LeadsView } from "@/components/admin/LeadsView";
 import { CountriesView } from "@/components/admin/CountriesView";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/guards";
@@ -15,11 +16,12 @@ type Invite = { email: string; role: string; note: string | null; claimed_at: st
 export default async function PeoplePage(props: PageProps<"/admin/people">) {
   const sp = await props.searchParams;
   const asked = Array.isArray(sp.view) ? sp.view[0] : sp.view;
-  const view = (VIEWS.some(([v]) => v === asked) ? asked : "people") as View;
-  const affiliate = Array.isArray(sp.affiliate) ? sp.affiliate[0] : sp.affiliate;
+  const view = (asked === "by" ? "leads" : VIEWS.some(([v]) => v === asked) ? asked : "people") as View;
+  const member = Array.isArray(sp.member) ? sp.member[0] : sp.member;
   const { session, supabase } = await requireAdmin();
   if (view === "countries") return <PeopleShell view={view}><CountriesView /></PeopleShell>;
-  if (view !== "people") return <PeopleShell view={view}><AffiliatesView view={view} affiliate={affiliate} /></PeopleShell>;
+  if (view === "leads") return <PeopleShell view={view}><LeadsView member={member} /></PeopleShell>;
+  if (view !== "people") return <PeopleShell view={view}><AffiliatesView view={view} /></PeopleShell>;
   const [people, invites, memberInvites] = await Promise.all([
     supabase.from("profiles").select("id, first_name, last_name, username, email, role, onboarded_at, unpaid_since, removed_at").order("created_at", { ascending: false }).limit(300),
     supabase.from("signup_allowlist").select("email, role, note, claimed_at, created_at").is("claimed_at", null).order("created_at", { ascending: false }).limit(300),
@@ -115,8 +117,8 @@ export default async function PeoplePage(props: PageProps<"/admin/people">) {
   );
 }
 
-type View = "people" | "current" | "past" | "leads" | "by" | "countries";
-const VIEWS: [View, string][] = [["people", "Invites and roles"], ["current", "Current members"], ["past", "Past members"], ["leads", "Leads"], ["by", "By affiliate"], ["countries", "By country"]];
+type View = "people" | "current" | "past" | "leads" | "countries";
+const VIEWS: [View, string][] = [["people", "Invites and roles"], ["current", "Current members"], ["past", "Past members"], ["leads", "Leads"], ["countries", "By country"]];
 
 /** One page for everyone: invites and roles, current and past members, leads, each affiliate's people, and where members live. */
 function PeopleShell({ view, children }: { view: View; children: React.ReactNode }) {
