@@ -1,4 +1,4 @@
-/** The topics a recording can be sorted under, A to Z. The database accepts only these (migration 0022). */
+/** The topics a recording can be sorted under, A to Z. The database accepts only these (migrations 0022 and 0101). */
 export const TOPICS = [
   "6A+ Interviews",
   "Ads",
@@ -6,11 +6,18 @@ export const TOPICS = [
   "Community calls",
   "Compensation Plan",
   "Event Launches + Recaps",
+  "In Person Sales",
   "Know Your Numbers",
+  "Mentoring Your Downline",
+  "Product Knowledge",
+  "Social Media",
   "Special Guests",
+  "Stacking",
   "Strategy",
   "Success Doesn't Discriminate",
   "Talking to Leads + Objections",
+  "Tracking Your Numbers",
+  "Verbiage + Objections",
 ] as const;
 export type Topic = (typeof TOPICS)[number];
 /** Recordings under this topic are open to leads automatically. */
