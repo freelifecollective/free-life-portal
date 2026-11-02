@@ -2078,3 +2078,13 @@ html, body { max-width: 100%; overflow-x: clip; }
 .room-btn.off { background: var(--tint); }
 .room-btn.leave { background: #b42318; border-color: #b42318; color: #fff; }
 .room-note { text-align: center; margin: 0; }
+/* weekly focus: results fill the width and stay compact */
+.sup { max-width: none; }
+.sup-list { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.sup-hit { padding: 12px 14px; }
+.rv-grid.sup-calls { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.sup-calls .rv-title { font-size: 14px; }
+.sup-calls .rv-body { padding: 10px 12px 12px; gap: 4px; }
+.sup-calls .rv-meta { font-size: 12px; }
+.doc-grid.sup-docs { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.sup-docs .doc-card-name { font-size: 13px; }

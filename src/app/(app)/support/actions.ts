@@ -14,6 +14,13 @@ export async function findSupport(_prev: FocusState, form: FormData): Promise<Fo
   const { data, error } = await supabase.rpc("support_search", { p_q: q });
   if (error) return { q, hits: null, error: "We could not look that up. Please try again.", checkin: false, people: { coach: null, buddy: null } };
   const hits = ((data ?? []) as SupportHit[]).map((h) => ({ ...h, rank: Number(h.rank), reviews: Number(h.reviews ?? 0) }));
+  /* documents come with a preview picture when one was made (a link that works for an hour) */
+  const docPaths = hits.filter((h) => h.kind === "document" && h.thumb).map((h) => h.thumb as string);
+  if (docPaths.length) {
+    const { data: signed } = await supabase.storage.from("documents").createSignedUrls(docPaths, 3600);
+    const byPath = new Map((signed ?? []).filter((x) => x.signedUrl && x.path).map((x) => [x.path as string, x.signedUrl]));
+    for (const h of hits) if (h.kind === "document") h.thumb = h.thumb ? byPath.get(h.thumb) ?? null : null;
+  }
   const [{ data: intent }, { data: ppl }] = await Promise.all([supabase.rpc("support_intent", { p_q: q }), supabase.rpc("my_support_people")]);
   const checkin = ((intent ?? []) as { checkin: boolean }[]).some((i) => i.checkin);
   const rows = (ppl ?? []) as (SupportPerson & { role: string })[];

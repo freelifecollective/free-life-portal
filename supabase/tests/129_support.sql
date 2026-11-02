@@ -96,4 +96,44 @@ begin
   perform tests.eq('the stored ask holds no names or question text', (select count(*) from information_schema.columns where table_name = 'support_asks' and column_name in ('user_id', 'question', 'member_id')), 0::bigint);
   perform tests.logout();
 end $$;
+
+do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1'; max uuid := '00000000-0000-0000-0000-0000000000a5'; ada uuid := '00000000-0000-0000-0000-0000000000a4'; lena uuid := '00000000-0000-0000-0000-0000000000a3'; f uuid;
+begin
+  insert into public.doc_folders (name) values ('Hard moment folder') returning id into f;
+  insert into public.doc_files (folder_id, name, storage_path) values (f, 'Consistency-Calculation.pdf', 'x/cc.pdf');
+  update public.profiles set coach_id = null where id = mia;
+  perform tests.login(mia);
+  perform tests.eq('a hard moment gets no documents', (select count(*) from public.support_search('I am tired of doing this, I want to quit my business') where kind = 'document'), 0::bigint);
+  perform tests.eq('a document comes with its type', (select sub from public.support_search('consistency calculation') where kind = 'document'), 'application/octet-stream');
+  perform tests.eq('a plain question still can', (select count(*) from public.support_search('consistency calculation') where kind = 'document'), 1::bigint);
+  -- the coach: chosen, otherwise from whose chart you are in
+  perform tests.eq('no coach to begin with', (select count(*) from public.my_support_people() where role = 'coach'), 0::bigint);
+  perform tests.logout();
+  perform tests.login(max);
+  insert into public.family_tree_nodes (owner_id, chart_id, parent_id, side, label, linked_member_id) values (max, public.ensure_default_chart(), null, 'left', 'Mia', mia);
+  perform tests.logout();
+  perform tests.login(mia);
+  perform tests.eq('found from the chart that has you in it', (select id from public.my_support_people() where role = 'coach'), max);
+  perform public.set_my_coach(ada);
+  perform tests.eq('a chosen coach wins', (select id from public.my_support_people() where role = 'coach'), ada);
+  perform tests.fails('you cannot be your own coach', format('select public.set_my_coach(%L)', mia), '22023');
+  perform tests.logout();
+  perform tests.login(lena);
+  perform tests.fails('a lead cannot choose one', format('select public.set_my_coach(%L)', max), '42501');
+  perform tests.logout();
+end $$;
+
+do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1';
+begin
+  perform tests.login(mia);
+  perform tests.eq('wanting to improve your mindset is positive, no check-in', (select count(*) from public.support_intent('I want to improve my mindset') where checkin), 0::bigint);
+  perform tests.eq('but it is still understood as mindset', (select count(*) from public.support_intent('I want to improve my mindset') where theme = 'Mindset'), 1::bigint);
+  perform tests.eq('struggling with mindset asks the check-in', (select count(*) from public.support_intent('I am struggling with my mindset') where checkin), 1::bigint);
+  perform tests.eq('quitting asks it too', (select count(*) from public.support_intent('I want to quit') where checkin), 1::bigint);
+  perform tests.eq('wanting to grow but feeling stuck counts as hard', (select count(*) from public.support_intent('I want to grow but I feel stuck with my mindset') where checkin), 1::bigint);
+  perform tests.eq('tone: positive', public.support_tone('I want to learn more about ads'), 'positive');
+  perform tests.eq('tone: negative', public.support_tone('I hate following up'), 'negative');
+  perform tests.eq('tone: neutral', public.support_tone('ads'), 'neutral');
+  perform tests.logout();
+end $$;
 rollback;

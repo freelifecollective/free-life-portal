@@ -19,10 +19,10 @@ export function hrefOf(h: SupportHit): string | null {
     case "call": return "/calendar";
     case "recording": return `/calls/${h.id}`;
     case "lesson": return h.parent ? `/classroom/${h.parent}` : "/classroom";
-    case "document": return h.parent ? `/documents?f=${h.parent}` : "/documents";
+    case "document": return `/documents/open/${h.id}`;
     case "resource": return h.url;
   }
 }
 
-export type SupportPerson = { first_name: string | null; last_name: string | null; username: string | null };
+export type SupportPerson = { id: string; first_name: string | null; last_name: string | null; username: string | null };
 export type SupportPeople = { coach: SupportPerson | null; buddy: SupportPerson | null };
