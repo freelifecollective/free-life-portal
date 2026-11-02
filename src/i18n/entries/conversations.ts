@@ -90,7 +90,6 @@ export const conversations: readonly Entry[] = [
   ["Emoji categories", "Categorías de emoji", "Catégories d'emoji", "Categorie di emoji", "Emoji-Kategorien"],
   ["Weekly hours", "Horario semanal", "Heures de la semaine", "Orari settimanali", "Wochenzeiten"],
   ["✎ Edit", "✎ Editar", "✎ Modifier", "✎ Modifica", "✎ Bearbeiten"],
-  ["Done", "Listo", "Terminé", "Fatto", "Fertig"],
   ["Unavailable", "No disponible", "Indisponible", "Non disponibile", "Nicht verfügbar"],
   ["Booking rules", "Reglas de reserva", "Règles de réservation", "Regole di prenotazione", "Buchungsregeln"],
   ["Control how and when calls can be booked.", "Controla cómo y cuándo se pueden reservar las llamadas.", "Contrôle comment et quand les appels peuvent être réservés.", "Controlla come e quando si possono prenotare le chiamate.", "Lege fest, wie und wann Anrufe gebucht werden können."],
