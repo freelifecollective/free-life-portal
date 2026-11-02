@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireMember } from "@/lib/auth/guards";
-import { isPreviewable, isViewable, MAX_FILE_BYTES } from "@/lib/documents/types";
+import { isDocType, isPreviewable, isViewable, MAX_FILE_BYTES } from "@/lib/documents/types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Result = { ok: boolean; error?: string };
@@ -25,11 +25,13 @@ export async function ensureFolder(parentId: string | null, name: string): Promi
   return { ok: true, id: data.id };
 }
 
-export async function registerFile(input: { folderId: string | null; path: string; name: string; mime: string; size: number; thumbPath?: string | null }): Promise<Result & { id?: string }> {
+export async function registerFile(input: { folderId: string | null; path: string; name: string; mime: string; size: number; thumbPath?: string | null; docType?: string; keywords?: string }): Promise<Result & { id?: string }> {
   const { session, supabase } = await requireAdmin();
   const name = cleanName(input.name, 200);
   if (!name || !parentOk(input.folderId) || !input.path || input.path.includes("..") || input.size > MAX_FILE_BYTES) return { ok: false, error: "That file could not be added." };
-  const { data, error } = await supabase.from("doc_files").insert({ folder_id: input.folderId, name, storage_path: input.path, thumb_path: input.thumbPath && !input.thumbPath.includes("..") ? input.thumbPath : null, mime: input.mime || "application/octet-stream", size_bytes: Math.max(0, Math.floor(input.size)), created_by: session.user.id }).select("id").single();
+  const docType = input.docType && isDocType(input.docType) ? input.docType : "other";
+  const keywords = String(input.keywords ?? "").trim().slice(0, 600) || null;
+  const { data, error } = await supabase.from("doc_files").insert({ doc_type: docType, keywords, folder_id: input.folderId, name, storage_path: input.path, thumb_path: input.thumbPath && !input.thumbPath.includes("..") ? input.thumbPath : null, mime: input.mime || "application/octet-stream", size_bytes: Math.max(0, Math.floor(input.size)), created_by: session.user.id }).select("id").single();
   if (error) return { ok: false, error: "We could not save that file." };
   refresh();
   return { ok: true, id: data.id };
@@ -191,6 +193,16 @@ export async function copyFile(fileId: string, destFolderId: string | null, same
   const name = sameSpot ? (dot > 0 ? `${f.name.slice(0, dot)} copy${f.name.slice(dot)}` : `${f.name} copy`) : f.name;
   const { error } = await supabase.from("doc_files").insert({ folder_id: destFolderId, name: name.slice(0, 200), storage_path: newPath, thumb_path: newThumb, mime: f.mime, size_bytes: f.size_bytes, downloadable: f.downloadable, for_leads: f.for_leads, for_downline: f.for_downline, created_by: session.user.id });
   if (error) return { ok: false, error: `Could not save the copy of ${f.name}.` };
+  refresh();
+  return { ok: true };
+}
+
+/** Change what kind of document it is, and what it helps with (so Weekly Focus can recommend it). */
+export async function setFileDetails(id: string, docType: string, keywords: string): Promise<Result> {
+  if (!UUID.test(id) || !isDocType(docType)) return { ok: false, error: "Something went wrong." };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("doc_files").update({ doc_type: docType, keywords: String(keywords ?? "").trim().slice(0, 600) || null }).eq("id", id);
+  if (error) return { ok: false, error: "We could not save that." };
   refresh();
   return { ok: true };
 }

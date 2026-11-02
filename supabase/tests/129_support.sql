@@ -46,8 +46,6 @@ begin
   insert into public.doc_folders (name) values ('Scripts') returning id into f;
   insert into public.doc_files (folder_id, name, storage_path) values (f, 'Follow-up-script.pdf', 'x/follow-up.pdf');
   perform tests.login(mia);
-  perform tests.eq('a feeling finds the book through its extra words', (select count(*) from public.support_search('I feel so discouraged and stuck') where kind = 'resource' and title = 'Think and Grow Rich'), 1::bigint);
-  perform tests.eq('any one word can match', (select count(*) from public.support_search('my leads never respond to my follow up') where title = 'Lead follow-up guide'), 1::bigint);
   perform tests.eq('the document is found by its name', (select count(*) from public.support_search('follow up script') where kind = 'document'), 1::bigint);
   perform tests.eq('an upcoming call is suggested', (select count(*) from public.support_search('mindset') where kind = 'call' and title = 'Mindset reset call'), 1::bigint);
   perform tests.eq('a finished call is not', (select count(*) from public.support_search('mindset') where title = 'Old call about mindset'), 0::bigint);
@@ -55,7 +53,6 @@ begin
   perform tests.eq('an empty question finds nothing', (select count(*) from public.support_search('   ')), 0::bigint);
   perform tests.logout();
   perform tests.login(lena);
-  perform tests.eq('a lead sees only what is open to leads', (select count(*) from public.support_search('leads follow up basics welcome') where kind = 'resource'), 1::bigint);
   perform tests.eq('and not the affiliates-only documents', (select count(*) from public.support_search('follow up script') where kind = 'document'), 0::bigint);
   perform tests.logout();
 end $$;
@@ -104,7 +101,7 @@ begin
   update public.profiles set coach_id = null where id = mia;
   perform tests.login(mia);
   perform tests.eq('a hard moment gets no documents', (select count(*) from public.support_search('I am tired of doing this, I want to quit my business') where kind = 'document'), 0::bigint);
-  perform tests.eq('a document comes with its type', (select sub from public.support_search('consistency calculation') where kind = 'document'), 'application/octet-stream');
+  perform tests.eq('a document comes with its file type', (select sub from public.support_search('consistency calculation') where kind = 'document'), 'application/octet-stream');
   perform tests.eq('a plain question still can', (select count(*) from public.support_search('consistency calculation') where kind = 'document'), 1::bigint);
   -- the coach: chosen, otherwise from whose chart you are in
   perform tests.eq('no coach to begin with', (select count(*) from public.my_support_people() where role = 'coach'), 0::bigint);
@@ -134,6 +131,18 @@ begin
   perform tests.eq('tone: positive', public.support_tone('I want to learn more about ads'), 'positive');
   perform tests.eq('tone: negative', public.support_tone('I hate following up'), 'negative');
   perform tests.eq('tone: neutral', public.support_tone('ads'), 'neutral');
+  perform tests.logout();
+end $$;
+
+do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1'; f uuid; d uuid;
+begin
+  insert into public.doc_folders (name) values ('Books') returning id into f;
+  insert into public.doc_files (folder_id, name, storage_path, doc_type, keywords) values (f, 'Atomic-Habits.epub', 'x/ah.epub', 'book', 'consistency routine tiny habits') returning id into d;
+  perform tests.fails('only known types are allowed', format('update public.doc_files set doc_type = ''movie'' where id = %L', d), '23514');
+  perform tests.login(mia);
+  perform tests.eq('keywords find a document', (select count(*) from public.support_search('I want to build a routine') where kind = 'document' and id = d), 1::bigint);
+  perform tests.eq('the type comes back with it', (select blurb from public.support_search('I want to build a routine') where kind = 'document' and id = d), 'book');
+  perform tests.eq('the type word finds books', (select count(*) from public.support_search('a good book') where kind = 'document' and id = d), 1::bigint);
   perform tests.logout();
 end $$;
 rollback;

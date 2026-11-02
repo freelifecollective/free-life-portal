@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { findSupport, type FocusState } from "@/app/(app)/support/actions";
 import { openDockChat } from "@/components/messages/MessageDock";
+import { docTypeLabel } from "@/lib/documents/types";
 import { GROUPS, hrefOf, KIND_LABEL, type ResourceKind, type SupportHit, type SupportPeople } from "@/lib/support/types";
 
 const initial: FocusState = { q: "", hits: null, error: "", checkin: false, people: { coach: null, buddy: null } };
@@ -57,6 +58,7 @@ function DocCard({ h }: { h: SupportHit }) {
           <img className="doc-cover" src={h.thumb} alt="" loading="lazy" />
         ) : <span className="doc-cover fallback"><span aria-hidden="true">{icon}</span><b>{ext}</b></span>}
         <span className="doc-card-name" translate="no">{h.title}</span>
+        {h.blurb ? <span className="doc-tags"><span className="doc-tag">{docTypeLabel(h.blurb)}</span></span> : null}
       </Link>
     </li>
   );
@@ -129,7 +131,7 @@ function CheckIn({ people, buddy, coach, setBuddy, setCoach }: { people: Support
   );
 }
 
-/** "What is your focus this week?": type it in, and we suggest what can help. */
+/** "What's your focus this week?": type it in, and we suggest what can help. */
 export function FocusForm() {
   const [state, action, pending] = useActionState(findSupport, initial);
   /* the check-in answers belong to one search: a new search starts them over */
@@ -143,7 +145,7 @@ export function FocusForm() {
   return (
     <div className="sup">
       <form action={action} className="card-s sup-form">
-        <label htmlFor="sup-q" className="sr-only">What is your focus this week?</label>
+        <label htmlFor="sup-q" className="sr-only">{"What's your focus this week?"}</label>
         <textarea id="sup-q" name="q" rows={3} maxLength={500} required placeholder="For example: following up with leads, handling objections, staying consistent…" defaultValue={state.q} />
         <div className="rs-actions" style={{ marginTop: 8 }}><button type="submit" className="btn primary" disabled={pending}>{pending ? "Looking…" : "Show me what can help"}</button></div>
         <p className="when" style={{ margin: "8px 0 0" }}>Whatever you type is completely anonymous, and no one will ever see that you typed it. Recurring questions get added as a suggestion to admins to help improve the system but no names or specific questions are ever shared.</p>

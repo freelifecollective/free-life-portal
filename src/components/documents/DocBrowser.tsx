@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteItem, ensureFolder, getFileLinks, getSourceLink, moveItem, registerFile, renameItem, setFileAccess, setFolderAccess, setThumb } from "@/app/(app)/documents/actions";
+import { deleteItem, ensureFolder, getFileLinks, getSourceLink, moveItem, registerFile, renameItem, setFileAccess, setFileDetails, setFolderAccess, setThumb } from "@/app/(app)/documents/actions";
 import { createClient } from "@/lib/supabase/client";
 import { BulkDialog, type Picked } from "./BulkDialog";
 import { makeThumb } from "@/lib/documents/thumbs";
-import { MAX_FILE_BYTES, MAX_UPLOAD_MB, isOfficeDoc, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
+import { DOC_TYPES, MAX_FILE_BYTES, MAX_UPLOAD_MB, isOfficeDoc, isViewable, mimeFor, safeName, sizeLabel, type DocFile, type DocFolder } from "@/lib/documents/types";
 import { PdfPages } from "./PdfPages";
 import { TextPreview } from "./TextPreview";
 import type { Role } from "@/lib/roles";
@@ -140,7 +140,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
 
   const log = (line: string) => setProgress((p) => [...p.slice(-6), line]);
 
-  async function upload(list: File[], at: string | null, relFolders?: Map<File, string[]>) {
+  async function upload(list: File[], at: string | null, relFolders?: Map<File, string[]>, kind?: { docType: string; keywords: string }) {
     const supabase = createClient();
     const cache = new Map<string, string | null>([["", at]]);
     const folderFor = async (parts: string[]): Promise<string | null> => {
@@ -165,7 +165,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         let thumbPath: string | null = null;
         const tb = await makeThumb(f, mime);
         if (tb) { const tp = `thumbs/${crypto.randomUUID()}.jpg`; const up = await supabase.storage.from("documents").upload(tp, tb, { contentType: "image/jpeg" }); if (!up.error) thumbPath = tp; }
-        const r = await registerFile({ folderId: where, path, name: f.name, mime, size: f.size, thumbPath });
+        const r = await registerFile({ folderId: where, path, name: f.name, mime, size: f.size, thumbPath, docType: kind?.docType, keywords: kind?.keywords });
         if (!r.ok) throw new Error(r.error ?? "not saved");
         done++; log(`Added ${f.name} (${done}/${list.length})`);
       } catch (e) { failed++; const why = e instanceof Error ? e.message : "error"; notAdded.push({ name: f.name, size: f.size, why }); log(`Could not add ${f.name}: ${why}`); }
@@ -174,10 +174,18 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
     return { done, failed };
   }
 
-  async function onFiles(files: FileList | null) {
+  /* choosing files first asks what kind of document they are (so Weekly Focus can recommend them well) */
+  const [ask, setAsk] = useState<{ files: File[]; docType: string; keywords: string } | null>(null);
+  function onFiles(files: FileList | null) {
     if (!files?.length) return;
+    setAsk({ files: [...files], docType: "guide", keywords: "" });
+  }
+  async function addAsked() {
+    if (!ask) return;
+    const { files, docType, keywords } = ask;
+    setAsk(null);
     setBusy(true); setProgress([]); setMsg(""); setSkipped([]);
-    const r = await upload([...files], folderId);
+    const r = await upload(files, folderId, undefined, { docType, keywords });
     setBusy(false); setMsg(`${r.done} added${r.failed ? `, ${r.failed} could not be added` : ""}.`); router.refresh();
   }
 
@@ -235,7 +243,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
         </p>
       ) : null}
       <nav className="crumbs" aria-label="Folder path">
-        <Link href={basePath}>{manage ? "Update Documents" : "Documents"}</Link>
+        <Link href={basePath}>{manage ? "Manage Documents" : "Documents"}</Link>
         {trail.map((t) => <span key={t.id}> / <Link href={`${basePath}?f=${t.id}`}>{t.name}</Link></span>)}
       </nav>
 
@@ -253,6 +261,17 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           {missing.length ? <button className="btn small" type="button" disabled={busy} onClick={makePreviews}>Make previews ({missing.length})</button> : null}
           <span className="admin-only-note">Admins Only</span>
         </div>
+      ) : null}
+      {ask ? (
+        <section className="card-s" style={{ maxWidth: 560, marginBottom: 12 }} aria-label="What kind of document">
+          <h2 className="qh" style={{ marginTop: 0, fontSize: 18 }}>{ask.files.length === 1 ? "What kind of document is this?" : `What kind of documents are these? (${ask.files.length})`}</h2>
+          <div className="field"><label htmlFor="up-type">Type of document</label>
+            <select id="up-type" value={ask.docType} onChange={(e) => setAsk({ ...ask, docType: e.target.value })}>{DOC_TYPES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
+          <div className="field" style={{ marginTop: 10 }}><label htmlFor="up-kw">What it helps with (optional)</label>
+            <input id="up-kw" type="text" maxLength={600} value={ask.keywords} placeholder="mindset, following up, staying consistent" onChange={(e) => setAsk({ ...ask, keywords: e.target.value })} /></div>
+          <p className="when" style={{ margin: "6px 0 0" }}>These words help Weekly Focus recommend it to people who need it.</p>
+          <div className="rs-actions"><button type="button" className="btn small primary" onClick={() => void addAsked()}>{ask.files.length === 1 ? "Add it" : "Add them"}</button><button type="button" className="btn small" onClick={() => setAsk(null)}>Cancel</button></div>
+        </section>
       ) : null}
       {progress.length ? <ul className="doc-progress" aria-live="polite">{progress.map((p, i) => <li key={i}>{p}</li>)}</ul> : null}
       <p role="status" className="when">{msg}</p>
@@ -399,6 +418,8 @@ function ItemSettings({ item, folders, onDone }: { item: Item; folders: DocFolde
   const [downline, setDownline] = useState(item.f.for_downline);
   const [downloadable, setDownloadable] = useState(item.kind === "file" ? item.f.downloadable : true);
   const [cascade, setCascade] = useState(true);
+  const [docType, setDocType] = useState(item.kind === "file" ? item.f.doc_type : "other");
+  const [kw, setKw] = useState(item.kind === "file" ? item.f.keywords ?? "" : "");
   const [to, setTo] = useState<string>((item.kind === "folder" ? item.f.parent_id : item.f.folder_id) ?? "");
   const [error, setError] = useState("");
   const here = (item.kind === "folder" ? item.f.parent_id : item.f.folder_id) ?? "";
@@ -413,6 +434,7 @@ function ItemSettings({ item, folders, onDone }: { item: Item; folders: DocFolde
     run(async () => {
       if (name.trim() !== item.f.name) { const r = await renameItem(item.kind, item.f.id, name); if (!r.ok) return r; }
       if (to !== here) { const r = await moveItem(item.kind, item.f.id, to || null); if (!r.ok) return r; }
+      if (item.kind === "file") { const r = await setFileDetails(item.f.id, docType, kw); if (!r.ok) return r; }
       return item.kind === "folder" ? setFolderAccess(item.f.id, leads, downline, cascade) : setFileAccess(item.f.id, leads, downline, downloadable);
     });
   }
@@ -422,6 +444,14 @@ function ItemSettings({ item, folders, onDone }: { item: Item; folders: DocFolde
     <div>
       <h2 id="de-title" className="qh" style={{ marginTop: 0 }}>{item.kind === "folder" ? "Folder options" : "Document options"}</h2>
       <div className="field"><label htmlFor="di-name">Name</label><input id="di-name" type="text" value={name} maxLength={200} onChange={(e) => setName(e.target.value)} /></div>
+      {item.kind === "file" ? (
+        <>
+          <div className="field" style={{ marginTop: 14 }}><label htmlFor="di-type">Type of document</label>
+            <select id="di-type" value={docType} onChange={(e) => setDocType(e.target.value)}>{DOC_TYPES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></div>
+          <div className="field" style={{ marginTop: 10 }}><label htmlFor="di-kw">What it helps with (optional)</label>
+            <input id="di-kw" type="text" maxLength={600} value={kw} onChange={(e) => setKw(e.target.value)} placeholder="mindset, following up, staying consistent" /></div>
+        </>
+      ) : null}
       <fieldset className="offer-pick" style={{ marginTop: 14, gridTemplateColumns: "1fr" }}>
         <legend>Who can see it (paying affiliates always can)</legend>
         <label className="check"><input type="checkbox" checked={leads} onChange={(e) => setLeads(e.target.checked)} /> Leads</label>

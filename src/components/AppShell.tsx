@@ -46,25 +46,22 @@ const NAV: NavItem[] = [
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
   { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
   { label: "Admin only", min: "admin", admin: true, caption: true },
-  { label: "People", min: "admin", admin: true, heading: true, group: "People" },
-  { label: "People and invites", href: "/admin/people", min: "admin", admin: true, group: "People" },
-  { label: "Affiliates and leads", href: "/admin/affiliates", min: "admin", admin: true, group: "People" },
-  { label: "Calls and Classes", min: "admin", admin: true, heading: true, group: "Calls and Classes" },
-  { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Calls and Classes" },
-  { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Calls and Classes" },
-  { label: "Manage courses", href: "/admin/classroom", min: "admin", admin: true, group: "Calls and Classes" },
+  { label: "People", href: "/admin/people", min: "admin", admin: true },
+  { label: "Calls and Courses", min: "admin", admin: true, heading: true, group: "Calls and Courses" },
+  { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Calls and Courses" },
+  { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Calls and Courses" },
+  { label: "Manage courses", href: "/admin/classroom", min: "admin", admin: true, group: "Calls and Courses" },
   { label: "Library", min: "admin", admin: true, heading: true, group: "Library" },
-  { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Library" },
+  { label: "Manage Documents", href: "/admin/documents", min: "admin", admin: true, group: "Library" },
   { label: "Manage graphics", href: "/admin/graphics", min: "admin", admin: true, group: "Library" },
-  { label: "Weekly Focus library", href: "/admin/support", min: "admin", admin: true, group: "Library" },
   { label: "Approvals", min: "admin", admin: true, heading: true, group: "Approvals" },
   { label: "Call closer applications", href: "/admin/closer-applications", min: "admin", admin: true, group: "Approvals" },
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Approvals" },
   { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true, group: "Approvals" },
-  { label: "Messages and Activity", min: "admin", admin: true, heading: true, group: "Messages and Activity" },
-  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Messages and Activity" },
-  { label: "Emails", href: "/admin/emails", min: "admin", admin: true, group: "Messages and Activity" },
-  { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Messages and Activity" },
+  { label: "Emails and Activity", min: "admin", admin: true, heading: true, group: "Emails and Activity" },
+  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Emails and Activity" },
+  { label: "Emails", href: "/admin/emails", min: "admin", admin: true, group: "Emails and Activity" },
+  { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Emails and Activity" },
 ];
 
 /** Home and Chats first, then the "FLC Calls", "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
@@ -78,8 +75,9 @@ function ordered(items: NavItem[]): NavItem[] {
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
   /* the admin menu is several folding sections, each with its tabs A to Z, in the order they are listed above */
   const adminHeads = items.filter((n) => n.admin && n.heading);
-  const cap = (n: NavItem) => (n.caption ? [n] : [n, ...items.filter((x) => x.admin && !x.heading && x.group === n.label).sort(az)]);
-  const adminTabs = [...items.filter((n) => n.caption), ...adminHeads].flatMap(cap);
+  const cap = (n: NavItem) => (n.caption || !n.heading ? [n] : [n, ...items.filter((x) => x.admin && !x.heading && x.group === n.label).sort(az)]);
+  const adminLoose = items.filter((n) => n.admin && !n.heading && !n.caption && !n.group);   /* admin tabs that stand on their own (People) */
+  const adminTabs = [...items.filter((n) => n.caption), ...adminLoose, ...adminHeads].flatMap(cap);
   return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...rest, ...adminTabs];
 }
 
