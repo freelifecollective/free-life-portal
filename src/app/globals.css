@@ -1991,3 +1991,10 @@ html, body { max-width: 100%; overflow-x: clip; }
 .dock-win .lead-warn { margin: 0; border-radius: 0; font-size: 12px; padding: 8px 10px; }
 .pc-owner { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 12px; color: var(--muted); font-size: 14px; }
 .cv-vote.on { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+/* subtitles and chat text wrap between words, never in the middle of one (a word is only broken if it is longer than the whole line) */
+.page-lede, .chat-lede, .when, .muted-line, .pc-sub, .home-eyebrow, .qh + p, .cv-bubble, .cv-text, .cv-quote, .bubble, .post-body, .dock-msg, .fb-list p, .comments p {
+  hyphens: manual;
+  -webkit-hyphens: manual;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
