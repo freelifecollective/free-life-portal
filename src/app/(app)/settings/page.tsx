@@ -35,6 +35,11 @@ export default async function SettingsPage() {
     const { data } = await supabase.rpc("badge_state");
     badges = (data as BadgeState | null) ?? null;
   }
+  let cards: { year: number; wishes: number }[] = [];
+  if (supabase && isMember) {
+    const { data } = await supabase.rpc("my_birthday_cards");
+    cards = ((data ?? []) as { year: number; wishes: number }[]).map((c) => ({ year: c.year, wishes: Number(c.wishes) }));
+  }
   let quoteStyle: Style = "general";
   if (supabase) {
     const { data } = await supabase.from("member_prefs").select("quote_style").maybeSingle();
@@ -68,6 +73,15 @@ export default async function SettingsPage() {
           <section className="card-s">
             <h2 className="qh" style={{ marginTop: 0 }}>My badges</h2>
             <ProfileBadges state={badges} />
+          </section>
+        ) : null}
+
+        {supabase && isMember ? (
+          <section className="card-s">
+            <h2 className="qh" style={{ marginTop: 0 }}>My birthday cards</h2>
+            {cards.length === 0 ? <p style={{ margin: 0 }}>On your birthday, everyone&apos;s wishes gather into a card you can download. Your cards will be kept here.</p> : (
+              <p style={{ margin: 0, display: "flex", flexWrap: "wrap", gap: 8 }}>{cards.map((c) => <Link key={c.year} className="btn small" href={`/birthday/${session.user.id}?y=${c.year}`}>{`${c.year} · ${c.wishes}`}</Link>)}</p>
+            )}
           </section>
         ) : null}
 
