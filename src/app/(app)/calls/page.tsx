@@ -29,35 +29,62 @@ export default async function CallsPage(props: PageProps<"/calls">) {
   const years = [...new Set(inTopic.map((r) => yearOf(r.recorded_at)))].sort((a, b) => b - a);
   const year = years.includes(yearParam) ? yearParam : null;
   const recordings = year ? inTopic.filter((r) => yearOf(r.recorded_at) === year) : inTopic;
+  /* grouped by year, newest first, so a long list reads as chapters instead of one wall of cards */
+  const byYear = [...new Set(recordings.map((r) => yearOf(r.recorded_at)))].sort((a, b) => b - a).map((y) => [y, recordings.filter((r) => yearOf(r.recorded_at) === y)] as const);
   const next = upcoming[0];
   const summary = next ? await rsvpSummary(supabase, next.id, 50) : null;
 
   return (
     <>
       <PageHeading lede="Join calls live, or watch the recordings any time.">Calls</PageHeading>
-      <div className="settings" style={{ maxWidth: 900 }}>
+      <div className="settings" style={{ maxWidth: 1100 }}>
         {/* the same card, at the same width, as on Home */}
         <div className="home-row next-only">
           <NextCallCard call={next ?? null} summary={summary} now={now} inviteUsername={session.profile.role === "lead" ? null : session.profile.username} />
         </div>
 
-        <div className="rec-head"><h2 className="qh" style={{ margin: 0 }}>{topic ?? "All"} Recordings{year ? ` · ${year}` : ""}</h2><TopicFilter topics={[...present]} years={years} topic={topic} year={year} /></div>
-        {recordings.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>{session.profile.role === "lead" ? "Recordings open to leads will appear here." : "No recordings yet. They are added after each call."}</p></section> : (
-          <ul className="doc-grid rec-grid">
-            {recordings.map((r) => (
-              <li key={r.id} className="doc-card">
-                <Link href={`/calls/${r.id}`} className="doc-card-main">
-                  {r.thumb_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className="doc-cover" src={r.thumb_url} alt="" loading="lazy" />
-                  ) : <span className="doc-cover folder" aria-hidden="true">🎬</span>}
-                  <span className="doc-card-name">{r.title}</span>
-                  <span className="doc-tags"><span className="when">{formatInZone(new Date(r.recorded_at)).split(",").slice(0, 2).join(",")}{r.duration_secs ? ` · ${formatTime(r.duration_secs)}` : ""}</span></span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <section className="rv" aria-label="Recordings">
+          <div className="rv-head">
+            <div>
+              <h2 className="qh" style={{ margin: 0 }}>{topic ?? "All"} Recordings{year ? ` · ${year}` : ""}</h2>
+              <p className="when" style={{ margin: "2px 0 0" }}>{`${recordings.length} ${recordings.length === 1 ? "recording" : "recordings"}`}</p>
+            </div>
+            <TopicFilter topics={[]} years={years} topic={topic} year={year} />
+          </div>
+          {present.length ? (
+            <nav className="rv-chips" aria-label="Topics">
+              <Link className={"rv-chip" + (!topic ? " on" : "")} href={year ? `/calls?year=${year}` : "/calls"}>All</Link>
+              {present.map((t) => <Link key={t} className={"rv-chip" + (topic === t ? " on" : "")} href={`/calls?topic=${encodeURIComponent(t)}${year ? `&year=${year}` : ""}`}>{t}</Link>)}
+            </nav>
+          ) : null}
+          {recordings.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>{session.profile.role === "lead" ? "Recordings open to leads will appear here." : "No recordings yet. They are added after each call."}</p></section> : (
+            byYear.map(([y, list]) => (
+              <div key={y} className="rv-year">
+                {byYear.length > 1 ? <h3 className="rv-year-h">{y}</h3> : null}
+                <ul className="rv-grid">
+                  {list.map((r) => (
+                    <li key={r.id} className="rv-card">
+                      <Link href={`/calls/${r.id}`} className="rv-link">
+                        <span className="rv-thumb">
+                          {r.thumb_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={r.thumb_url} alt="" loading="lazy" />
+                          ) : <span className="rv-fallback" aria-hidden="true">▶</span>}
+                          {r.duration_secs ? <span className="rv-dur">{formatTime(r.duration_secs)}</span> : null}
+                        </span>
+                        <span className="rv-body">
+                          <span className="rv-title">{r.title}</span>
+                          <span className="rv-meta">{formatInZone(new Date(r.recorded_at)).split(",").slice(0, 2).join(",")}</span>
+                          {r.topics.length ? <span className="rv-tags">{r.topics.slice(0, 2).map((t) => <span key={t} className="rv-tag">{t}</span>)}{r.topics.length > 2 ? <span className="rv-tag more">{`+${r.topics.length - 2}`}</span> : null}</span> : null}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
+        </section>
       </div>
     </>
   );

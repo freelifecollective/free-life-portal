@@ -235,6 +235,8 @@ export const conversations: readonly Entry[] = [
   ["Social Media", "Redes sociales", "Réseaux sociaux", "Social media", "Social Media"],
   ["In Person Sales", "Ventas en persona", "Ventes en personne", "Vendite di persona", "Verkäufe vor Ort"],
   ["Tracking Your Numbers", "Seguimiento de tus números", "Suivi de tes chiffres", "Monitorare i tuoi numeri", "Deine Zahlen verfolgen"],
+  ["{0} recordings", "{0} grabaciones", "{0} enregistrements", "{0} registrazioni", "{0} Aufzeichnungen"],
+  ["{0} recording", "{0} grabación", "{0} enregistrement", "{0} registrazione", "{0} Aufzeichnung"],
   ["Balanced", "Equilibrado", "Équilibré", "Bilanciato", "Ausgeglichen"],
   ["Add your first accounts", "Añade tus primeras cuentas", "Ajoute tes premiers comptes", "Aggiungi i tuoi primi account", "Füge deine ersten Konten hinzu"],
   ["Anyone with this link can look at this chart (they cannot change it). Stop sharing and the link stops working.", "Cualquiera con este enlace puede ver este gráfico (no puede cambiarlo). Deja de compartir y el enlace deja de funcionar.", "Toute personne avec ce lien peut voir ce graphique (sans pouvoir le modifier). Arrête le partage et le lien ne fonctionne plus.", "Chiunque abbia questo link può vedere questo grafico (senza modificarlo). Interrompi la condivisione e il link smette di funzionare.", "Jeder mit diesem Link kann dieses Diagramm ansehen (aber nicht ändern). Beende das Teilen und der Link funktioniert nicht mehr."],
