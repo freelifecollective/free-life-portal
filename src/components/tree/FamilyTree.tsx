@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { copyNode, copyTop, createChart, deleteChart, removeNode, moveNode, renameChart, setSharing } from "@/app/(app)/family-tree/actions";
+import { copyNode, copyTop, createChart, deleteChart, removeNode, moveNode, renameChart, restoreChart, setSharing } from "@/app/(app)/family-tree/actions";
 import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
 import { NodeDialog, type DialogTarget } from "./NodeDialog";
@@ -30,6 +30,33 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
   const [msg, setMsg] = useState("");
   const [pending, start] = useTransition();
   const svg = useRef<SVGSVGElement>(null);
+  /* undo and redo: a snapshot of the whole chart before each change */
+  type Snap = { nodes: TreeNode[]; top: { name: string; rank: string } };
+  const [hist, setHist] = useState<{ past: Snap[]; future: Snap[] }>({ past: [], future: [] });
+  const record = () => setHist((h) => ({ past: [...h.past.slice(-49), { nodes, top }], future: [] }));
+  const apply = (snap: Snap, then: { past: Snap[]; future: Snap[] }) => {
+    const back = { nodes, top }, backHist = hist;
+    const topChanged = snap.top.name !== top.name || snap.top.rank !== top.rank;
+    setNodes(snap.nodes); setTop(snap.top); setHist(then); setMsg("");
+    start(async () => {
+      const r = await restoreChart(chartId, snap.nodes, topChanged ? { label: snap.top.name === ownerName ? "" : snap.top.name, rank: snap.top.rank } : null);
+      if (!r.ok) { setNodes(back.nodes); setTop(back.top); setHist(backHist); setMsg(r.error); }
+    });
+  };
+  const undo = () => { const prev = hist.past[hist.past.length - 1]; if (prev && !pending) apply(prev, { past: hist.past.slice(0, -1), future: [...hist.future, { nodes, top }] }); };
+  const redo = () => { const next = hist.future[hist.future.length - 1]; if (next && !pending) apply(next, { past: [...hist.past, { nodes, top }], future: hist.future.slice(0, -1) }); };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      const k = e.key.toLowerCase();
+      if (k === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if ((k === "z" && e.shiftKey) || k === "y") { e.preventDefault(); redo(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
   const root = buildTree(nodes);
   const bal = balanceOf(root);
   const link = tok && typeof window !== "undefined" ? `${window.location.origin}/tree/${tok}` : "";
@@ -48,6 +75,7 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
     const cur = nodes.find((n) => n.id === id);
     if (!cur || (cur.parent_id === parentId && !place)) return;
     const before = nodes;
+    record();
     /* it goes where it was dropped among the others under that account: first, right after one of them, or at the end */
     const rest = nodes.filter((n) => n.id !== id);
     const moved = { ...cur, parent_id: parentId, side };
@@ -59,7 +87,7 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
     setMsg("");
     start(async () => {
       const r = await moveNode(id, parentId, side, place);
-      if (!r.ok) { setNodes(before); setMsg(r.error); }
+      if (!r.ok) { setNodes(before); setHist((h) => ({ ...h, past: h.past.slice(0, -1) })); setMsg(r.error); }
     });
   };
   const download = async () => {
@@ -111,14 +139,15 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
     setMsg("");
     const r = await removeNode(delNode);
     if (!r.ok) { setMsg(r.error); setDelNode(null); return; }
-    gone(delNode); setDelNode(null);
+    record(); gone(delNode); setDelNode(null);
   });
   const doCopy = () => start(async () => {
     if (!copyFor || !copyFor.to) return;
     setMsg("");
     const r = copyFor.id === "root" ? await copyTop(chartId, copyFor.to, copyFor.side, copyFor.below) : await copyNode(copyFor.id, copyFor.to, copyFor.side, copyFor.below);
     if (!r.ok) { setMsg(r.error); return; }
-    setCopiedMsg(`Copied to “${charts.find((c) => c.id === copyFor.to)?.name ?? "that chart"}”.`);
+    if (copyFor.to === chartId) { record(); setNodes(r.nodes); setCopiedMsg("Copied. Drag the copy to where you want it."); }
+    else setCopiedMsg(`Copied to “${charts.find((c) => c.id === copyFor.to)?.name ?? "that chart"}”.`);
     setCopyFor(null);
   });
   const makeChart = () => start(async () => {
@@ -169,25 +198,22 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
       ) : null}
       {bmenu ? (
         <div className="mute-menu" role="menu" style={{ left: Math.min(bmenu.x, window.innerWidth - 240), top: Math.min(bmenu.y, window.innerHeight - 110) }} onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
-          <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: false, to: otherCharts[0]?.id ?? "", side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble only</button>
-          <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: true, to: otherCharts[0]?.id ?? "", side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble + all below</button>
+          <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: false, to: otherCharts[0]?.id ?? chartId, side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble only</button>
+          <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: true, to: otherCharts[0]?.id ?? chartId, side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy this bubble + all below</button>
           {bmenu.id !== "root" ? <button type="button" role="menuitem" onClick={() => { setDelNode(bmenu.id); setBmenu(null); }}>Delete this bubble</button> : null}
         </div>
       ) : null}
       {copyFor ? (
         <form className="card-s ft-newform" onSubmit={(e) => { e.preventDefault(); doCopy(); }}>
-          <p className="when" style={{ margin: 0 }}>{copyFor.below ? "Copy this bubble and everything under it to another chart" : "Copy just this bubble to another chart"}</p>
-          {otherCharts.length === 0 ? <p className="when" style={{ margin: "6px 0 0" }}>You only have one chart so far. Use “+ New chart” above to make another one, then you can copy bubbles into it.</p> : null}
+          <p className="when" style={{ margin: 0 }}>{copyFor.below ? "Copy this bubble and everything under it" : "Copy just this bubble"}</p>
           <div className="rs-actions" style={{ marginTop: 6, flexWrap: "wrap" }}>
-            {otherCharts.length > 0 ? <>
-              <select value={copyFor.to} onChange={(e) => setCopyFor({ ...copyFor, to: e.target.value })} aria-label="Which chart">
-                {otherCharts.map((c) => <option key={c.id} value={c.id} data-i18n="skip">{c.name}</option>)}
-              </select>
-              <select value={copyFor.side} onChange={(e) => setCopyFor({ ...copyFor, side: e.target.value as Side })} aria-label="Which side">
-                <option value="left">on the left</option><option value="right">on the right</option>
-              </select>
-              <button type="submit" className="btn small primary" disabled={pending || !copyFor.to}>Copy</button>
-            </> : null}
+            <select value={copyFor.to} onChange={(e) => setCopyFor({ ...copyFor, to: e.target.value })} aria-label="Which chart">
+              {charts.map((c) => c.id === chartId ? <option key={c.id} value={c.id}>This chart</option> : <option key={c.id} value={c.id} data-i18n="skip">{c.name}</option>)}
+            </select>
+            <select value={copyFor.side} onChange={(e) => setCopyFor({ ...copyFor, side: e.target.value as Side })} aria-label="Which side">
+              <option value="left">on the left</option><option value="right">on the right</option>
+            </select>
+            <button type="submit" className="btn small primary" disabled={pending || !copyFor.to}>Copy</button>
             <button type="button" className="btn small" onClick={() => setCopyFor(null)}>Cancel</button>
           </div>
         </form>
@@ -244,6 +270,8 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
       </div>
 
       <div className="ft-tools">
+        <button type="button" className="btn small" disabled={pending || hist.past.length === 0} onClick={undo} title="Undo (Ctrl+Z)">↶ Undo</button>
+        <button type="button" className="btn small" disabled={pending || hist.future.length === 0} onClick={redo} title="Redo (Ctrl+Shift+Z)">↷ Redo</button>
         <button type="button" className="btn small" onClick={download}>Download picture</button>
         <button type="button" className="btn small" onClick={() => window.print()}>Print or save as PDF</button>
         {tok ? <button type="button" className="btn small" disabled={pending} onClick={() => share(false)}>Stop sharing</button> : <button type="button" className="btn small" disabled={pending} onClick={() => share(true)}>Share a link</button>}
@@ -265,8 +293,9 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
       <p className="when">Tap a bubble to change it, or to add accounts under it (choose Add to the left or Add to the right). Tap the top bubble to change your own name or rank, or to add to it. To move a bubble (and everything under it), drag it onto another bubble, or drop it anywhere in the white space: a faded line shows which bubble it will hang from. On a phone, press and hold first.</p>
 
       <NodeDialog chartId={chartId} target={target} onClose={() => setTarget(null)}
-        onRootSaved={(label, rank) => { setTop({ name: label || ownerName, rank: rank || (label ? "" : ownerRank ?? "") }); setTarget(null); }}
+        onRootSaved={(label, rank) => { record(); setTop({ name: label || ownerName, rank: rank || (label ? "" : ownerRank ?? "") }); setTarget(null); }}
         onSaved={(n, side) => {
+          record();
           setNodes((cur) => {
             if (cur.some((x) => x.id === n.id)) return cur.map((x) => (x.id === n.id ? n : x));
             /* "Add to the left" puts it first among its parent's accounts, "Add to the right" last */
