@@ -20,6 +20,7 @@ export const instant = false;
 async function SessionGate({ children }: { children: ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  if (session.profile.removed_at) redirect("/removed");
   if (!session.profile.onboarded_at) redirect("/welcome");
   const badges: Record<string, number> = {};
   let unread = 0;

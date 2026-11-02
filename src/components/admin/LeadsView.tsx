@@ -1,4 +1,5 @@
 import { LeadMemberFilter } from "@/components/admin/LeadMemberFilter";
+import { PersonStatus } from "@/components/admin/PersonStatus";
 import { requireAdmin } from "@/lib/auth/guards";
 
 type L = { source: "account" | "invited" | "form"; id: string | null; first_name: string | null; last_name: string | null; email: string; created_at: string; in_portal: boolean; owner_id: string | null; owner_first: string | null; owner_last: string | null };
@@ -24,7 +25,7 @@ export async function LeadsView({ member }: { member?: string }) {
       {shown.length === 0 ? <p className="page-lede">No leads here yet.</p> : (
         <div className="table-wrap">
           <table className="admin-table">
-            <thead><tr><th scope="col">Lead</th><th scope="col">Email</th><th scope="col">Belongs to</th><th scope="col">How they came in</th><th scope="col">Date</th><th scope="col">In the portal</th></tr></thead>
+            <thead><tr><th scope="col">Lead</th><th scope="col">Email</th><th scope="col">Belongs to</th><th scope="col">How they came in</th><th scope="col">Date</th><th scope="col">In the portal</th><th scope="col">Status</th></tr></thead>
             <tbody>
               {shown.map((l) => (
                 <tr key={l.email}>
@@ -34,6 +35,7 @@ export async function LeadsView({ member }: { member?: string }) {
                   <td>{HOW[l.source]}</td>
                   <td>{day(l.created_at)}</td>
                   <td>{l.in_portal ? "Yes" : "Not yet"}</td>
+                  <td>{l.source === "account" && l.id ? <PersonStatus id={l.id} name={nameOf(l) || l.email} role="lead" /> : <span className="muted-line">Not in the portal yet</span>}</td>
                 </tr>
               ))}
             </tbody>
