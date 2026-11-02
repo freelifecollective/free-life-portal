@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { canSee, isAffiliate, type Role } from "@/lib/roles";
-import { MemberList } from "./MemberList";
 import { MuteMenu, MutedIcon } from "@/components/mute/MuteMenu";
 import { SearchAll } from "./SearchAll";
 import { NewGroup } from "@/components/conversation/NewGroup";
@@ -17,7 +16,7 @@ function Lock() {
   );
 }
 
-const kindOf = (n: string) => { const k = n.trim().toLowerCase(); return k === "affiliates only" ? "affiliates" as const : k === "new members" ? "leads" as const : null; };
+export const kindOf = (n: string) => { const k = n.trim().toLowerCase(); return k === "affiliates only" ? "affiliates" as const : k === "new members" ? "leads" as const : null; };
 
 /**
  * The chats, as two rows of tabs across the top: first the sections (New Members, Affiliates Only, Lacey's Downline, Group Chats),
@@ -87,9 +86,6 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
             {isAffiliate(role) ? <li><NewGroup /></li> : null}
           </ul>
         ) : null}
-        {here && !canSee(role, here.min_role) ? null : here && kindOf(here.name) && isAffiliate(role)
-          ? <span className="chat-members"><MemberList kind={kindOf(here.name)!} title={kindOf(here.name) === "affiliates" ? "FLC Members" : "New Members"} canMessage>{kindOf(here.name) === "affiliates" ? "See FLC Members" : "See New Members"}</MemberList></span>
-          : null}
       </div>
     </nav>
   );
