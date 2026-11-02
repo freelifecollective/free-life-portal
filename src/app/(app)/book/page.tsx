@@ -4,6 +4,7 @@ import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
 import { dropBusy } from "@/lib/google/busy";
 import { busyIntervals } from "@/lib/google/calendar";
+import { nowMs } from "@/lib/time";
 
 export const instant = false;
 export const metadata = { title: "Book a Call" };
@@ -17,7 +18,7 @@ export default async function BookPage() {
   const [{ data: infoRows }, { data: slots }, { data: mine }] = await Promise.all([
     supabase.rpc("booking_info"),
     supabase.rpc("open_slots", { p_days: 14 }),
-    supabase.from("booked_calls").select("id, starts_at").eq("lead_id", session.user.id).gt("starts_at", new Date().toISOString()).order("starts_at"),
+    supabase.from("booked_calls").select("id, starts_at").eq("lead_id", session.user.id).is("completed_at", null).gt("starts_at", new Date(nowMs() - 3 * 3600_000).toISOString()).order("starts_at"),
   ]);
   const info = ((infoRows ?? []) as Info[])[0];
   let times = ((slots ?? []) as { slot: string }[]).map((x) => x.slot);
@@ -39,7 +40,7 @@ export default async function BookPage() {
       ) : !info.has_hours ? (
         <section className="card-s" style={{ maxWidth: 640 }}><p style={{ margin: 0 }}>{`${info.target_name ?? info.coach_name ?? "Your coach"} has not set open hours yet. Message them and ask for a time.`}</p></section>
       ) : (
-        <BookingPicker slots={times} mine={(mine ?? []) as Mine[]} who={info.target_name ?? info.coach_name ?? "your coach"} minutes={info.call_minutes} withCloser={info.with_closer} />
+        <BookingPicker nowIso={new Date(nowMs()).toISOString()} slots={times} mine={(mine ?? []) as Mine[]} who={info.target_name ?? info.coach_name ?? "your coach"} minutes={info.call_minutes} withCloser={info.with_closer} />
       )}
     </>
   );

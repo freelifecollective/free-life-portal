@@ -7,6 +7,9 @@ import { QuoteStyle } from "@/components/settings/QuoteStyle";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { isQuoteStyle, type QuoteStyle as Style } from "@/lib/quotes";
 import { requireMember } from "@/lib/auth/guards";
+import { MyCoach, type CoachOption } from "@/components/settings/MyCoach";
+import { MyMilestones, type MyEvent } from "@/components/settings/MyMilestones";
+import { nowMs, toZonedInput } from "@/lib/time";
 import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
@@ -41,6 +44,25 @@ export default async function SettingsPage() {
     const { data } = await supabase.rpc("my_birthday_cards");
     cards = ((data ?? []) as { year: number; wishes: number }[]).map((c) => ({ year: c.year, wishes: Number(c.wishes) }));
   }
+  let events: MyEvent[] = [];
+  if (supabase && isMember) {
+    const { data } = await supabase.from("milestone_events").select("id, kind, happened_on, note, logged_by").eq("member_id", session.user.id).order("happened_on", { ascending: false }).order("created_at", { ascending: false }).limit(12);
+    events = ((data ?? []) as { id: string; kind: "coaching" | "sale"; happened_on: string; note: string | null; logged_by: string | null }[]).map((e) => ({ id: e.id, kind: e.kind, happened_on: e.happened_on, note: e.note, mine: e.logged_by === session.user.id }));
+  }
+  let coachOptions: CoachOption[] = [];
+  let coachNow = "";
+  let coachFound: string | null = null;
+  if (supabase && isMember) {
+    const [{ data: dir }, { data: me }, { data: ppl }] = await Promise.all([
+      supabase.rpc("member_directory", { p_kind: "affiliates" }),
+      supabase.from("profiles").select("coach_id").eq("id", session.user.id).maybeSingle(),
+      supabase.rpc("my_support_people"),
+    ]);
+    coachOptions = ((dir ?? []) as { id: string; first_name: string | null; last_name: string | null }[]).filter((x) => x.id !== session.user.id).map((x) => ({ id: x.id, name: [x.first_name, x.last_name].filter(Boolean).join(" ") || "A member" }));
+    coachNow = (me as { coach_id: string | null } | null)?.coach_id ?? "";
+    const c = ((ppl ?? []) as { role: string; first_name: string | null; last_name: string | null }[]).find((x) => x.role === "coach");
+    coachFound = !coachNow && c ? [c.first_name, c.last_name].filter(Boolean).join(" ") : null;
+  }
   let quoteStyle: Style = "general";
   if (supabase) {
     const { data } = await supabase.from("member_prefs").select("quote_style").maybeSingle();
@@ -74,6 +96,22 @@ export default async function SettingsPage() {
           <section className="card-s">
             <h2 className="qh" style={{ marginTop: 0 }}>My badges</h2>
             <ProfileBadges state={badges} />
+          </section>
+        ) : null}
+
+        {supabase && isMember ? (
+          <section className="card-s">
+            <h2 className="qh" style={{ marginTop: 0 }}>My coach</h2>
+            <p className="when" style={{ margin: "0 0 12px" }}>Choose who your coach is, so the portal knows who belongs to whom and can open the right conversation when you want to talk to them.</p>
+            <MyCoach options={coachOptions} current={coachNow} found={coachFound} />
+          </section>
+        ) : null}
+
+        {supabase && isMember ? (
+          <section className="card-s">
+            <h2 className="qh" style={{ marginTop: 0 }}>My coaching calls and sales</h2>
+            <p className="when" style={{ margin: "0 0 12px" }}>Log them here and they count toward your coaching and sales badges.</p>
+            <MyMilestones today={toZonedInput(new Date(nowMs())).slice(0, 10)} events={events} />
           </section>
         ) : null}
 

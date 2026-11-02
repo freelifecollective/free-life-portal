@@ -25,7 +25,7 @@ export default async function CallCloserPage(props: PageProps<"/call-closer">) {
     supabase.from("call_closer_details").select("paused, price_per_call_cents, calls_taken, close_rate").eq("member_id", me).maybeSingle(),
     supabase.rpc("closer_stats", { p_id: me }),
     supabase.from("closer_hires").select("id, member_id, calls_total, calls_used, note, status").eq("closer_id", me).in("status", ["pending", "active"]).order("created_at"),
-    supabase.from("booked_calls").select("id, member_id, lead_name, starts_at, note, outcome, pay_points, pay_call_cents, pay_products_cents, pay_currency, paid_cents, paid_at").eq("closer_id", me).order("starts_at", { ascending: false }).limit(300),
+    supabase.from("booked_calls").select("id, member_id, lead_name, lead_id, completed_at, starts_at, note, outcome, pay_points, pay_call_cents, pay_products_cents, pay_currency, paid_cents, paid_at").eq("closer_id", me).order("starts_at", { ascending: false }).limit(300),
     supabase.from("closer_pay_rules").select("rank_from, rank_to, kind, amount").eq("closer_id", me).order("rank_from"),
   ]);
   const { data: det } = r1, { data: st } = r2, { data: hires } = r3, { data: cs } = r4, { data: rl } = r5;

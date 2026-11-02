@@ -1,9 +1,9 @@
 import { PageHeading } from "@/components/PageHeading";
 import { InviteForm } from "@/components/admin/InviteForm";
-import { MilestoneForm } from "@/components/admin/MilestoneForm";
+import { CountriesView } from "@/components/admin/CountriesView";
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/guards";
-import { nowMs, toZonedInput } from "@/lib/time";
-import { removeInvite, removeMilestone, setRole, setStanding } from "./actions";
+import { removeInvite, setRole, setStanding } from "./actions";
 
 export const instant = false;
 export const metadata = { title: "People and invites" };
@@ -11,46 +11,28 @@ export const metadata = { title: "People and invites" };
 type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; email: string | null; role: "downline" | "lead" | "member" | "admin"; onboarded_at: string | null; unpaid_since: string | null; removed_at: string | null };
 type Invite = { email: string; role: string; note: string | null; claimed_at: string | null; created_at: string };
 
-export default async function PeoplePage() {
+export default async function PeoplePage(props: PageProps<"/admin/people">) {
+  const sp = await props.searchParams;
+  const view = (Array.isArray(sp.view) ? sp.view[0] : sp.view) === "countries" ? "countries" : "people";
   const { session, supabase } = await requireAdmin();
-  const [people, invites, memberInvites, events] = await Promise.all([
+  if (view === "countries") return <PeopleShell view={view}><CountriesView /></PeopleShell>;
+  const [people, invites, memberInvites] = await Promise.all([
     supabase.from("profiles").select("id, first_name, last_name, username, email, role, onboarded_at, unpaid_since, removed_at").order("created_at", { ascending: false }).limit(300),
     supabase.from("signup_allowlist").select("email, role, note, claimed_at, created_at").is("claimed_at", null).order("created_at", { ascending: false }).limit(300),
     supabase.from("signup_allowlist").select("email, created_by, created_at, claimed_at, note").eq("role", "member").order("created_at", { ascending: false }).limit(300),
-    supabase.from("milestone_events").select("id, member_id, kind, happened_on, note").order("created_at", { ascending: false }).limit(15),
   ]);
   const ppl = (people.data ?? []) as Person[];
   const waiting = (invites.data ?? []) as Invite[];
   const nameOf = new Map(ppl.map((p) => [p.id, [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unknown"]));
   const byEmail = new Map(ppl.map((p) => [(p.email ?? "").toLowerCase(), p]));
-  const logged = (events.data ?? []) as { id: string; member_id: string; kind: "coaching" | "sale"; happened_on: string; note: string | null }[];
-  const affiliates = ppl.filter((p) => (p.role === "member" || p.role === "admin") && p.onboarded_at && !p.removed_at)
-    .map((p) => ({ id: p.id, name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unknown" })).sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
-  const todayDay = toZonedInput(new Date(nowMs())).slice(0, 10);
   const given = (memberInvites.data ?? []) as { email: string; created_by: string | null; created_at: string; claimed_at: string | null; note: string | null }[];
 
   return (
-    <>
+    <PeopleShell view={view}>
       <PageHeading lede={<>Only people on this list can create an account. Leads who register for a call are added automatically. Add leads and FLC Members here. <em>If you select to invite them as a member, this bypasses them having to pay a monthly subscription.</em></>}>People and invites</PageHeading>
       <section className="card-s" style={{ maxWidth: 680 }} aria-label="Invite someone">
         <h2 className="qh" style={{ marginTop: 0 }}>Invite someone</h2>
         <InviteForm />
-      </section>
-
-      <section className="card-s" style={{ maxWidth: 680, marginTop: 24 }} aria-label="Log a coaching call or a sale">
-        <h2 className="qh" style={{ marginTop: 0 }}>Log a coaching call or a sale</h2>
-        <p className="when" style={{ margin: "0 0 12px" }}>This is what hands out the coaching and sales badges.</p>
-        <MilestoneForm members={affiliates} today={todayDay} />
-        {logged.length ? (
-          <ul className="admin-list" style={{ marginTop: 16 }}>
-            {logged.map((e) => (
-              <li key={e.id}>
-                <div><strong>{nameOf.get(e.member_id) ?? "A member"}</strong><div className="muted-line">{e.kind === "sale" ? "Sale" : "Coaching call"} · {e.happened_on}{e.note ? ` · ${e.note}` : ""}</div></div>
-                <form action={removeMilestone}><input type="hidden" name="id" value={e.id} /><button className="linkbtn" type="submit">Remove</button></form>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </section>
 
       <h2 className="qh" style={{ marginTop: 36 }}>Waiting to sign up ({waiting.length})</h2>
@@ -125,6 +107,19 @@ export default async function PeoplePage() {
           </tbody>
         </table>
       </div>
+    </PeopleShell>
+  );
+}
+
+/** The two views of the same page: people and invites, and where members live. */
+function PeopleShell({ view, children }: { view: "people" | "countries"; children: React.ReactNode }) {
+  return (
+    <>
+      <nav className="lead-tabs" aria-label="Which view">
+        <Link className={"chip" + (view === "people" ? " on" : "")} href="/admin/people">People and invites</Link>
+        <Link className={"chip" + (view === "countries" ? " on" : "")} href="/admin/people?view=countries">Members by country</Link>
+      </nav>
+      {children}
     </>
   );
 }

@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { findSupport, type FocusState } from "@/app/(app)/support/actions";
-import { GROUPS, hrefOf, KIND_LABEL, type ResourceKind, type SupportHit, type SupportPeople, type SupportPerson } from "@/lib/support/types";
+import { openDockChat } from "@/components/messages/MessageDock";
+import { GROUPS, hrefOf, KIND_LABEL, type ResourceKind, type SupportHit, type SupportPeople } from "@/lib/support/types";
 
 const initial: FocusState = { q: "", hits: null, error: "", checkin: false, people: { coach: null, buddy: null } };
-const nameOf = (p: SupportPerson) => [p.first_name, p.last_name].filter(Boolean).join(" ") || "them";
 
 function Hit({ h }: { h: SupportHit }) {
   const href = hrefOf(h);
@@ -44,6 +44,24 @@ function CallCard({ h }: { h: SupportHit }) {
   );
 }
 
+/** A recommended document, with its preview picture (or a plain icon when it has none). */
+function DocCard({ h }: { h: SupportHit }) {
+  const ext = h.title.includes(".") ? h.title.split(".").pop()!.slice(0, 4).toUpperCase() : "FILE";
+  const mime = h.sub ?? "";
+  const icon = mime.startsWith("audio/") ? "🎧" : mime.startsWith("video/") ? "🎬" : mime.includes("sheet") || mime.includes("excel") ? "📊" : mime.includes("presentation") || mime.includes("powerpoint") ? "📽️" : mime.includes("pdf") ? "📄" : "📎";
+  return (
+    <li className="doc-card">
+      <Link href={hrefOf(h) ?? "/documents"} className="doc-card-main">
+        {h.thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="doc-cover" src={h.thumb} alt="" loading="lazy" />
+        ) : <span className="doc-cover fallback"><span aria-hidden="true">{icon}</span><b>{ext}</b></span>}
+        <span className="doc-card-name" translate="no">{h.title}</span>
+      </Link>
+    </li>
+  );
+}
+
 function Results({ hits }: { hits: SupportHit[] }) {
   return GROUPS.map((g) => {
     const list = hits.filter((h) => h.kind === g.kind);
@@ -52,7 +70,9 @@ function Results({ hits }: { hits: SupportHit[] }) {
       <section key={g.kind}>
         <h2 className="qh">{g.title}</h2>
         {g.kind === "recording"
-          ? <ul className="rv-grid">{list.map((h) => <CallCard key={h.id} h={h} />)}</ul>
+          ? <ul className="rv-grid sup-calls">{list.map((h) => <CallCard key={h.id} h={h} />)}</ul>
+          : g.kind === "document"
+          ? <ul className="doc-grid sup-docs">{list.map((h) => <DocCard key={h.id} h={h} />)}</ul>
           : <ul className="sup-list">{list.map((h) => <Hit key={h.kind + h.id} h={h} />)}</ul>}
       </section>
     );
@@ -72,6 +92,13 @@ function CheckIn({ people, buddy, coach, setBuddy, setCoach }: { people: Support
       </span>
     </div>
   );
+  /* the buttons open a direct message with the right person straight away */
+  const buddyBtn = people.buddy
+    ? <button type="button" className="btn small primary" onClick={() => openDockChat(people.buddy!.id)}>Message accountability buddy</button>
+    : <Link className="btn small" href="/buddy">Find an accountability buddy</Link>;
+  const coachBtn = people.coach
+    ? <button type="button" className="btn small primary" onClick={() => openDockChat(people.coach!.id)}>Message my coach</button>
+    : <Link className="btn small" href="/settings#coach">Choose your coach</Link>;
   return (
     <section className="card-s sup-check">
       <h2 className="qh" style={{ marginTop: 0 }}>First, a quick check-in</h2>
@@ -81,13 +108,22 @@ function CheckIn({ people, buddy, coach, setBuddy, setCoach }: { people: Support
       {buddy === "no" && coach === "no" ? (
         <div className="sup-reach" role="note">
           <p style={{ margin: "0 0 10px" }}><b>Please reach out to one of them first.</b> They want to hear from you, and a real conversation will do more than anything on this page.</p>
-          <div className="rs-actions" style={{ marginTop: 0 }}>
-            {people.buddy?.username ? <Link className="btn small primary" href={`/messages/${people.buddy.username}`}>{`Message ${nameOf(people.buddy)}, my buddy`}</Link> : <Link className="btn small primary" href="/buddy">Find an accountability buddy</Link>}
-            {people.coach?.username ? <Link className="btn small primary" href={`/messages/${people.coach.username}`}>{`Message ${nameOf(people.coach)}, my coach`}</Link> : <Link className="btn small" href="/chats">Ask in the chats who your coach is</Link>}
-          </div>
+          <div className="rs-actions" style={{ marginTop: 0 }}>{buddyBtn}{coachBtn}</div>
         </div>
       ) : null}
-      {buddy === "yes" || coach === "yes" ? <p className="when" style={{ margin: "10px 0 0" }}>That is the best first step. Here are some things that may help too.</p> : null}
+      {buddy === "yes" && coach === "no" ? (
+        <div className="sup-reach" role="note">
+          <p style={{ margin: "0 0 10px" }}>That&apos;s great that you reached out to your accountability buddy! Maybe try talking to your coach as well. They want to help you!</p>
+          <div className="rs-actions" style={{ marginTop: 0 }}>{coachBtn}</div>
+        </div>
+      ) : null}
+      {coach === "yes" && buddy === "no" ? (
+        <div className="sup-reach" role="note">
+          <p style={{ margin: "0 0 10px" }}>That&apos;s great that you reached out to your coach! Maybe try talking to your accountability buddy as well. They want to help you!</p>
+          <div className="rs-actions" style={{ marginTop: 0 }}>{buddyBtn}</div>
+        </div>
+      ) : null}
+      {buddy === "yes" && coach === "yes" ? <p className="when" style={{ margin: "10px 0 0" }}>That is the best first step. Here are some things that may help too.</p> : null}
       {buddy === null || coach === null ? <p style={{ margin: "10px 0 0" }}><button type="button" className="linkbtn" onClick={() => { setBuddy("skip"); setCoach("skip"); }}>Just show me resources</button></p> : null}
     </section>
   );

@@ -54,12 +54,13 @@ export default async function HomePage(props: PageProps<"/">) {
   let booked: BookedCall[] = [];
   if (supabase && affiliate) {
     const [{ data: rows }, list] = await Promise.all([
-      supabase.from("booked_calls").select("id, lead_name, starts_at, closer_id").eq("member_id", session.user.id).gte("starts_at", new Date(now - 3600_000).toISOString()).order("starts_at").limit(10),
+      supabase.from("booked_calls").select("id, lead_name, starts_at, closer_id, lead_id, completed_at").eq("member_id", session.user.id).gte("starts_at", new Date(now - 3600_000).toISOString()).order("starts_at").limit(10),
       listAffiliates(supabase),
     ]);
     booked = (rows ?? []).map((r) => {
       const c = r.closer_id ? list.find((x) => x.id === r.closer_id) : null;
-      return { id: r.id as string, lead_name: r.lead_name as string, when: formatInZone(new Date(r.starts_at as string), tz), closer: c ? { name: c.name, photo_url: c.photo_url } : null };
+      const mine = !r.closer_id && !!r.lead_id && !r.completed_at;   /* you take the call yourself (no call closer): you meet the lead in the portal */
+      return { id: r.id as string, lead_name: r.lead_name as string, when: formatInZone(new Date(r.starts_at as string), tz), closer: c ? { name: c.name, photo_url: c.photo_url } : null, room: mine ? { startsAt: r.starts_at as string, nowIso: new Date(now).toISOString() } : null };
     });
   }
   const leadsHref = (show?: string) => `/leads?from=${range.from}&to=${range.to}${show ? `&show=${show}` : ""}`;
