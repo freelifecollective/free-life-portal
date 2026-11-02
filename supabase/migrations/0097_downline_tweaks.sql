@@ -2,7 +2,13 @@
 
 -- ---------------------------------------------------------------- calls: open to leads and/or the downline (FLC members always see every call)
 alter table public.calls add column if not exists downline_open boolean not null default false;
-update public.calls set downline_open = true, audience = 'affiliates_only' where audience = 'downline_open';
+-- calls that were marked for the downline under the old single choice (only exists if 0095 was run)
+do $$
+begin
+  if exists (select 1 from pg_enum e join pg_type t on t.oid = e.enumtypid where t.typname = 'call_audience' and e.enumlabel = 'downline_open') then
+    execute 'update public.calls set downline_open = true, audience = ''affiliates_only'' where audience::text = ''downline_open''';
+  end if;
+end $$;
 
 drop policy if exists calls_read on public.calls;
 do $$
