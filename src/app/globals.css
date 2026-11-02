@@ -1991,6 +1991,7 @@ html, body { max-width: 100%; overflow-x: clip; }
 .dock-win .lead-warn { margin: 0; border-radius: 0; font-size: 12px; padding: 8px 10px; }
 .pc-owner { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 12px; color: var(--muted); font-size: 14px; }
 .cv-vote.on { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+.nav .nav-caption { list-style: none; margin: 18px 0 0; padding: 10px 6px 0; border-top: 1px solid var(--line); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #C0261C; }
 /* subtitles and chat text wrap between words, never in the middle of one (a word is only broken if it is longer than the whole line) */
 .page-lede, .chat-lede, .when, .muted-line, .pc-sub, .home-eyebrow, .qh + p, .cv-bubble, .cv-text, .cv-quote, .bubble, .post-body, .dock-msg, .fb-list p, .comments p {
   hyphens: manual;
@@ -2035,6 +2036,7 @@ html, body { max-width: 100%; overflow-x: clip; }
 .sup-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .sup-hit a { text-decoration: none; }
 .sup-hit a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+.ft-paste { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-left: 5px solid #AB9080; background: #FBF6F1; }
 /* chat sections fold away like the left menu */
 .chat-fold-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .chat-fold-head > .chat-section, .chat-fold-head .chat-section { margin: 0; }
