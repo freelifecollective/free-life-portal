@@ -135,14 +135,15 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
             <p style={{ margin: 0 }}>We recommend doing this 7 days a week until it becomes second nature for you and your business is creating results.<br />Remember you <em>get</em> to do these activities daily, you don&apos;t <em>have</em> to.</p>
           </div>
           {[...new Set(DAILY_ROUTINE.map((r) => r.group))].map((g) => (
-            <div key={g} style={{ marginTop: 12 }}>
-              <h3 style={{ margin: "0 0 6px", fontSize: 16 }}>{g}</h3>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }}>
+            <div key={g} className="rt-group">
+              <h3 className="rt-h">{g}</h3>
+              <ul className="rt-list">
                 {DAILY_ROUTINE.map((r, i) => r.group !== g ? null : (
                   <li key={r.title}>
-                    <label style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <label className="rt-item">
                       <input type="checkbox" checked={picks.includes(i)} onChange={(e) => setPicks(e.target.checked ? [...picks, i] : picks.filter((x) => x !== i))} />
-                      <span><strong>{r.title}</strong>{r.repeat === "weekly" ? <span className="muted-line"> (weekly)</span> : null}{r.note ? <><br /><span className="muted-line">{r.note}</span></> : null}</span>
+                      <span className="rt-box" aria-hidden="true">✓</span>
+                      <span className="rt-text"><span className="rt-title">{r.title}</span>{r.repeat === "weekly" ? <span className="rt-tag">weekly</span> : null}{r.note ? <span className="rt-note">{r.note}</span> : null}</span>
                     </label>
                   </li>
                 ))}
