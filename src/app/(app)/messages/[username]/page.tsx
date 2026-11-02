@@ -1,3 +1,4 @@
+import { LeadWarning } from "@/components/messages/LeadWarning";
 import { PersonLink } from "@/components/people/ProfilePopup";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -30,6 +31,7 @@ export default async function ConversationPage(props: PageProps<"/messages/[user
       {unread ? <ReadMarker otherId={other.id} /> : null}
       {sp.notice === "close" ? <CloseAccountNotice /> : null}
       <div className="settings" style={{ maxWidth: 720 }}>
+        <LeadWarning otherId={other.id} />
         <Thread messages={thread} me={session.user.id} />
         <MessageComposer otherId={other.id} draft={sp.draft === "ab" ? "You've been matched as potential AB's!" : ""} />
       </div>

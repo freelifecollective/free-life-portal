@@ -45,6 +45,14 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose, sta
   const [presence, setPresence] = useState<{ text: string; online: boolean } | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsTick, setStatsTick] = useState(0);
+  const [owner, setOwner] = useState<{ first_name: string | null; last_name: string | null; avatar_url: string | null } | null>(null);
+  /* a lead's profile says which affiliate they belong to (affiliates only; anyone else gets nothing back) */
+  useEffect(() => {
+    if (guest || !p.id) return;
+    let live = true;
+    void createClient().rpc("lead_owner_info", { p_lead: p.id }).then(({ data }) => { if (live) setOwner(((data as { first_name: string | null; last_name: string | null; avatar_url: string | null }[] | null) ?? [])[0] ?? null); });
+    return () => { live = false; };
+  }, [guest, p.id]);
 
   /* the call closer numbers shown at the top of the call closer view */
   useEffect(() => {
@@ -116,6 +124,9 @@ export function ProfileCard({ p, guest = false, canMessage, onBack, onClose, sta
 
       {view === "profile" ? (
         <>
+          {owner ? (
+            <p className="pc-owner"><span>Belongs to</span> <Avatar url={owner.avatar_url} initials={((owner.first_name ?? "").charAt(0) + (owner.last_name ?? "").charAt(0)).toUpperCase() || "?"} size={28} /> <b translate="no">{[owner.first_name, owner.last_name].filter(Boolean).join(" ")}</b></p>
+          ) : null}
           {tiles > 0 ? (
             <div className="pc-tiles">
               {canMessage && !guest && p.username ? (
