@@ -113,15 +113,14 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
     <div className="tasks-layout">
     <div className="tasks">
       <div className="tasks-top">
-        <button type="button" className="btn primary tasks-add" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
         <div className="tasks-progress" aria-label={`${doneToday.length} of ${total} done today`}>
           <div className="tasks-count"><strong>{doneToday.length}</strong> of {total} done today</div>
+          <div className="tasks-bar"><i style={{ width: total ? `${(doneToday.length / total) * 100}%` : "0%" }} /></div>
           <p className="routine-links">
             <button type="button" className="linkbtn" onClick={() => openRoutine("faith")}>{ROUTINES.faith.label}</button>
-            <span aria-hidden="true"> · </span>
+            <span className="routine-star" aria-hidden="true">✦</span>
             <button type="button" className="linkbtn" onClick={() => openRoutine("spiritual")}>{ROUTINES.spiritual.label}</button>
           </p>
-          <div className="tasks-bar"><i style={{ width: total ? `${(doneToday.length / total) * 100}%` : "0%" }} /></div>
           {streaks ? <StreakLine streaks={streaks} /> : null}
         </div>
         <div className="tasks-actions">
@@ -133,7 +132,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
 
       {routineOpen ? (
         <section className="card-s" aria-label="Recommended daily routine">
-          <div className="page-lede" style={{ margin: "0 0 10px", textAlign: "center", display: "grid", gap: 14 }}>
+          <div className="page-lede" style={{ margin: "0 0 10px", textAlign: "left", display: "grid", gap: 14 }}>
             <p style={{ margin: 0 }}>In the beginning of your business, we recommend picking 1 activity from each category to do every day for a total of 4 daily activities.<br />Do those same 4 activities every day until it becomes a routine for you.</p>
             <p style={{ margin: 0 }}>{"Once you're used to that routine, add another activity from each section, bringing you to a total of 8 daily activities."}<br />{"Continue adding activities in as you become accustomed to your new routine until you're performing every activity on this list daily."}</p>
             <p style={{ margin: 0 }}>{"If you miss an activity or a day, don't beat yourself up, just carry on the next day with your routine."}<br />Focus on your <strong>WINS</strong> not on your <strong>MISSES</strong>. Good energy attracts more good energy! ✨</p>
@@ -260,7 +259,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
       {newBadges.length ? <BadgeToast keys={newBadges} onClose={() => setNewBadges([])} /> : null}
     </div>
-    {badgeKeys.length ? <aside className="tasks-badges" aria-label="Your badges"><BadgeStrip keys={badgeKeys} /></aside> : null}
+    <aside className="tasks-badges" aria-label="Your badges"><div className="tasks-side-top"><button type="button" className="btn primary tasks-add" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button><BadgeStrip keys={badgeKeys} /></div></aside>
     </div>
   );
 }
