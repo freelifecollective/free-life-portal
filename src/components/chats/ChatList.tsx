@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { canSee, type Role } from "@/lib/roles";
+import { ChatFold } from "./ChatFold";
 import { MemberList } from "./MemberList";
 import { MuteMenu, MutedIcon } from "@/components/mute/MuteMenu";
 import { SearchAll } from "./SearchAll";
@@ -23,16 +24,18 @@ const kindOf = (n: string) => { const k = n.trim().toLowerCase(); return k === "
 
 /** Sections with bold headings, each listing its chats. Chats you cannot open yet are faded with a lock. */
 export function ChatList({ sections, current, role, muted, unread, groups }: { sections: ChatSection[]; current: string; role: Role; muted?: Set<string>; unread?: Record<string, number>; groups?: GroupRow[] }) {
+  /* the section holding the chat you are in starts open (otherwise the first one) until someone picks another */
+  const here = current.startsWith("group:") ? "groups" : String(sections.find((s) => s.chats.some((c) => c.slug === current))?.id ?? sections[0]?.id ?? "");
   return (
     <nav className="chat-list" aria-label="Chats">
       <SearchAll />
       {sections.map((s) => {
         const locked = !canSee(role, s.min_role);
         return (
-          <section key={s.id} className={locked ? "locked" : undefined}>
-            {!locked && isAffiliate(role) && kindOf(s.name)
+          <ChatFold key={s.id} id={String(s.id)} name={s.name} defaultOpen={here === String(s.id)} waiting={s.chats.reduce((n, c) => n + (unread?.[c.id] ?? 0), 0)} className={locked ? "locked" : undefined}
+            header={!locked && isAffiliate(role) && kindOf(s.name)
               ? <MemberList kind={kindOf(s.name)!} title={kindOf(s.name) === "affiliates" ? "FLC Members" : "New Members"} canMessage>{s.name}</MemberList>
-              : <h2 className="chat-section">{s.name}{locked ? <Lock /> : null}</h2>}
+              : <h2 className="chat-section">{s.name}{locked ? <Lock /> : null}</h2>}>
             <ul>
               {s.chats.map((c) => (
                 <Fragment key={c.id}>
@@ -45,12 +48,12 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
                 </Fragment>
               ))}
             </ul>
-          </section>
+          </ChatFold>
         );
       })}
       {groups && (isAffiliate(role) || groups.length > 0) ? (
-        <section className="chat-groups">
-          <div className="chat-section-row"><h2 className="chat-section">Group Chats</h2>{isAffiliate(role) ? <NewGroup /> : null}</div>
+        <ChatFold id="groups" name="Group Chats" defaultOpen={here === "groups"} waiting={groups.reduce((n, g) => n + (g.unread ?? 0), 0)} className="chat-groups"
+          header={<div className="chat-section-row"><h2 className="chat-section">Group Chats</h2>{isAffiliate(role) ? <NewGroup /> : null}</div>}>
           {groups.length === 0 ? <p className="when" style={{ margin: "0 12px" }}>No groups yet.</p> : null}
           <ul className="chat-group-list">
             {groups.map((g) => (
@@ -61,7 +64,7 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
               </li>
             ))}
           </ul>
-        </section>
+        </ChatFold>
       ) : null}
     </nav>
   );

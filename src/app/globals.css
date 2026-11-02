@@ -2010,3 +2010,11 @@ html, body { max-width: 100%; overflow-x: clip; }
 .sup-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .sup-hit a { text-decoration: none; }
 .sup-hit a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+/* chat sections fold away like the left menu */
+.chat-fold-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.chat-fold-head > .chat-section, .chat-fold-head .chat-section { margin: 0; }
+.chat-fold-head > .chat-section-row { flex: 1; margin-bottom: 0; }
+.chat-fold-btn { all: unset; cursor: pointer; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; color: var(--muted); flex: none; }
+.chat-fold-btn:hover { color: var(--ink); }
+.chat-fold-btn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+.chat-fold-head .badge { margin: 0; }
