@@ -4,13 +4,14 @@ import { ListingForm } from "@/components/outsourcing/ListingForm";
 import { ProviderList } from "@/components/outsourcing/ProviderList";
 import { requireMember } from "@/lib/auth/guards";
 import { loadOutsourcing } from "@/lib/outsourcing/queries";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Outsourcing" };
 
 export default async function OutsourcingPage() {
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/");
+  if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Outsourcing</PageHeading><p className="page-lede">This needs the database.</p></>;
   const { providers, mine, hired, reviews } = await loadOutsourcing(supabase, session.user.id);
   return (

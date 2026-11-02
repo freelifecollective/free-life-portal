@@ -8,7 +8,7 @@ import { removeInvite, removeMilestone, setRole, setStanding } from "./actions";
 export const instant = false;
 export const metadata = { title: "People and invites" };
 
-type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; email: string | null; role: "lead" | "member" | "admin"; onboarded_at: string | null; unpaid_since: string | null; removed_at: string | null };
+type Person = { id: string; first_name: string | null; last_name: string | null; username: string | null; email: string | null; role: "downline" | "lead" | "member" | "admin"; onboarded_at: string | null; unpaid_since: string | null; removed_at: string | null };
 type Invite = { email: string; role: string; note: string | null; claimed_at: string | null; created_at: string };
 
 export default async function PeoplePage() {
@@ -104,13 +104,13 @@ export default async function PeoplePage() {
                     <form action={setRole} className="inline-form">
                       <input type="hidden" name="id" value={p.id} />
                       <label className="sr-only" htmlFor={`role-${p.id}`}>Role for {p.email}</label>
-                      <select id={`role-${p.id}`} name="role" defaultValue={p.role}><option value="lead">lead</option><option value="member">member</option><option value="admin">admin</option></select>
+                      <select id={`role-${p.id}`} name="role" defaultValue={p.role}><option value="downline">downline</option><option value="lead">lead</option><option value="member">member</option><option value="admin">admin</option></select>
                       <button className="btn small" type="submit">Save</button>
                     </form>
                   )}
                 </td>
                 <td>
-                  {p.role === "lead" || p.id === session.user.id ? null : (
+                  {p.role === "lead" || p.role === "downline" || p.id === session.user.id ? null : (
                     <form action={setStanding} className="inline-form">
                       <input type="hidden" name="id" value={p.id} />
                       <label className="sr-only" htmlFor={`since-${p.id}`}>Date {p.email} stopped paying</label>

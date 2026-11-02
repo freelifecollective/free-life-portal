@@ -11,6 +11,7 @@ import { TOUR_VERSION } from "@/lib/tour";
 import { unreadMessageCount } from "@/lib/messages/queries";
 import { pendingFinancingCount } from "@/lib/financing/queries";
 import { pendingSubmissionCount } from "@/lib/resources/queries";
+import { isAffiliate } from "@/lib/roles";
 
 /* Every page here depends on who is signed in, so it renders per request. Revisit when adopting instant navigation. */
 export const instant = false;
@@ -44,7 +45,7 @@ async function SessionGate({ children }: { children: ReactNode }) {
       const total = ((cu ?? []) as { unread: number }[]).reduce((a, r) => a + r.unread, 0) + ((go ?? []) as { unread: number }[]).reduce((a, r) => a + r.unread, 0);
       if (total > 0) badges["/chats"] = total;
     }
-    if (session.profile.role !== "lead") {
+    if (isAffiliate(session.profile.role)) {
       const { data: asked } = await db.from("water_share_asked").select("member_id").maybeSingle();
       waterPrompt = !asked;
       const [{ data: ab }, { data: mp }] = await Promise.all([db.from("ab_profiles").select("pool_status, in_pool_since, complete").maybeSingle(), db.from("member_private").select("rank_id").maybeSingle()]);

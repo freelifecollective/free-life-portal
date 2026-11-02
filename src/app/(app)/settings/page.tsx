@@ -7,6 +7,7 @@ import { QuoteStyle } from "@/components/settings/QuoteStyle";
 import { SettingsForm } from "@/components/settings/SettingsForm";
 import { isQuoteStyle, type QuoteStyle as Style } from "@/lib/quotes";
 import { requireMember } from "@/lib/auth/guards";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Profile" };
@@ -15,7 +16,7 @@ export default async function SettingsPage() {
   const { session, supabase } = await requireMember();
   const p = session.profile;
   const initials = ((p.first_name ?? "").charAt(0) + (p.last_name ?? "").charAt(0)).toUpperCase() || "?";
-  const isMember = p.role !== "lead";
+  const isMember = isAffiliate(p.role);
   let rank: number | null = null;
   let extra = null as { birth_month: number | null; birth_day: number | null; birth_year: number | null } | null;
   let ranks: { id: number; name: string }[] = [];

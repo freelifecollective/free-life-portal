@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { COUNTRIES, countryValue } from "@/lib/financing/countries";
+import { isAffiliate } from "@/lib/roles";
 
 export type FinancingState = { error: string; sent?: number; approved?: boolean };
 
@@ -18,7 +19,7 @@ async function save(direct: boolean, form: FormData): Promise<FinancingState> {
   if (link && (!/^https:\/\/\S+$/.test(link) || link.length > 500)) return { error: "The link must start with https://" };
   const { session, supabase } = await requireMember();
   if (!supabase) return { error: "Needs the database." };
-  if (session.profile.role === "lead") return { error: "Only affiliates can suggest financing options." };
+  if (!isAffiliate(session.profile.role)) return { error: "Only affiliates can suggest financing options." };
   const admin = direct && session.profile.role === "admin";
   if (direct && !admin) return { error: "Only admins can publish directly." };
   const { error } = await supabase.from("financing_options").insert({

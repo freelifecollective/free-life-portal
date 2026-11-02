@@ -7,6 +7,7 @@ import { SearchAll } from "./SearchAll";
 import { NewGroup } from "@/components/conversation/NewGroup";
 import type { ChatSection } from "@/lib/chats/types";
 import type { GroupRow } from "@/lib/chats/sidebar";
+import { isAffiliate } from "@/lib/roles";
 
 const Badge = ({ n }: { n?: number }) => (n ? <span className="chat-badge" aria-label={`${n} unread`}>{n > 99 ? "99+" : n}</span> : null);
 
@@ -29,7 +30,7 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
         const locked = !canSee(role, s.min_role);
         return (
           <section key={s.id} className={locked ? "locked" : undefined}>
-            {!locked && role !== "lead" && kindOf(s.name)
+            {!locked && isAffiliate(role) && kindOf(s.name)
               ? <MemberList kind={kindOf(s.name)!} title={kindOf(s.name) === "affiliates" ? "FLC Members" : "New Members"} canMessage>{s.name}</MemberList>
               : <h2 className="chat-section">{s.name}{locked ? <Lock /> : null}</h2>}
             <ul>
@@ -47,9 +48,9 @@ export function ChatList({ sections, current, role, muted, unread, groups }: { s
           </section>
         );
       })}
-      {groups && (role !== "lead" || groups.length > 0) ? (
+      {groups && (isAffiliate(role) || groups.length > 0) ? (
         <section className="chat-groups">
-          <div className="chat-section-row"><h2 className="chat-section">Group Chats</h2>{role !== "lead" ? <NewGroup /> : null}</div>
+          <div className="chat-section-row"><h2 className="chat-section">Group Chats</h2>{isAffiliate(role) ? <NewGroup /> : null}</div>
           {groups.length === 0 ? <p className="when" style={{ margin: "0 12px" }}>No groups yet.</p> : null}
           <ul className="chat-group-list">
             {groups.map((g) => (

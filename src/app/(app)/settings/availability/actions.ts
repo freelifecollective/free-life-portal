@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { BUFFERS, CALL_LENGTHS, DAYS, DAYS_AHEAD, INTERVALS, NOTICE_HOURS, PER_DAY, toMin } from "@/lib/booking/times";
 import { validZone } from "@/lib/tasks/queries";
+import { isAffiliate } from "@/lib/roles";
 
 export type HoursState = { error: string; saved?: boolean };
 
 /** Saves when an affiliate (or their closer) is open for coaching calls: one stretch of time per weekday. */
 export async function saveHours(_prev: HoursState, form: FormData): Promise<HoursState> {
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { error: "Open hours are for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { error: "Open hours are for affiliates." };
   const mins = Number(form.get("call_minutes"));
   const tz = String(form.get("tz") ?? "");
   if (!(CALL_LENGTHS as readonly number[]).includes(mins)) return { error: "Choose how long a call is." };
@@ -49,7 +50,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 /** Blocks one date, or every date from the first to the last, so leads cannot book them. */
 export async function blockDates(from: string, to: string, note: string): Promise<{ ok: boolean; error?: string }> {
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Availability is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Availability is for affiliates." };
   const last = to || from;
   if (!DAY.test(from) || !DAY.test(last)) return { ok: false, error: "Choose a date." };
   const a = new Date(`${from}T00:00:00Z`).getTime(), b = new Date(`${last}T00:00:00Z`).getTime();

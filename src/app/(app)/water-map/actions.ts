@@ -6,6 +6,7 @@ import { requireMember } from "@/lib/auth/guards";
 import { geocode, suggest } from "@/lib/water/geocode";
 import type { Suggestion } from "@/lib/water/photon";
 import type { Place } from "@/lib/water/types";
+import { isAffiliate } from "@/lib/roles";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -29,7 +30,7 @@ export async function suggestPlaces(query: string): Promise<Suggestion[]> {
 export async function saveWaterShare(input: { address: string; chosen?: Place | null; prefilter: boolean | null; waterType: string }): Promise<Result> {
   const { session, supabase } = await requireMember();
   if (!supabase) return { ok: false, error: "Needs the database." };
-  if (session.profile.role === "lead") return { ok: false, error: "The map is for affiliates." };
+  if (!isAffiliate(session.profile.role) && session.profile.role !== "downline") return { ok: false, error: "The map is for affiliates." };
   if (typeof input.prefilter !== "boolean") return { ok: false, error: "Please say whether you have a prefilter." };
   if (input.waterType !== "city" && input.waterType !== "well") return { ok: false, error: "Please choose city water or well water." };
   const address = String(input.address ?? "").trim();

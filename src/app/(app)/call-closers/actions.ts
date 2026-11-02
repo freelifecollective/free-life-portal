@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { SUPABASE_URL } from "@/lib/env";
+import { isAffiliate } from "@/lib/roles";
 
 function checkCard(c: { cover: string; location: string; experienceText: string; bio: string }): string | null {
   if (!c.cover) return "Please add your cover photo.";
@@ -38,7 +39,7 @@ export async function applyAsCloser(_prev: ApplyState, form: FormData): Promise<
   }
   if (form.get("agreed") !== "on") return { error: "Please tick the box to confirm you agree." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { error: "Applications are for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { error: "Applications are for affiliates." };
   if (!cover.startsWith(`${SUPABASE_URL}/storage/v1/object/public/avatars/${session.user.id}/`)) return { error: "Please add your cover photo." };
   const { error } = await supabase.from("closer_applications").insert({
     member_id: session.user.id, cover_url: cover, location, experience_text: experienceText, bio, calls_taken: calls || null, availability, pitch, price_per_call_cents: cents, price_per_sale: priceSale || null, agreed: true,
@@ -66,7 +67,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function hireCloser(closerId: string, calls: number, note: string): Promise<{ ok: boolean; error?: string }> {
   if (!UUID.test(closerId) || ![0, 1, 2].includes(calls)) return { ok: false, error: "Choose one call, two calls or all my future calls." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Hiring is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Hiring is for affiliates." };
   const { error } = await supabase.rpc("hire_closer", { p_closer: closerId, p_calls: calls || null, p_note: note.trim().slice(0, 200) || null });
   if (error) {
     if (error.code === "23505") return { ok: false, error: "You already have a call closer hired. End that one first." };

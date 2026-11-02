@@ -5,6 +5,7 @@ import { BuddyQuestionnaire } from "@/components/buddy/BuddyQuestionnaire";
 import { requireMember } from "@/lib/auth/guards";
 import { RANKS } from "@/lib/buddy/questions";
 import { cleanAnswers, isComplete } from "@/lib/buddy/validate";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Accountability Buddy" };
@@ -12,7 +13,7 @@ export const metadata = { title: "Accountability Buddy" };
 export default async function BuddyPage(props: PageProps<"/buddy">) {
   const sp = await props.searchParams;
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/");
+  if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Accountability Buddy</PageHeading><p className="page-lede">This needs the database.</p></>;
 
   const [{ data: ab }, { data: mp }] = await Promise.all([

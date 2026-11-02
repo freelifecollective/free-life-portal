@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { TREE_RANKS } from "@/lib/tree/colors";
 import type { TreeNode } from "@/lib/tree/layout";
+import { isAffiliate } from "@/lib/roles";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const RANKS: string[] = [...TREE_RANKS];
@@ -22,7 +23,7 @@ export async function saveNode(input: NodeInput): Promise<Result<{ node: TreeNod
   if (input.parentId && !UUID.test(input.parentId)) return { ok: false, error: "Something went wrong." };
   const linked = input.linkedId && UUID.test(input.linkedId) ? input.linkedId : null;
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
   const cols = "id, parent_id, side, label, rank, linked_member_id, owned";
   const owned = input.owned === true;
   if (input.id) {
@@ -79,7 +80,7 @@ export async function saveRoot(chartId: string, label: string, rank: string): Pr
   if (l.length > 60) return { ok: false, error: "Enter a name or account name (up to 60 characters)." };
   if (r && !RANKS.includes(r)) return { ok: false, error: "Choose a rank from the list." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
   const { error } = await supabase.rpc("save_chart_root", { p_chart: chartId, p_label: l, p_rank: r });
   if (error) return { ok: false, error: "We could not save that. Please try again." };
   revalidatePath("/family-tree");
@@ -90,7 +91,7 @@ export async function saveRoot(chartId: string, label: string, rank: string): Pr
 export async function moveNode(id: string, parentId: string | null, side: "left" | "right", place?: { first?: boolean; after?: string }): Promise<Result> {
   if (!UUID.test(id) || (parentId && !UUID.test(parentId)) || (side !== "left" && side !== "right") || (place?.after && !UUID.test(place.after))) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
   const { error } = await supabase.rpc("move_tree_node", { p_id: id, p_parent: parentId, p_side: side, p_after: place?.after ?? null, p_first: !!place?.first });
   if (error) return { ok: false, error: error.code === "23514" ? "A bubble cannot go under itself or anything below it." : "We could not move that. Please try again." };
   revalidatePath("/family-tree");
@@ -103,7 +104,7 @@ export async function createChart(name: string, copyOf: string | null): Promise<
   if (!n || n.length > 60) return { ok: false, error: "Give the chart a name of up to 60 characters." };
   if (copyOf && !UUID.test(copyOf)) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
   const { data, error } = await supabase.rpc("create_chart", { p_name: n, p_copy_of: copyOf });
   if (error || !data) return { ok: false, error: "We could not make that chart. Please try again." };
   revalidatePath("/family-tree");
@@ -136,7 +137,7 @@ export async function deleteChart(chartId: string): Promise<Result> {
 export async function copyTop(chartId: string, destId: string, side: "left" | "right", below: boolean): Promise<Result> {
   if (!UUID.test(chartId) || !UUID.test(destId) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
   const { error } = await supabase.rpc("copy_chart_top", { p_src: chartId, p_dest: destId, p_side: side, p_below: below });
   if (error) return { ok: false, error: error.code === "23514" ? "That chart is full (600 bubbles)." : "We could not copy that. Please try again." };
   revalidatePath("/family-tree");
@@ -146,7 +147,7 @@ export async function copyTop(chartId: string, destId: string, side: "left" | "r
 export async function copyNode(id: string, chartId: string, side: "left" | "right", below: boolean): Promise<Result> {
   if (!UUID.test(id) || !UUID.test(chartId) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, error: "Your Organization is for affiliates." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
   const { error } = await supabase.rpc("copy_tree_nodes", { p_id: id, p_chart: chartId, p_parent: null, p_side: side, p_below: below });
   if (error) return { ok: false, error: error.code === "23514" ? "That chart is full (600 bubbles)." : "We could not copy that. Please try again." };
   revalidatePath("/family-tree");

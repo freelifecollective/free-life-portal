@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { requireMember } from "@/lib/auth/guards";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { isAffiliate } from "@/lib/roles";
 
 export type LeadInviteState = { error: string; done: string };
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -23,7 +24,7 @@ async function sendLoginEmail(email: string): Promise<boolean> {
 /** Any paying affiliate can invite a lead. The lead then belongs to them. */
 export async function inviteLead(_prev: LeadInviteState, form: FormData): Promise<LeadInviteState> {
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { error: "Inviting is for affiliates.", done: "" };
+  if (!supabase || !isAffiliate(session.profile.role)) return { error: "Inviting is for affiliates.", done: "" };
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const note = String(form.get("note") ?? "").trim().slice(0, 200);
   if (!EMAIL.test(email)) return { error: "That does not look like an email address.", done: "" };

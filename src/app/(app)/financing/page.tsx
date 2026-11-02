@@ -4,6 +4,7 @@ import Link from "next/link";
 import { COUNTRIES, countryBySlug, countryValue } from "@/lib/financing/countries";
 import { requireMember } from "@/lib/auth/guards";
 import { listApproved, mySuggestions } from "@/lib/financing/queries";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Financing Options" };
@@ -33,7 +34,7 @@ export default async function FinancingPage(props: PageProps<"/financing">) {
           ))}
         </div>
       )}
-      {role !== "lead" ? (
+      {isAffiliate(role) ? (
         <div className="fin-bottom">
           <SuggestForm isAdmin={false} country={country} />
           {mine.length ? (

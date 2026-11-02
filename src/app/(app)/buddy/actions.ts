@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireMember } from "@/lib/auth/guards";
 import { currentRank, rankUp } from "@/lib/buddy/rank";
 import { cleanAnswers, isComplete, rankId } from "@/lib/buddy/validate";
+import { isAffiliate } from "@/lib/roles";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Result = { ok: boolean; error?: string; rankUp?: string };
@@ -11,7 +12,7 @@ type Result = { ok: boolean; error?: string; rankUp?: string };
 /** Saves answers as the member goes. Returns whether the questionnaire is now complete. */
 export async function saveBuddyAnswers(raw: unknown): Promise<{ ok: boolean; complete: boolean; error?: string; rankUp?: string }> {
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") return { ok: false, complete: false, error: "Only affiliates can use this." };
+  if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, complete: false, error: "Only affiliates can use this." };
   const answers = cleanAnswers(raw);
   const rank = rankId(answers.rank);
   const before = await currentRank(supabase);

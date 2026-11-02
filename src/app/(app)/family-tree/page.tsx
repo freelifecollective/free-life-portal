@@ -3,6 +3,7 @@ import { FamilyTree } from "@/components/tree/FamilyTree";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
 import type { TreeNode } from "@/lib/tree/layout";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Your Organization" };
@@ -10,7 +11,7 @@ export const metadata = { title: "Your Organization" };
 export default async function FamilyTreePage(props: PageProps<"/family-tree">) {
   const sp = await props.searchParams;
   const { session, supabase } = await requireMember();
-  if (session.profile.role === "lead") redirect("/");
+  if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Your Organization</PageHeading><p className="page-lede">This needs the database.</p></>;
   let { data: chartRows } = await supabase.from("family_charts").select("id, name, share_token, root_label, root_rank").eq("owner_id", session.user.id).order("sort").order("created_at");
   if (!chartRows || chartRows.length === 0) {

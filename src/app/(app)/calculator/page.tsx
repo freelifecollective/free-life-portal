@@ -6,13 +6,14 @@ import { requireMember } from "@/lib/auth/guards";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { defaultCalcCountry } from "@/lib/calculator/default";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "Earnings Estimator" };
 
 export default async function CalculatorPage() {
   const { session } = await requireMember();
-  if (session.profile.role === "lead") redirect("/");
+  if (!isAffiliate(session.profile.role)) redirect("/");
   const lang = (await cookies()).get("flc_lang")?.value;
   const supabase = await createClient();
   const [{ data: spot }, { data: me }] = supabase ? await Promise.all([

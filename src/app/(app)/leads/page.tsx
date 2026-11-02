@@ -5,6 +5,7 @@ import { requireMember } from "@/lib/auth/guards";
 import { parseRange } from "@/lib/dashboard/range";
 import { formatInZone, nowMs } from "@/lib/time";
 import { redirect } from "next/navigation";
+import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
 export const metadata = { title: "My leads" };
@@ -20,7 +21,7 @@ export default async function LeadsPage(props: PageProps<"/leads">) {
   const sp = await props.searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
   const { session, supabase } = await requireMember();
-  if (!supabase || session.profile.role === "lead") redirect("/");
+  if (!supabase || !isAffiliate(session.profile.role)) redirect("/");
   const range = parseRange(one(sp.from), one(sp.to), nowMs());
   const [{ data }, { data: inv }] = await Promise.all([supabase.rpc("my_leads", { p_from: range.fromIso, p_to: range.toIso }), supabase.rpc("my_invites")]);
   const invited = (inv ?? []) as { email: string; note: string | null; created_at: string; claimed_at: string | null; first_name: string | null; last_name: string | null }[];
