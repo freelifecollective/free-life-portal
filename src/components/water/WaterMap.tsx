@@ -87,7 +87,8 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
                 if (!/^label_(city|town|village|other)/.test(l.id) || l.layout?.["icon-image"]) continue;
                 l.layout = { ...l.layout, "text-field": field };
               }
-              m.addLayer(l);
+              /* the street detail only takes over once you are zoomed in; the world view is always the bundled country map */
+              m.addLayer({ ...l, minzoom: Math.max(l.minzoom ?? 0, 5) } as LayerSpecification);
             }
           } catch { /* no street detail; the country map stays */ }
         })();
