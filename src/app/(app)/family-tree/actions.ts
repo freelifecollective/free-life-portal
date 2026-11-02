@@ -141,21 +141,21 @@ export async function deleteChart(chartId: string): Promise<Result> {
 
 /** Copies an account (and, if asked, everything under it) into another chart, under that chart's top bubble. */
 /** Copy the top bubble of this chart into another chart (alone, or with everything under it). */
-export async function copyTop(chartId: string, destId: string, side: "left" | "right", below: boolean): Promise<Result<{ nodes: TreeNode[] }>> {
-  if (!UUID.test(chartId) || !UUID.test(destId) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
+export async function copyTop(chartId: string, destId: string, side: "left" | "right", below: boolean, parentId: string | null = null): Promise<Result<{ nodes: TreeNode[] }>> {
+  if (!UUID.test(chartId) || !UUID.test(destId) || (parentId !== null && !UUID.test(parentId)) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
   if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
-  const { error } = await supabase.rpc("copy_chart_top", { p_src: chartId, p_dest: destId, p_side: side, p_below: below });
+  const { error } = await supabase.rpc("copy_chart_top", { p_src: chartId, p_dest: destId, p_side: side, p_below: below, p_parent: parentId });
   if (error) return { ok: false, error: error.code === "23514" ? "That chart is full (600 bubbles)." : "We could not copy that. Please try again." };
   revalidatePath("/family-tree");
   return { ok: true, nodes: await chartNodes(supabase, destId) };
 }
 
-export async function copyNode(id: string, chartId: string, side: "left" | "right", below: boolean): Promise<Result<{ nodes: TreeNode[] }>> {
-  if (!UUID.test(id) || !UUID.test(chartId) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
+export async function copyNode(id: string, chartId: string, side: "left" | "right", below: boolean, parentId: string | null = null): Promise<Result<{ nodes: TreeNode[] }>> {
+  if (!UUID.test(id) || !UUID.test(chartId) || (parentId !== null && !UUID.test(parentId)) || (side !== "left" && side !== "right")) return { ok: false, error: "Something went wrong." };
   const { session, supabase } = await requireMember();
   if (!supabase || !isAffiliate(session.profile.role)) return { ok: false, error: "Your Organization is for affiliates." };
-  const { error } = await supabase.rpc("copy_tree_nodes", { p_id: id, p_chart: chartId, p_parent: null, p_side: side, p_below: below });
+  const { error } = await supabase.rpc("copy_tree_nodes", { p_id: id, p_chart: chartId, p_parent: parentId, p_side: side, p_below: below });
   if (error) return { ok: false, error: error.code === "23514" ? "That chart is full (600 bubbles)." : "We could not copy that. Please try again." };
   revalidatePath("/family-tree");
   return { ok: true, nodes: await chartNodes(supabase, chartId) };
