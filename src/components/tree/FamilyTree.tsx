@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { copyNode, copyTop, createChart, deleteChart, removeNode, moveNode, renameChart, restoreChart, setSharing } from "@/app/(app)/family-tree/actions";
 import { downloadSvgAsPng } from "@/lib/tree/export";
 import { balanceOf, buildTree, countAll, type Built, type Side, type TreeNode } from "@/lib/tree/layout";
@@ -10,6 +10,17 @@ import { NodeDialog, type DialogTarget } from "./NodeDialog";
 import { TreeChart, type Place } from "./TreeChart";
 import { KEY_POSITIONS, useKeyPos } from "./useKeyPos";
 import { useWidth } from "./useWidth";
+
+/* what you copied, kept for this browser tab so you can switch charts before pasting */
+type Clip = { id: string; srcChart: string; below: boolean; label: string };
+const CLIP_KEY = "flc_tree_clip";
+const clipListeners = new Set<() => void>();
+const subscribeClip = (cb: () => void) => { clipListeners.add(cb); return () => { clipListeners.delete(cb); }; };
+const readClip = () => { try { return sessionStorage.getItem(CLIP_KEY) ?? ""; } catch { return ""; /* storage blocked */ } };
+function writeClip(c: Clip | null) {
+  try { if (c) sessionStorage.setItem(CLIP_KEY, JSON.stringify(c)); else sessionStorage.removeItem(CLIP_KEY); } catch { /* not kept, still works on this chart */ }
+  clipListeners.forEach((l) => l());
+}
 
 function find(b: Built, id: string): Built | null {
   if (b.node?.id === id) return b;
@@ -119,9 +130,9 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
   }, [menu]);
   /* right-click a bubble to copy it (alone, or with everything under it) into another chart */
   const [bmenu, setBmenu] = useState<{ x: number; y: number; id: string } | null>(null);
-  const [copyFor, setCopyFor] = useState<{ id: string; below: boolean; to: string; side: Side } | null>(null);
   const [copiedMsg, setCopiedMsg] = useState("");
-  const otherCharts = charts.filter((c) => c.id !== chartId);
+  const clipRaw = useSyncExternalStore(subscribeClip, readClip, () => "");
+  const clip = useMemo<Clip | null>(() => { try { return clipRaw ? (JSON.parse(clipRaw) as Clip) : null; } catch { return null; } }, [clipRaw]);
   useEffect(() => {
     if (!bmenu) return;
     const close = () => setBmenu(null);
@@ -141,22 +152,28 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
     if (!r.ok) { setMsg(r.error); setDelNode(null); return; }
     record(); gone(delNode); setDelNode(null);
   });
-  /* copies into this chart at once; the copy lands under the top bubble, ready to drag where you want it */
-  const copyHere = (id: string, below: boolean) => start(async () => {
+  /* copy: remember the bubble (alone, or with everything under it); then you click where it should go */
+  const copyBubble = (id: string, below: boolean) => {
     setMsg(""); setCopiedMsg("");
-    const r = id === "root" ? await copyTop(chartId, chartId, "right", below) : await copyNode(id, chartId, "right", below);
-    if (!r.ok) { setMsg(r.error); return; }
-    record(); setNodes(r.nodes);
-    setCopiedMsg("Copied. Drag the copy to where you want it.");
-  });
-  const doCopy = () => start(async () => {
-    if (!copyFor || !copyFor.to) return;
-    setMsg("");
-    const r = copyFor.id === "root" ? await copyTop(chartId, copyFor.to, copyFor.side, copyFor.below) : await copyNode(copyFor.id, copyFor.to, copyFor.side, copyFor.below);
-    if (!r.ok) { setMsg(r.error); return; }
-    setCopiedMsg(`Copied to “${charts.find((c) => c.id === copyFor.to)?.name ?? "that chart"}”.`);
-    setCopyFor(null);
-  });
+    const label = id === "root" ? top.name : nodes.find((n) => n.id === id)?.label ?? "";
+    writeClip({ id, srcChart: chartId, below, label });
+  };
+  const pasteUnder = (parentId: string | null) => {
+    if (!clip || pending) return;
+    start(async () => {
+      setMsg("");
+      const r = clip.id === "root" ? await copyTop(clip.srcChart, chartId, "right", clip.below, parentId) : await copyNode(clip.id, chartId, "right", clip.below, parentId);
+      if (!r.ok) { setMsg(r.error); return; }
+      record(); setNodes(r.nodes);
+      setCopiedMsg("Pasted. Click another bubble to paste again, or press Done.");
+    });
+  };
+  useEffect(() => {
+    if (!clip) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") writeClip(null); };
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [clip]);
   const makeChart = () => start(async () => {
     setMsg("");
     const r = await createChart(newName, newCopy ? chartId : null);
@@ -205,27 +222,16 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
       ) : null}
       {bmenu ? (
         <div className="mute-menu" role="menu" style={{ left: Math.min(bmenu.x, window.innerWidth - 240), top: Math.min(bmenu.y, window.innerHeight - 110) }} onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
-          <button type="button" role="menuitem" onClick={() => { const id = bmenu.id; setBmenu(null); copyHere(id, false); }}>Copy this bubble only</button>
-          <button type="button" role="menuitem" onClick={() => { const id = bmenu.id; setBmenu(null); copyHere(id, true); }}>Copy this bubble + all below</button>
-          {otherCharts.length > 0 ? <button type="button" role="menuitem" onClick={() => { setCopyFor({ id: bmenu.id, below: true, to: otherCharts[0].id, side: "left" }); setCopiedMsg(""); setBmenu(null); }}>Copy to another chart…</button> : null}
+          <button type="button" role="menuitem" onClick={() => { const id = bmenu.id; setBmenu(null); copyBubble(id, false); }}>Copy this bubble only</button>
+          <button type="button" role="menuitem" onClick={() => { const id = bmenu.id; setBmenu(null); copyBubble(id, true); }}>Copy this bubble + all below</button>
           {bmenu.id !== "root" ? <button type="button" role="menuitem" onClick={() => { setDelNode(bmenu.id); setBmenu(null); }}>Delete this bubble</button> : null}
         </div>
       ) : null}
-      {copyFor ? (
-        <form className="card-s ft-newform" onSubmit={(e) => { e.preventDefault(); doCopy(); }}>
-          <p className="when" style={{ margin: 0 }}>Copy to another chart</p>
-          <div className="rs-actions" style={{ marginTop: 6, flexWrap: "wrap" }}>
-            <select value={copyFor.to} onChange={(e) => setCopyFor({ ...copyFor, to: e.target.value })} aria-label="Which chart">
-              {otherCharts.map((c) => <option key={c.id} value={c.id} data-i18n="skip">{c.name}</option>)}
-            </select>
-            <select value={copyFor.side} onChange={(e) => setCopyFor({ ...copyFor, side: e.target.value as Side })} aria-label="Which side">
-              <option value="left">on the left</option><option value="right">on the right</option>
-            </select>
-            <button type="submit" className="btn small primary" disabled={pending || !copyFor.to}>Copy</button>
-            <button type="button" className="btn small" onClick={() => setCopyFor(null)}>Cancel</button>
-          </div>
-          <label className="check" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}><input type="checkbox" checked={copyFor.below} onChange={(e) => setCopyFor({ ...copyFor, below: e.target.checked })} /> <span>Include everything under it</span></label>
-        </form>
+      {clip ? (
+        <div className="card-s ft-paste" role="status">
+          <span>{clip.below ? `Paste “${clip.label}” and everything below it: click the bubble you want it to go under.` : `Paste “${clip.label}”: click the bubble you want it to go under.`}</span>
+          <button type="button" className="btn small" onClick={() => writeClip(null)}>Done</button>
+        </div>
       ) : null}
       <dialog ref={delDialog} className="rs-dialog" aria-labelledby="ft-del-title" onClose={() => setDelNode(null)}>
         <h2 id="ft-del-title" className="qh" style={{ marginTop: 0 }}>Delete this bubble</h2>
@@ -279,7 +285,7 @@ export function FamilyTree({ chartId, chartName, charts, initial, ownerName, own
           </div>
           <div className="ft-scroll" ref={box}>
             <TreeChart ref={svg} keyPos={keyPos} availW={Math.max(0, boxW - 18)} nodes={nodes} ownerName={top.name} ownerRank={top.rank || null} leftLabel="Left" rightLabel="Right"
-              onPick={openEdit} onMove={onMove} onMenu={(id, x, y) => setBmenu({ id, x, y })} onPickRoot={() => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
+              onPick={clip ? (id: string) => pasteUnder(id) : openEdit} onMove={clip ? undefined : onMove} onMenu={(id, x, y) => setBmenu({ id, x, y })} onPickRoot={clip ? () => pasteUnder(null) : () => setTarget({ mode: "root", label: rootEdited || top.name !== ownerName ? top.name : "", rank: top.rank })} onAdd={(parentId, side) => setTarget({ mode: "add", parentId, side })} />
           </div>
         </div>
       </div>

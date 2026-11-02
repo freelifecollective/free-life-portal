@@ -52,6 +52,10 @@ begin
   perform tests.eq('B is under A', (select parent_id from public.family_tree_nodes where id = b), a);
   perform tests.eq('A keeps its rank and ownership', (select rank || owned::text from public.family_tree_nodes where id = a), '1Atrue');
   perform tests.eq('the order is kept', (select string_agg(label, '' order by created_at) from public.family_tree_nodes where chart_id = c1), 'ABD');
+  perform public.copy_chart_top(c1, c1, 'right', false, d);
+  perform tests.eq('the top bubble can be pasted under a chosen bubble', (select count(*) from public.family_tree_nodes where parent_id = d), 1::bigint);
+  perform public.copy_tree_nodes(a, c1, d, 'right', true);
+  perform tests.eq('a bubble and everything under it can be pasted under another', (select count(*) from public.family_tree_nodes where parent_id = d), 2::bigint);
   perform public.restore_chart_nodes(c1, '[]'::jsonb);
   perform tests.eq('an empty snapshot empties the chart', (select count(*) from public.family_tree_nodes where chart_id = c1), 0::bigint);
   perform tests.logout();

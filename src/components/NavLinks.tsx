@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { LiveDot } from "./LiveBadge";
 
-export type NavEntry = { label: string; href?: string; heading?: boolean; group?: string; badge?: number; live?: boolean };
+export type NavEntry = { label: string; href?: string; heading?: boolean; caption?: boolean; group?: string; badge?: number; live?: boolean };
 
 /* Only one section is open at a time. Each device remembers which one (or "none"), under its own key. */
 const KEY = "flc_nav_open";
@@ -64,7 +64,7 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
   return (
     <>
       <ul>
-        {items.map((n) => (n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} />))}
+        {items.map((n) => (n.caption ? <li key={n.label} className="nav-caption" data-nav={n.label}>{n.label}</li> : n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} />))}
       </ul>
       {/* never shown: it holds every name, folded away or not, so the menu is always wide enough for all of them in this language */}
       <ul className="nav-sizer" aria-hidden="true">
