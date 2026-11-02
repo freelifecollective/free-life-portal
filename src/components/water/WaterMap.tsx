@@ -57,6 +57,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       if (cancelled || !box.current) return;
       const topo = (atlas.default ?? atlas) as unknown as Parameters<typeof feature>[0];
       const land = feature(topo, (topo as unknown as { objects: { countries: Parameters<typeof feature>[1] } }).objects.countries) as unknown as GeoJSON.FeatureCollection<GeoJSON.Polygon | GeoJSON.MultiPolygon, { name?: string }>;
+      ml.setWorkerUrl(`${location.origin}/maplibre-gl-worker.mjs`);
       const m = new ml.Map({
         container: box.current, center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true },
         style: {
@@ -71,15 +72,14 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
         },
       });
       m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
-      /* TEMPORARY: show what the map reports, so a missing-land problem can be seen from a screenshot */
+      /* if the map ever reports a problem, say so in a small box (so it can be read from a screenshot) */
       const diag = document.createElement("pre");
       diag.style.cssText = "position:absolute;left:8px;bottom:8px;max-width:70%;max-height:40%;overflow:auto;margin:0;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.92);font:11px/1.3 monospace;z-index:5;white-space:pre-wrap";
-      diag.setAttribute("translate", "no");
+      diag.setAttribute("translate", "no"); diag.hidden = true;
       box.current.appendChild(diag);
       const say = (t: string) => { if (diag.textContent!.length < 1500) diag.textContent += t + "\n"; };
-      m.on("error", (e) => say("error: " + String((e as unknown as { error?: { message?: string } }).error?.message ?? e).slice(0, 200)));
-      m.on("load", () => say("loaded; layers=" + m.getStyle().layers.length));
-      m.on("idle", () => { try { say("idle; land features drawn=" + m.queryRenderedFeatures({ layers: ["land"] }).length + "; zoom=" + m.getZoom().toFixed(1)); } catch (e) { say("idle query failed " + e); } });
+      const bad = (t: string) => { diag.hidden = false; say(t); };
+      m.on("error", (e) => bad("error: " + String((e as unknown as { error?: { message?: string } }).error?.message ?? e).slice(0, 200)));
       /* Street-level detail (water, roads, towns) from OpenFreeMap is added on top when it answers. If it does not, the map above still works. */
       m.once("load", () => {
         void (async () => {
