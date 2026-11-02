@@ -2004,3 +2004,11 @@ html, body { max-width: 100%; overflow-x: clip; }
 .ft-hist button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: rgba(255,255,255,.92); color: var(--ink); cursor: pointer; }
 .ft-hist button:hover:not(:disabled) { background: var(--tint); }
 .ft-hist button:disabled { opacity: .35; cursor: default; }
+/* chat sections fold away like the left menu */
+.chat-fold-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.chat-fold-head > .chat-section, .chat-fold-head .chat-section { margin: 0; }
+.chat-fold-head > .chat-section-row { flex: 1; margin-bottom: 0; }
+.chat-fold-btn { all: unset; cursor: pointer; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 6px; color: var(--muted); flex: none; }
+.chat-fold-btn:hover { color: var(--ink); }
+.chat-fold-btn:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+.chat-fold-head .badge { margin: 0; }
