@@ -229,6 +229,7 @@ export const conversations: readonly Entry[] = [
   ["Undo", "Deshacer", "Annuler", "Annulla", "Rückgängig"],
   ["Redo", "Rehacer", "Rétablir", "Ripeti", "Wiederholen"],
   ["Undo and redo", "Deshacer y rehacer", "Annuler et rétablir", "Annulla e ripeti", "Rückgängig und wiederholen"],
+  ["Show or hide {0}", "Mostrar u ocultar {0}", "Afficher ou masquer {0}", "Mostra o nascondi {0}", "{0} ein- oder ausblenden"],
   ["Balanced", "Equilibrado", "Équilibré", "Bilanciato", "Ausgeglichen"],
   ["Add your first accounts", "Añade tus primeras cuentas", "Ajoute tes premiers comptes", "Aggiungi i tuoi primi account", "Füge deine ersten Konten hinzu"],
   ["Anyone with this link can look at this chart (they cannot change it). Stop sharing and the link stops working.", "Cualquiera con este enlace puede ver este gráfico (no puede cambiarlo). Deja de compartir y el enlace deja de funcionar.", "Toute personne avec ce lien peut voir ce graphique (sans pouvoir le modifier). Arrête le partage et le lien ne fonctionne plus.", "Chiunque abbia questo link può vedere questo grafico (senza modificarlo). Interrompi la condivisione e il link smette di funzionare.", "Jeder mit diesem Link kann dieses Diagramm ansehen (aber nicht ändern). Beende das Teilen und der Link funktioniert nicht mehr."],
