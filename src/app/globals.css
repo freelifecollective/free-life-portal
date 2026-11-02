@@ -2152,3 +2152,11 @@ html, body { max-width: 100%; overflow-x: clip; }
   .tasks-layout { grid-template-columns: minmax(0, 1fr) 320px; }
   .tasks-badges { position: sticky; top: 20px; }
 }
+
+/* tasks top: Add a task on the left, the routines as links under the count, badges bare on the page background */
+.tasks-top { justify-content: flex-start; align-items: flex-start; }
+.tasks-top .tasks-add { flex: none; }
+.tasks-top .tasks-actions { margin-left: auto; }
+.routine-links { margin: 0; font-size: 14px; color: var(--muted); }
+.routine-links .linkbtn { font-size: 14px; }
+.tasks-badges { padding: 0; border: 0; border-radius: 0; background: transparent; }
