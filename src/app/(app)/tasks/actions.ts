@@ -5,7 +5,7 @@ import { tagOf } from "@/lib/badges/defs";
 import { complete, REPEATS, split, undo, type Area, type Repeat, type Task } from "@/lib/tasks/schedule";
 import { getTz, listTasks, todayIn, validZone } from "@/lib/tasks/queries";
 import { isAffiliate } from "@/lib/roles";
-import { DAILY_ROUTINE } from "@/lib/tasks/routine";
+import { ROUTINES, type RoutineKey } from "@/lib/tasks/routine";
 
 export type TaskInput = { area: string; title: string; note: string; repeat: string; due_on: string };
 type Result = { ok: true; tasks: Task[]; badges?: string[] } | { ok: false; error: string; tasks?: Task[] };
@@ -47,8 +47,9 @@ export async function addTask(input: TaskInput): Promise<Result> {
 }
 
 /** Adds the chosen items of the recommended daily routine (by position in the list) to the end of the person's list. They can then edit, reorder or delete them like any task. */
-export async function addDailyRoutine(picks: number[]): Promise<Result> {
+export async function addDailyRoutine(which: RoutineKey, picks: number[]): Promise<Result> {
   const c = await ctx(); if (!c) return NO;
+  const DAILY_ROUTINE = (ROUTINES[which] ?? ROUTINES.faith).items;
   const chosen = [...new Set((Array.isArray(picks) ? picks : []).filter((n) => Number.isInteger(n) && n >= 0 && n < DAILY_ROUTINE.length))].sort((a, b) => a - b);
   if (chosen.length === 0) return FAIL("Choose at least one thing to add.");
   const existing = await listTasks(c.supabase);

@@ -5,7 +5,7 @@ const d = (group: string, area: Area, title: string, note = ""): RoutineItem => 
 const w = (group: string, area: Area, title: string, note = ""): RoutineItem => ({ group, area, title, note, repeat: "weekly" });
 
 /** The recommended routine people can start their task list from (daily things repeat every day, the weekly ones every week). Titles with "morning" or "follow up" count toward the streaks. */
-export const DAILY_ROUTINE: RoutineItem[] = [
+const SPIRITUAL: RoutineItem[] = [
   d("Mindset work", "personal", "Write down 5 goals for the week"),
   d("Mindset work", "personal", "Write 5-10 things you are grateful for, and why"),
   d("Mindset work", "personal", "Tapping"),
@@ -35,3 +35,20 @@ export const DAILY_ROUTINE: RoutineItem[] = [
   w("Highly recommended", "personal", "Weekly reflection"),
   w("Highly recommended", "business", "Plan your Instagram stories in advance"),
 ];
+
+const FAITH_MINDSET: RoutineItem[] = [
+  d("Faith and mindset", "personal", "Morning prayer and quiet time with God"),
+  d("Faith and mindset", "personal", "Read scripture for 10-20 minutes"),
+  d("Faith and mindset", "personal", "Write down 5 goals for the week and pray over them"),
+  d("Faith and mindset", "personal", "Write 5-10 things you are thankful to God for, and why"),
+  d("Faith and mindset", "personal", "Listen to worship music or a devotional"),
+  d("Faith and mindset", "personal", "Pray over your business, your leads and your team"),
+  d("Faith and mindset", "personal", "Speak affirmations of faith over your day"),
+];
+const REST = SPIRITUAL.filter((r) => r.group !== "Mindset work");
+
+export type RoutineKey = "faith" | "spiritual";
+export const ROUTINES: Record<RoutineKey, { label: string; items: RoutineItem[] }> = {
+  faith: { label: "Recommended daily routine", items: [...FAITH_MINDSET, ...REST] },
+  spiritual: { label: "Recommended daily routine (spiritual)", items: SPIRITUAL },
+};

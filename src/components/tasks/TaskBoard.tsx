@@ -12,7 +12,7 @@ import type { BadgeState } from "@/lib/badges/defs";
 import { Fireworks } from "./Fireworks";
 import { TaskForm } from "./TaskForm";
 import { TrashButton } from "./TrashButton";
-import { DAILY_ROUTINE } from "@/lib/tasks/routine";
+import { ROUTINES, type RoutineKey } from "@/lib/tasks/routine";
 
 /** The whole Tasks screen: today's list (drag or use the arrows to reorder), what is coming up, and what is done. */
 export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial: Task[]; today: string; tz: string; badgeKeys: string[]; streaks: BadgeState["streaks"] | null }) {
@@ -28,8 +28,10 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
   const [party, setParty] = useState(false);
   const [newBadges, setNewBadges] = useState<string[]>([]);
   const [pending, run] = useTransition();
-  const [routineOpen, setRoutineOpen] = useState(initial.length === 0);
-  const [picks, setPicks] = useState<number[]>(DAILY_ROUTINE.map((_, i) => i));
+  const [routineOpen, setRoutineOpen] = useState<RoutineKey | null>(initial.length === 0 ? "faith" : null);
+  const [picks, setPicks] = useState<number[]>(ROUTINES.faith.items.map((_, i) => i));
+  const DAILY_ROUTINE = ROUTINES[routineOpen ?? "faith"].items;
+  const openRoutine = (k: RoutineKey) => { if (routineOpen === k) { setRoutineOpen(null); return; } setRoutineOpen(k); setPicks(ROUTINES[k].items.map((_, i) => i)); };
 
   const { todayList, upcoming, doneToday } = split(tasks, today);
   const total = todayList.length + doneToday.length;
@@ -117,7 +119,8 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
         </div>
         <div className="tasks-actions">
           {todayList.length > 1 ? <button type="button" className="btn" onClick={() => setSuggestion(suggestOrder(todayList, today))}>Suggest the best order</button> : null}
-          <button type="button" className="btn" onClick={() => setRoutineOpen((o) => !o)}>Recommended daily routine</button>
+          <button type="button" className="btn" onClick={() => openRoutine("faith")}>{ROUTINES.faith.label}</button>
+          <button type="button" className="btn" onClick={() => openRoutine("spiritual")}>{ROUTINES.spiritual.label}</button>
           <button type="button" className="btn primary" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
           <BadgeStrip keys={badgeKeys} />
         </div>
@@ -150,8 +153,8 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
             </div>
           ))}
           <div className="actions" style={{ marginTop: 12 }}>
-            <button type="button" className="btn primary" disabled={pending || picks.length === 0} onClick={() => run(async () => { const r = await addDailyRoutine(picks); if (r.ok) { setTasks(r.tasks); setRoutineOpen(false); setSuggestion(null); } else setError(r.error); })}>Add these to my list</button>
-            <button type="button" className="btn" onClick={() => setRoutineOpen(false)}>Not now</button>
+            <button type="button" className="btn primary" disabled={pending || picks.length === 0} onClick={() => run(async () => { const r = await addDailyRoutine(routineOpen ?? "faith", picks); if (r.ok) { setTasks(r.tasks); setRoutineOpen(null); setSuggestion(null); } else setError(r.error); })}>Add these to my list</button>
+            <button type="button" className="btn" onClick={() => setRoutineOpen(null)}>Not now</button>
           </div>
         </section>
       ) : null}
