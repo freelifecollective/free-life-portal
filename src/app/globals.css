@@ -2133,18 +2133,4 @@ html, body { max-width: 100%; overflow-x: clip; }
 .rt-tag { justify-self: start; margin-top: 2px; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font-size: 12px; font-weight: 700; }
 .rt-note { color: var(--muted); font-size: 14px; line-height: 1.4; }
 
-/* balanced chat pills: always the same number in every row (8 chats become 4 + 4, never 7 + 1), for chats and group chats alike.
-   --n is how many pills there are; --m is how many fit across at this screen width. Older browsers keep the plain wrapping row. */
-@supports (width: round(up, 3.5px, 1px)) {
-  .chat-bar ul.chat-pills { --m: 2; --rows: round(up, calc(var(--n, 1) / var(--m)), 1); --cols: round(up, calc(var(--n, 1) / var(--rows)), 1); display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; flex: 1 1 100%; }
-  @media (min-width: 560px) { .chat-bar ul.chat-pills { --m: 3; } }
-  @media (min-width: 900px) { .chat-bar ul.chat-pills { --m: 4; } }
-  @media (min-width: 1180px) { .chat-bar ul.chat-pills { --m: 5; } }
-  @media (min-width: 1500px) { .chat-bar ul.chat-pills { --m: 6; } }
-  .chat-bar ul.chat-pills > li { min-width: 0; display: flex; }
-  .chat-bar ul.chat-pills > li > *, .chat-bar ul.chat-pills .chat-pill { flex: 1 1 auto; }
-  .chat-bar .chat-pills a.chat-pill, .chat-bar .chat-pills button { justify-content: center; text-align: center; width: 100%; box-sizing: border-box; }
-}
-.chat-bar ul.chat-pills > li > *, .chat-bar ul.chat-pills > li > * > a.chat-pill { align-self: stretch; min-height: 100%; }
-.chat-bar ul.chat-pills a.chat-pill { line-height: 1.25; }
-.chat-bar ul.chat-pills { align-items: stretch; }
+/* balanced chat pills: BalancedPills closes each row so rows are even (8 chats become 4 + 4, never 7 + 1) without changing the pill size */
