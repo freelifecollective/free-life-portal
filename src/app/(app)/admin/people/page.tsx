@@ -41,44 +41,48 @@ export default async function PeoplePage(props: PageProps<"/admin/people">) {
           <h2 className="qh" style={{ marginTop: 0 }}>Invite someone</h2>
           <InviteForm />
         </section>
-        <section aria-label="Waiting to sign up">
-          <h2 className="qh" style={{ marginTop: 0 }}>Waiting to sign up ({waiting.length})</h2>
-          {waiting.length === 0 ? <p className="page-lede" style={{ marginBottom: 0 }}>No one is waiting.</p> : (
-            <ul className="admin-list">
-              {waiting.map((i) => (
-                <li key={i.email}>
-                  <div><strong>{i.email}</strong><div className="muted-line">{i.role}{i.note ? ` · ${i.note}` : ""}</div></div>
-                  <form action={removeInvite}><input type="hidden" name="email" value={i.email} /><button className="linkbtn" type="submit">Remove</button></form>
-                </li>
-              ))}
-            </ul>
-          )}
+        <section aria-label="Members added without paying">
+        <h2 className="qh" style={{ marginTop: 0 }}>Members added without paying ({given.length})</h2>
+        <p className="page-lede" style={{ marginTop: -6 }}>Everyone invited as a member by an admin, and who invited them, so you can check they are fine to be here.</p>
+        {given.length === 0 ? <p className="page-lede" style={{ marginBottom: 0 }}>No one yet.</p> : (
+          <div className="table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>Member</th><th>Email</th><th>Invited by</th><th>Invited on</th><th>Status</th></tr></thead>
+              <tbody>
+                {given.map((g) => {
+                  const person = byEmail.get(g.email.toLowerCase());
+                  return (
+                    <tr key={g.email}>
+                      <td>{person ? [person.first_name, person.last_name].filter(Boolean).join(" ") || "Not finished" : <span className="muted-line">Not signed up yet</span>}</td>
+                      <td>{g.email}</td>
+                      <td>{g.created_by ? nameOf.get(g.created_by) ?? "An admin" : "Unknown"}</td>
+                      <td>{new Date(g.created_at).toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric" })}</td>
+                      <td>{g.claimed_at ? "Joined" : "Waiting"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
         </section>
       </div>
 
-      <h2 className="qh" style={{ marginTop: 36 }}>Members added without paying ({given.length})</h2>
-      <p className="page-lede" style={{ marginTop: -6 }}>Everyone invited as a member by an admin, and who invited them, so you can check they are fine to be here.</p>
-      {given.length === 0 ? <p className="page-lede" style={{ marginBottom: 0 }}>No one yet.</p> : (
-        <div className="table-wrap">
-          <table className="admin-table">
-            <thead><tr><th>Member</th><th>Email</th><th>Invited by</th><th>Invited on</th><th>Status</th></tr></thead>
-            <tbody>
-              {given.map((g) => {
-                const person = byEmail.get(g.email.toLowerCase());
-                return (
-                  <tr key={g.email}>
-                    <td>{person ? [person.first_name, person.last_name].filter(Boolean).join(" ") || "Not finished" : <span className="muted-line">Not signed up yet</span>}</td>
-                    <td>{g.email}</td>
-                    <td>{g.created_by ? nameOf.get(g.created_by) ?? "An admin" : "Unknown"}</td>
-                    <td>{new Date(g.created_at).toLocaleDateString("en-US", { timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric" })}</td>
-                    <td>{g.claimed_at ? "Joined" : "Waiting"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div style={{ marginTop: 36 }}>
+          <section aria-label="Waiting to sign up">
+            <h2 className="qh" style={{ marginTop: 0 }}>Waiting to sign up ({waiting.length})</h2>
+            {waiting.length === 0 ? <p className="page-lede" style={{ marginBottom: 0 }}>No one is waiting.</p> : (
+              <ul className="admin-list">
+                {waiting.map((i) => (
+                  <li key={i.email}>
+                    <div><strong>{i.email}</strong><div className="muted-line">{i.role}{i.note ? ` · ${i.note}` : ""}</div></div>
+                    <form action={removeInvite}><input type="hidden" name="email" value={i.email} /><button className="linkbtn" type="submit">Remove</button></form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+      </div>
     </PeopleShell>
   );
 }
