@@ -75,3 +75,14 @@ merged by the owner on GitHub (open a pull request and press Merge); the merge c
 The free plan allows 100 deployments a day. If it is hit, builds that were refused are not retried by themselves: make a new
 merge into `main` (even a tiny one) and Vercel builds everything fresh. Setting "Ignored Build Step" in Vercel to
 `if [ "$VERCEL_GIT_COMMIT_REF" = "main" ]; then exit 1; else exit 0; fi` stops branch pushes from using up the limit.
+
+## Email series
+
+New leads get a welcome the moment they register, then follow-ups 1, 3 and 10 days later (wording in `src/lib/email/templates.ts`). Emails wait in `email_outbox` until sending is switched on. In Vercel add:
+
+- `RESEND_API_KEY` and `EMAIL_FROM` (for example `Free Life Collective <hello@yourdomain.com>`), from the email service once the domain is verified.
+- `CRON_SECRET` (any long random text). `vercel.json` runs `/api/email/drain` every 10 minutes with it.
+- `EMAIL_LINK_SECRET` (optional, any long random text) for the unsubscribe links; it falls back to the service key.
+- `NEXT_PUBLIC_SITE_URL` (the portal's real address) so the links in the emails point to the right place.
+
+The admin page "Emails" shows what is waiting, sent, failed and how many people unsubscribed.

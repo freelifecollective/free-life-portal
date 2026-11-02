@@ -56,6 +56,7 @@ const NAV: NavItem[] = [
   { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true, group: "Admin only" },
   { label: "People and invites", href: "/admin/people", min: "admin", admin: true, group: "Admin only" },
   { label: "Affiliates and leads", href: "/admin/affiliates", min: "admin", admin: true, group: "Admin only" },
+  { label: "Emails", href: "/admin/emails", min: "admin", admin: true, group: "Admin only" },
   { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Admin only" },
 ];
 
