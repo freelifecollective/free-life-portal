@@ -2160,3 +2160,11 @@ html, body { max-width: 100%; overflow-x: clip; }
 .routine-links { margin: 0; font-size: 14px; color: var(--muted); }
 .routine-links .linkbtn { font-size: 14px; }
 .tasks-badges { padding: 0; border: 0; border-radius: 0; background: transparent; }
+
+.tasks-side-top { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.tasks-side-top .badge-strip { margin: 0; padding: 0; border: 0; }
+.routine-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; }
+.routine-links .linkbtn { display: inline; width: auto; padding: 0; }
+.routine-star { color: var(--accent); font-size: 13px; }
+.tasks-badges { order: -1; }
+@media (min-width: 1000px) { .tasks-badges { order: 0; } }
