@@ -110,6 +110,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
   const alreadyBest = suggestion && suggestion.ids.join() === todayList.map((t) => t.id).join();
 
   return (
+    <div className="tasks-layout">
     <div className="tasks">
       <div className="tasks-top">
         <div className="tasks-progress" aria-label={`${doneToday.length} of ${total} done today`}>
@@ -122,7 +123,6 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
           <button type="button" className="btn" onClick={() => openRoutine("faith")}>{ROUTINES.faith.label}</button>
           <button type="button" className="btn" onClick={() => openRoutine("spiritual")}>{ROUTINES.spiritual.label}</button>
           <button type="button" className="btn primary" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
-          <BadgeStrip keys={badgeKeys} />
         </div>
       </div>
 
@@ -256,6 +256,8 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
         onSave={save} onClose={() => setEditing(null)} />
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
       {newBadges.length ? <BadgeToast keys={newBadges} onClose={() => setNewBadges([])} /> : null}
+    </div>
+    {badgeKeys.length ? <aside className="tasks-badges" aria-label="Your badges"><h2 className="qh" style={{ margin: "0 0 10px", fontSize: 18 }}>Your badges</h2><BadgeStrip keys={badgeKeys} /></aside> : null}
     </div>
   );
 }
