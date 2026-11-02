@@ -77,7 +77,6 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       diag.setAttribute("translate", "no");
       box.current.appendChild(diag);
       const say = (t: string) => { if (diag.textContent!.length < 1500) diag.textContent += t + "\n"; };
-      say("v: maplibre " + ml.version);
       m.on("error", (e) => say("error: " + String((e as unknown as { error?: { message?: string } }).error?.message ?? e).slice(0, 200)));
       m.on("load", () => say("loaded; layers=" + m.getStyle().layers.length));
       m.on("idle", () => { try { say("idle; land features drawn=" + m.queryRenderedFeatures({ layers: ["land"] }).length + "; zoom=" + m.getZoom().toFixed(1)); } catch (e) { say("idle query failed " + e); } });
