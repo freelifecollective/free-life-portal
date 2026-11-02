@@ -49,6 +49,6 @@ const REST = SPIRITUAL.filter((r) => r.group !== "Mindset work");
 
 export type RoutineKey = "faith" | "spiritual";
 export const ROUTINES: Record<RoutineKey, { label: string; items: RoutineItem[] }> = {
-  faith: { label: "Recommended daily routine", items: [...FAITH_MINDSET, ...REST] },
+  faith: { label: "Recommended daily routine (faith-based)", items: [...FAITH_MINDSET, ...REST] },
   spiritual: { label: "Recommended daily routine (spiritual)", items: SPIRITUAL },
 };

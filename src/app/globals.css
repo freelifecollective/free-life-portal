@@ -2166,5 +2166,3 @@ html, body { max-width: 100%; overflow-x: clip; }
 .routine-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; }
 .routine-links .linkbtn { display: inline; width: auto; padding: 0; }
 .routine-star { color: var(--accent); font-size: 13px; }
-.tasks-badges { order: -1; }
-@media (min-width: 1000px) { .tasks-badges { order: 0; } }
