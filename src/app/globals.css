@@ -2088,3 +2088,4 @@ html, body { max-width: 100%; overflow-x: clip; }
 .sup-calls .rv-meta { font-size: 12px; }
 .doc-grid.sup-docs { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .sup-docs .doc-card-name { font-size: 13px; }
+.sup-form { max-width: 720px; }

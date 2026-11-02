@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DocFile, DocFolder } from "./types";
 
 const FOLDER = "id, parent_id, name, for_leads, for_downline";
-const FILE = "id, folder_id, name, mime, size_bytes, downloadable, for_leads, for_downline, created_at, thumb_path";
+const FILE = "id, folder_id, name, mime, size_bytes, downloadable, for_leads, for_downline, created_at, thumb_path, doc_type, keywords";
 
 /** One folder's contents (null = the top level) plus the path of folders leading to it. Row level security decides what the person may see. */
 export async function openFolder(supabase: SupabaseClient, folderId: string | null) {

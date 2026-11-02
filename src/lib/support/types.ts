@@ -10,7 +10,6 @@ export const GROUPS: { kind: SupportHit["kind"]; title: string }[] = [
   { kind: "recording", title: "Watch one of these past calls" },
   { kind: "lesson", title: "Lessons in the classroom" },
   { kind: "document", title: "Documents" },
-  { kind: "resource", title: "Recommended reading and websites" },
 ];
 
 /** Where each kind of result opens. */

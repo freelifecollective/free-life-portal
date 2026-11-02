@@ -1,4 +1,3 @@
-import { PageHeading } from "@/components/PageHeading";
 import { requireAdmin } from "@/lib/auth/guards";
 import { adviseLanguages, countryName, isCountryCode, languageName, languageOf, SUPPORTED_LANGS, type CountryRow } from "@/lib/countries";
 
@@ -16,7 +15,7 @@ export async function CountriesView() {
 
   return (
     <>
-      <PageHeading lede="How many members live in each country, taken from the country they chose in their profile or on the Water Share Map.">Members by country</PageHeading>
+      <p className="page-lede">How many members live in each country, taken from the country they chose in their profile or on the Water Share Map.</p>
       <section className="card-s" style={{ maxWidth: 680, marginBottom: 24 }} aria-label="Languages to consider">
         <h2 className="qh" style={{ marginTop: 0 }}>Languages to add next</h2>
         <p className="when" style={{ marginTop: 0 }}>The portal can be switched to {SUPPORTED_LANGS.map((l) => languageName(l)).join(", ")}. Here are other languages our members speak.</p>

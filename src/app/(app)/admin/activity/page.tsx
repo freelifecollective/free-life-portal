@@ -29,6 +29,8 @@ export default async function ActivityPage(props: PageProps<"/admin/activity">) 
   const rows = (data ?? []) as Row[];
   const people = await authorsById(supabase, rows.flatMap((r) => [r.actor_id, r.undone_by]).filter((x): x is string => !!x));
   const name = (id: string | null) => (id ? people.get(id)?.name ?? "An admin" : "System");
+  const { data: needsData } = await supabase.rpc("support_suggestions");
+  const needs = (needsData ?? []) as { label: string; kind: "theme" | "word"; asked: number; nothing_found: number }[];
   const weeks = groupByWeek(rows);
   const label = months.find((m) => m.value === month)?.label ?? month;
 
@@ -58,6 +60,18 @@ export default async function ActivityPage(props: PageProps<"/admin/activity">) 
             </details>
           ))}
         </div>
+      )}
+      <h2 className="qh" style={{ marginTop: 36 }}>Weekly Focus: needs that keep coming up</h2>
+      <p className="page-lede" style={{ marginTop: -6 }}>Anonymous. Only things asked at least three times in the last three months, as counts: no names and no one&apos;s actual questions are ever kept. Ones that often found nothing are the gaps to fill: add a document (with what it helps with), a recording or a lesson.</p>
+      {needs.length === 0 ? <p className="page-lede">Nothing has come up often enough yet.</p> : (
+        <ul className="admin-list">
+          {needs.map((n) => (
+            <li key={n.kind + n.label}>
+              <div><strong style={{ color: n.nothing_found > 0 ? "var(--bad, #c0261c)" : undefined }}>{n.label}</strong> <span className="doc-tag">{n.kind === "theme" ? "Situation" : "Word"}</span>
+                <div className="muted-line">{`Asked ${n.asked} times · found nothing ${n.nothing_found} ${n.nothing_found === 1 ? "time" : "times"}`}</div></div>
+            </li>
+          ))}
+        </ul>
       )}
     </>
   );

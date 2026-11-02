@@ -1,5 +1,6 @@
 import { PageHeading } from "@/components/PageHeading";
 import { InviteForm } from "@/components/admin/InviteForm";
+import { AffiliatesView } from "@/components/admin/AffiliatesView";
 import { CountriesView } from "@/components/admin/CountriesView";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/guards";
@@ -13,9 +14,12 @@ type Invite = { email: string; role: string; note: string | null; claimed_at: st
 
 export default async function PeoplePage(props: PageProps<"/admin/people">) {
   const sp = await props.searchParams;
-  const view = (Array.isArray(sp.view) ? sp.view[0] : sp.view) === "countries" ? "countries" : "people";
+  const asked = Array.isArray(sp.view) ? sp.view[0] : sp.view;
+  const view = (VIEWS.some(([v]) => v === asked) ? asked : "people") as View;
+  const affiliate = Array.isArray(sp.affiliate) ? sp.affiliate[0] : sp.affiliate;
   const { session, supabase } = await requireAdmin();
   if (view === "countries") return <PeopleShell view={view}><CountriesView /></PeopleShell>;
+  if (view !== "people") return <PeopleShell view={view}><AffiliatesView view={view} affiliate={affiliate} /></PeopleShell>;
   const [people, invites, memberInvites] = await Promise.all([
     supabase.from("profiles").select("id, first_name, last_name, username, email, role, onboarded_at, unpaid_since, removed_at").order("created_at", { ascending: false }).limit(300),
     supabase.from("signup_allowlist").select("email, role, note, claimed_at, created_at").is("claimed_at", null).order("created_at", { ascending: false }).limit(300),
@@ -29,7 +33,7 @@ export default async function PeoplePage(props: PageProps<"/admin/people">) {
 
   return (
     <PeopleShell view={view}>
-      <PageHeading lede={<>Only people on this list can create an account. Leads who register for a call are added automatically. Add leads and FLC Members here. <em>If you select to invite them as a member, this bypasses them having to pay a monthly subscription.</em></>}>People and invites</PageHeading>
+      <p className="page-lede">Only people on this list can create an account. Leads who register for a call are added automatically. Add leads and FLC Members here. <em>If you select to invite them as a member, this bypasses them having to pay a monthly subscription.</em></p>
       <section className="card-s" style={{ maxWidth: 680 }} aria-label="Invite someone">
         <h2 className="qh" style={{ marginTop: 0 }}>Invite someone</h2>
         <InviteForm />
@@ -111,13 +115,16 @@ export default async function PeoplePage(props: PageProps<"/admin/people">) {
   );
 }
 
-/** The two views of the same page: people and invites, and where members live. */
-function PeopleShell({ view, children }: { view: "people" | "countries"; children: React.ReactNode }) {
+type View = "people" | "current" | "past" | "leads" | "by" | "countries";
+const VIEWS: [View, string][] = [["people", "Invites and roles"], ["current", "Current members"], ["past", "Past members"], ["leads", "Leads"], ["by", "By affiliate"], ["countries", "By country"]];
+
+/** One page for everyone: invites and roles, current and past members, leads, each affiliate's people, and where members live. */
+function PeopleShell({ view, children }: { view: View; children: React.ReactNode }) {
   return (
     <>
+      <PageHeading lede="Everyone in the portal in one place: who is invited, who is a member, who is a lead, and where people live.">People</PageHeading>
       <nav className="lead-tabs" aria-label="Which view">
-        <Link className={"chip" + (view === "people" ? " on" : "")} href="/admin/people">People and invites</Link>
-        <Link className={"chip" + (view === "countries" ? " on" : "")} href="/admin/people?view=countries">Members by country</Link>
+        {VIEWS.map(([v, label]) => <Link key={v} className={"chip" + (view === v ? " on" : "")} href={v === "people" ? "/admin/people" : `/admin/people?view=${v}`}>{label}</Link>)}
       </nav>
       {children}
     </>
