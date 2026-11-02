@@ -11,6 +11,7 @@ export type SignedIn = { session: AppSession; supabase: SupabaseClient };
 export async function requireMember(): Promise<{ session: AppSession; supabase: SupabaseClient | null }> {
   const session = await getSession();
   if (!session) redirect("/login");
+  if (session.profile.removed_at) redirect("/removed");
   if (!session.profile.onboarded_at) redirect("/welcome");
   return { session, supabase: session.mode === "supabase" ? await createClient() : null };
 }

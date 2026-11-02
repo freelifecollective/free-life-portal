@@ -2134,3 +2134,10 @@ html, body { max-width: 100%; overflow-x: clip; }
 .rt-note { color: var(--muted); font-size: 14px; line-height: 1.4; }
 
 /* balanced chat pills: BalancedPills closes each row so rows are even (8 chats become 4 + 4, never 7 + 1) without changing the pill size */
+
+/* invites: the invite box fills the left half and the people waiting sit to its right */
+.invite-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (min-width: 900px) { .invite-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.invite-grid .card-s { max-width: none; }
+/* "See new members" / "See FLC members": a smidge in from the chat's right edge */
+.chats .chats-head .chat-members { margin-right: 6px; }

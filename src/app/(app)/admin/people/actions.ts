@@ -30,6 +30,9 @@ export async function inviteEmail(_prev: InviteState, form: FormData): Promise<I
   const note = String(form.get("note") ?? "").trim().slice(0, 200);
   if (!EMAIL.test(email) || email.length > 254) return { error: "Enter a valid email address.", done: "" };
   if (role !== "lead" && role !== "member" && role !== "downline") return { error: "Choose lead, member or downline.", done: "" };
+  const { data: blocked } = await supabase.from("blocked_emails").select("email").eq("email", email).maybeSingle();
+  if (blocked) return { error: "That email has been blocked from the portal, so it cannot be invited.", done: "" };
+  await supabase.rpc("admin_restore_person", { p_email: email, p_role: role });
   const { error } = await supabase.from("signup_allowlist").insert({ email, role, note: note || null, created_by: session.user.id });
   if (error) return { error: error.code === "23505" ? "That email is already on the list." : "We could not add that email. Please try again.", done: "" };
   revalidatePath("/admin/people");
@@ -57,16 +60,21 @@ export async function setRole(form: FormData): Promise<void> {
   revalidatePath("/admin/people");
 }
 
-/** Membership standing, until payments can set it automatically: the date someone stopped paying, and whether they were removed from the community. */
-export async function setStanding(form: FormData): Promise<void> {
+export type RemoveResult = { error: string } | { ok: true };
+
+/** Take someone out of the portal: they lose access to everything and need a new invite to come back. "block" also stops that email ever having an account. */
+export async function removePerson(id: string, mode: "remove" | "block", reason: string, note: string, typed: string): Promise<RemoveResult> {
   const { session, supabase } = await requireAdmin();
-  const id = String(form.get("id") ?? "");
-  const since = String(form.get("unpaid_since") ?? "").trim();
-  const removed = form.get("removed") === "on";
-  if (!UUID.test(id) || id === session.user.id) return;
-  if (since && !/^\d{4}-\d{2}-\d{2}$/.test(since)) return;
-  await supabase.from("profiles").update({ unpaid_since: since || null, removed_at: removed ? new Date().toISOString() : null }).eq("id", id);
+  if (!UUID.test(id) || id === session.user.id) return { error: "That person cannot be removed." };
+  if (mode !== "remove" && mode !== "block") return { error: "Something went wrong." };
+  if (typed.trim().toLowerCase() !== mode) return { error: `Type the word ${mode} to confirm.` };
+  const why = note.trim().slice(0, 500);
+  if (mode === "remove") {
+    if (reason !== "cancelled" && reason !== "unpaid" && reason !== "manual") return { error: "Choose why they are being removed." };
+    if (reason === "manual" && !why) return { error: "Please say why you are removing them, so it is noted for the future." };
+  }
+  const { error } = await supabase.rpc("admin_remove_person", { p_id: id, p_reason: mode === "block" ? "manual" : reason, p_note: why || null, p_block: mode === "block" });
+  if (error) return { error: error.message.includes("change them to a member") ? "Change them from admin to member first." : "We could not remove them. Please try again." };
   revalidatePath("/admin/people");
+  return { ok: true };
 }
-
-

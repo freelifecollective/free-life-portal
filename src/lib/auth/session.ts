@@ -7,7 +7,7 @@ import type { AppSession, Profile } from "@/lib/profile/types";
 import { createClient } from "@/lib/supabase/server";
 
 const PROFILE_COLUMNS =
-  "id, first_name, last_name, username, instagram, facebook, avatar_url, avatar_kind, role, onboarded_at, call_closer";
+  "id, first_name, last_name, username, instagram, facebook, avatar_url, avatar_kind, role, onboarded_at, call_closer, removed_at";
 
 /**
  * The signed-in user and their profile, verified with the auth server (never trust cookies alone).

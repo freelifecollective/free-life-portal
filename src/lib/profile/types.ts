@@ -15,6 +15,7 @@ export type Profile = {
   avatar_kind: AvatarKind | null;
   role: Role;
   onboarded_at: string | null;
+  removed_at?: string | null;
 };
 
 export type AppSession = {
