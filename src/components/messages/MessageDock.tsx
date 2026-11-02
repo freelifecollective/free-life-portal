@@ -1,5 +1,6 @@
 "use client";
 
+import { LeadWarning } from "@/components/messages/LeadWarning";
 import { PersonTap } from "@/components/people/ProfilePopup";
 import { UserText } from "@/components/UserText";
 import Link from "next/link";
@@ -301,6 +302,7 @@ function ChatWindow({ me, other, min, tick, onMin, onClose, onCounts }: { me: st
       </header>
       {!min ? (
         <>
+          <LeadWarning otherId={other.id} />
           <div className="dock-thread" aria-live="polite">
             {msgs.length === 0 ? <p className="dock-empty">Say hello to {other.first_name ?? "them"}.</p> : null}
             {msgs.map((m, i) => {
