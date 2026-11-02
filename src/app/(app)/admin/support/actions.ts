@@ -34,11 +34,3 @@ export async function removeResource(form: FormData): Promise<void> {
   await supabase.from("support_resources").delete().eq("id", id);
   revalidatePath("/admin/support");
 }
-
-export async function clearQuestion(form: FormData): Promise<void> {
-  const { supabase } = await requireAdmin();
-  const id = String(form.get("id") ?? "");
-  if (!UUID.test(id)) return;
-  await supabase.from("support_questions").delete().eq("id", id);
-  revalidatePath("/admin/support");
-}
