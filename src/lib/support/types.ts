@@ -1,0 +1,25 @@
+export type SupportHit = { kind: "resource" | "recording" | "lesson" | "document" | "call"; id: string; parent: string | null; title: string; blurb: string; url: string | null; at: string | null; rank: number; /** for a recommended resource: book, website, … */ sub: string | null };
+
+export const RESOURCE_KINDS = ["book", "website", "video", "podcast", "document", "other"] as const;
+export type ResourceKind = (typeof RESOURCE_KINDS)[number];
+export const KIND_LABEL: Record<ResourceKind, string> = { book: "Book", website: "Website", video: "Video", podcast: "Podcast", document: "Document", other: "Other" };
+
+/** The groups on the results page, in the order they are shown. */
+export const GROUPS: { kind: SupportHit["kind"]; title: string }[] = [
+  { kind: "call", title: "Calls to join" },
+  { kind: "recording", title: "Recordings to watch" },
+  { kind: "lesson", title: "Lessons in the classroom" },
+  { kind: "document", title: "Documents" },
+  { kind: "resource", title: "Recommended reading and websites" },
+];
+
+/** Where each kind of result opens. */
+export function hrefOf(h: SupportHit): string | null {
+  switch (h.kind) {
+    case "call": return "/calendar";
+    case "recording": return `/calls/${h.id}`;
+    case "lesson": return h.parent ? `/classroom/${h.parent}` : "/classroom";
+    case "document": return h.parent ? `/documents?f=${h.parent}` : "/documents";
+    case "resource": return h.url;
+  }
+}
