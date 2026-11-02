@@ -41,7 +41,7 @@ export function BirthdayParty({ personId, name, year, isOpen, isMe, isAdmin, wis
       {isOpen && isMe ? <p className="when">It&apos;s your birthday! Everyone&apos;s wishes will gather here, and tonight they become a card you can keep.</p> : null}
       {!isOpen && !isMe ? <p className="when">This birthday chat has finished. Birthday wishes are open on the day.</p> : null}
       {msg ? <p className="err" role="alert">{msg}</p> : null}
-      {wishes.length === 0 ? <p className="page-lede" style={{ margin: 0 }}>{isOpen ? "No wishes yet. Be the first!" : "No wishes were left on this day."}</p> : (
+      {wishes.length === 0 ? (isOpen ? <p className="page-lede" style={{ margin: 0 }}>No wishes yet. Be the first!</p> : null) : (
         <ul className="bday-list">
           {wishes.map((w) => (
             <li key={w.id} className="card-s bday-wish">
