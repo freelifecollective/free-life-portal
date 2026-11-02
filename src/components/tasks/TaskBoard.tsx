@@ -28,7 +28,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
   const [party, setParty] = useState(false);
   const [newBadges, setNewBadges] = useState<string[]>([]);
   const [pending, run] = useTransition();
-  const [routineOpen, setRoutineOpen] = useState<RoutineKey | null>(initial.length === 0 ? "faith" : null);
+  const [routineOpen, setRoutineOpen] = useState<RoutineKey | null>(null);
   const [picks, setPicks] = useState<number[]>(ROUTINES.faith.items.map((_, i) => i));
   const DAILY_ROUTINE = ROUTINES[routineOpen ?? "faith"].items;
   const openRoutine = (k: RoutineKey) => { if (routineOpen === k) { setRoutineOpen(null); return; } setRoutineOpen(k); setPicks(ROUTINES[k].items.map((_, i) => i)); };
@@ -118,13 +118,13 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
           <div className="tasks-bar"><i style={{ width: total ? `${(doneToday.length / total) * 100}%` : "0%" }} /></div>
           <p className="routine-links">
             <button type="button" className="linkbtn" onClick={() => openRoutine("faith")}>{ROUTINES.faith.label}</button>
-            <span className="routine-star" aria-hidden="true">✦</span>
             <button type="button" className="linkbtn" onClick={() => openRoutine("spiritual")}>{ROUTINES.spiritual.label}</button>
           </p>
           {streaks ? <StreakLine streaks={streaks} /> : null}
         </div>
         <div className="tasks-actions">
           {todayList.length > 1 ? <button type="button" className="btn" onClick={() => setSuggestion(suggestOrder(todayList, today))}>Suggest the best order</button> : null}
+          <button type="button" className="btn primary tasks-add" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
         </div>
       </div>
 
@@ -259,7 +259,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
       {newBadges.length ? <BadgeToast keys={newBadges} onClose={() => setNewBadges([])} /> : null}
     </div>
-    <aside className="tasks-badges" aria-label="Your badges"><div className="tasks-side-top"><button type="button" className="btn primary tasks-add" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button><BadgeStrip keys={badgeKeys} /></div></aside>
+    {badgeKeys.length ? <aside className="tasks-badges" aria-label="Your badges"><BadgeStrip keys={badgeKeys} /></aside> : null}
     </div>
   );
 }
