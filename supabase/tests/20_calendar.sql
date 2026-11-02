@@ -142,7 +142,7 @@ do $$ declare r jsonb; begin
 end $$;
 select tests.eq('one registration was stored (second attempt is a no-op)', (select count(*) from public.registrations where email = 'nora.new@example.com'), 1::bigint);
 select tests.eq('the name was trimmed', (select name from public.registrations where email = 'nora.new@example.com'), 'Nora New');
-select tests.eq('one confirmation email is waiting, not two', (select count(*) from public.email_outbox where to_email = 'nora.new@example.com'), 1::bigint);
+select tests.eq('one confirmation email is waiting, not two', (select count(*) from public.email_outbox where to_email = 'nora.new@example.com' and template = 'registration_confirmation'), 1::bigint);
 select tests.eq('registering puts the email on the invite list as a lead', (select role::text from public.signup_allowlist where email = 'nora.new@example.com'), 'lead');
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e1', 'nora.new@example.com');
 select tests.eq('the registered lead can now create an account', (select role::text from public.profiles where id = '00000000-0000-0000-0000-0000000000e1'), 'lead');
@@ -156,7 +156,7 @@ do $$ begin
   perform tests.fails('a member cannot change their own email', $q$update public.profiles set email = 'other@example.com' where id = auth.uid()$q$, '42501');
   perform tests.login('00000000-0000-0000-0000-0000000000c1');
   perform tests.eq('admins can read registrations', (select count(*) from public.registrations), 1::bigint);
-  perform tests.eq('admins can read the outbox', (select count(*) from public.email_outbox), 1::bigint);
+  perform tests.eq('admins can read the outbox', (select count(*) from public.email_outbox where template = 'registration_confirmation'), 1::bigint);
   perform tests.eq('admins can read member emails', (select email::text from public.profiles where id = '00000000-0000-0000-0000-0000000000b1'), 'member1@example.com');
   perform tests.logout();
 end $$;
