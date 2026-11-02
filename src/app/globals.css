@@ -2106,14 +2106,11 @@ html, body { max-width: 100%; overflow-x: clip; }
 /* ---- chat width: the conversation is a comfortable width, with the subtitle in a side card on bigger screens ---- */
 .chats .chat-main, .chats .chats-head { max-width: 940px; }
 .chats .cv-scroll { height: calc(100dvh - 360px); }
-@media (min-width: 1280px) {
-  .chats { grid-template-columns: minmax(0, 940px) 300px; grid-template-areas: "list list" "title about" "main about"; column-gap: 28px; justify-content: start; }
-  .chats-head { display: contents; }
-  .chats .chats-head > .page-heading { grid-area: title; }
-  .chats .chats-head > .page-lede { grid-area: about; align-self: start; margin: 4px 0 0; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
-  .chats .chats-head > :not(.page-heading):not(.page-lede) { grid-area: about; align-self: start; }
-  .chats .chat-main { grid-area: main; }
-}
+/* the subtitle sits right under the chat name on the page background, and "See members" sits above the chat at its right edge */
+.chats .chats-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.chats .chats-head-text { flex: 1 1 320px; min-width: 0; }
+.chats .chats-head .chat-members { flex: none; }
+.chats .chats-head .page-lede { background: none; border: 0; padding: 0; }
 .gl-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .gl-item { display: grid; gap: 4px; text-decoration: none; color: inherit; }
 .gl-item:hover { background: var(--tint); }

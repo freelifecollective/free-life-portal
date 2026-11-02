@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
-import { ChatList } from "@/components/chats/ChatList";
+import { ChatList, kindOf } from "@/components/chats/ChatList";
+import { MemberList } from "@/components/chats/MemberList";
 import { Composer } from "@/components/chats/Composer";
 import { LiveRefresh } from "@/components/chats/LiveRefresh";
 import { SeenReporter } from "@/components/chats/SeenReporter";
 import { PinnedPost } from "@/components/chats/PinnedPost";
 import { PostCard } from "@/components/chats/PostCard";
-import { canSee } from "@/lib/roles";
+import { canSee, isAffiliate } from "@/lib/roles";
 import { SubmitResource } from "@/components/chats/SubmitResource";
 import { requireMember } from "@/lib/auth/guards";
 import { mySubmissions } from "@/lib/resources/queries";
@@ -49,6 +50,10 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
       </>
     );
   }
+  const mk = kindOf(chat.name);
+  const members = mk && isAffiliate(role)
+    ? <span className="chat-members"><MemberList kind={mk} title={mk === "affiliates" ? "FLC Members" : "New Members"} canMessage>{mk === "affiliates" ? "See FLC Members" : "See New Members"}</MemberList></span>
+    : null;
   const limit = Math.min(300, Math.max(PAGE, Number(Array.isArray(sp.limit) ? sp.limit[0] : sp.limit) || PAGE));
   if (chat.mode === "conversation") {
     const { messages, more } = await listConversation(supabase, chat, session.user.id, session.profile.role === "admin", limit);
@@ -56,7 +61,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
     const admin = session.profile.role === "admin";
     return (
       <div className="chats">
-        <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={((role === "lead" || role === "downline") ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
+        <div className="chats-head"><div className="chats-head-text"><PageHeading ledeClass="chat-lede" lede={((role === "lead" || role === "downline") ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>{members}</div>
         <ChatList sections={sections} current={slug} role={role} muted={side.muted} unread={side.unread} groups={side.groups} />
         <div className="chat-main">
           <LiveRefresh />
@@ -76,7 +81,7 @@ export default async function ChatPage(props: PageProps<"/chats/[slug]">) {
   return (
     <>
       <div className="chats">
-        <div className="chats-head"><PageHeading ledeClass="chat-lede" lede={((role === "lead" || role === "downline") ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>
+        <div className="chats-head"><div className="chats-head-text"><PageHeading ledeClass="chat-lede" lede={((role === "lead" || role === "downline") ? chat.description_lead : null) ?? chat.description ?? undefined}>{chat.name}</PageHeading></div>{members}</div>
         <ChatList sections={sections} current={slug} role={role} muted={side.muted} unread={side.unread} groups={side.groups} />
         <div className="chat-main">
           <LiveRefresh />
