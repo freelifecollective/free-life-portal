@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { deleteComment, deletePost, editMessage, pinPost, searchMessages, sendMessage, type Hit } from "@/app/(app)/chats/actions";
+import { deleteComment, deletePost, editMessage, pinPost, searchMessages, sendMessage, toggleVote, type Hit } from "@/app/(app)/chats/actions";
 import { deleteGroupMessage, sendGroupMessage } from "@/app/(app)/groups/actions";
 import { Avatar } from "@/components/Avatar";
 import { PersonLink } from "@/components/people/ProfilePopup";
@@ -24,8 +24,8 @@ const snippet = (s: string) => (s.length > 90 ? s.slice(0, 88) + "…" : s);
  * A conversation like Telegram: oldest at the top, newest at the bottom, your messages on the right, a box at the bottom to write in,
  * replies that quote the message they answer, and the view stays at the bottom as new messages come in.
  */
-export function ConversationView({ messages, kind, targetId, slug = "", canPost, placeholder, moreHref, nowIso, readOnlyText, jumpTo, canPin = false, basePath, me }: {
-  me: string; messages: Msg[]; kind: "chat" | "group"; targetId: string; slug?: string; canPost: boolean; placeholder: string; moreHref?: string; nowIso: string; readOnlyText?: string; jumpTo?: string; canPin?: boolean; basePath: string;
+export function ConversationView({ messages, kind, targetId, slug = "", canPost, placeholder, moreHref, nowIso, readOnlyText, jumpTo, canPin = false, basePath, me, voting = false }: {
+  voting?: boolean; me: string; messages: Msg[]; kind: "chat" | "group"; targetId: string; slug?: string; canPost: boolean; placeholder: string; moreHref?: string; nowIso: string; readOnlyText?: string; jumpTo?: string; canPin?: boolean; basePath: string;
 }) {
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
@@ -179,6 +179,10 @@ export function ConversationView({ messages, kind, targetId, slug = "", canPost,
                 </div>
                 <div className="cv-tools">
                   {canPost ? <button type="button" className="cv-tool" onClick={() => { setReplyTo(m); area.current?.focus(); }}>Reply</button> : null}
+                  {voting && kind === "chat" && !m.legacy ? (
+                    m.mine ? <span className="cv-tool vote-count">{`${m.votes ?? 0} ${(m.votes ?? 0) === 1 ? "vote" : "votes"}`}</span>
+                    : <button type="button" className={"cv-tool cv-vote" + (m.voted ? " on" : "")} disabled={pending} onClick={() => start(async () => { const r = await toggleVote(m.id, slug, !m.voted); if (!r.ok) setError(r.error ?? "That did not work."); else router.refresh(); })}>{m.voted ? "Voted" : "Vote for this answer"} · {m.votes ?? 0}</button>
+                  ) : null}
                   {kind === "chat" && !m.legacy ? <Reactions postId={m.id} slug={slug} reactions={m.reactions ?? []} mine={m.myReaction ?? null} onError={setError} /> : null}
                   {m.canDelete ? <button type="button" className="cv-tool danger" onClick={() => remove(m)}>Delete</button> : null}
                 </div>

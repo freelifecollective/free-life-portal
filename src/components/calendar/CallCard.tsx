@@ -1,6 +1,6 @@
 import { UserText } from "@/components/UserText";
 import Link from "next/link";
-import { AUDIENCE_LABEL, KIND_LABEL, speakersOf, type Call, type RsvpMode, type RsvpSummary } from "@/lib/calls/types";
+import { KIND_LABEL, audienceTags, speakersOf, type Call, type RsvpMode, type RsvpSummary } from "@/lib/calls/types";
 import { endsAt, formatInZone } from "@/lib/time";
 import { LiveBadge } from "@/components/LiveBadge";
 import { FeedbackLink } from "@/components/calls/FeedbackLink";
@@ -42,7 +42,7 @@ export function CallCard({ call, summary, featured = false, now, review, attenda
       <div className="call-tags">
         {featured ? <span className="tag tag-pin">Next call</span> : null}
         <span className="tag">{KIND_LABEL[call.kind]}</span>
-        <span className={"tag" + (call.audience === "affiliates_only" ? " tag-dark" : "")}>{AUDIENCE_LABEL[call.audience]}</span>
+        {audienceTags(call).map((t) => <span key={t.label} className={"tag" + (t.dark ? " tag-dark" : "")}>{t.label}</span>)}
         {live ? <LiveBadge>LIVE · Happening now</LiveBadge> : null}
       </div>
       <h2 id={`call-${call.id}`} className="call-title"><UserText text={call.title} /></h2>

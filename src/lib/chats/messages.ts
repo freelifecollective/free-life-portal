@@ -19,6 +19,9 @@ export type Msg = {
   audio_secs?: number | null;
   edited_at?: string | null;
   pinned?: boolean;
+  /** for a chat where people vote on answers (Verbiage + Objections): how many votes, and whether I voted */
+  votes?: number;
+  voted?: boolean;
   /** a GIF sent with (or instead of) the text */
   image_url?: string | null;
   /** people who have seen my message, and when (only filled in for my own messages) */

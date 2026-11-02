@@ -44,21 +44,25 @@ const NAV: NavItem[] = [
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
   { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
-  { label: "Admin only", min: "admin", admin: true, heading: true, group: "Admin only" },
-  { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Admin only" },
-  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Admin only" },
-  { label: "Members by country", href: "/admin/countries", min: "admin", admin: true, group: "Admin only" },
-  { label: "Call closer applications", href: "/admin/closer-applications", min: "admin", admin: true, group: "Admin only" },
-  { label: "Manage courses", href: "/admin/classroom", min: "admin", admin: true, group: "Admin only" },
-  { label: "Manage graphics", href: "/admin/graphics", min: "admin", admin: true, group: "Admin only" },
-  { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Admin only" },
-  { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Admin only" },
-  { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Admin only" },
-  { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true, group: "Admin only" },
-  { label: "People and invites", href: "/admin/people", min: "admin", admin: true, group: "Admin only" },
-  { label: "Affiliates and leads", href: "/admin/affiliates", min: "admin", admin: true, group: "Admin only" },
-  { label: "Emails", href: "/admin/emails", min: "admin", admin: true, group: "Admin only" },
-  { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Admin only" },
+  { label: "Calls and Recordings", min: "admin", admin: true, heading: true, group: "Calls and Recordings" },
+  { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Calls and Recordings" },
+  { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Calls and Recordings" },
+  { label: "Members and Leads", min: "admin", admin: true, heading: true, group: "Members and Leads" },
+  { label: "People and invites", href: "/admin/people", min: "admin", admin: true, group: "Members and Leads" },
+  { label: "Affiliates and leads", href: "/admin/affiliates", min: "admin", admin: true, group: "Members and Leads" },
+  { label: "Members by country", href: "/admin/countries", min: "admin", admin: true, group: "Members and Leads" },
+  { label: "Call closer applications", href: "/admin/closer-applications", min: "admin", admin: true, group: "Members and Leads" },
+  { label: "Content", min: "admin", admin: true, heading: true, group: "Content" },
+  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Content" },
+  { label: "Manage courses", href: "/admin/classroom", min: "admin", admin: true, group: "Content" },
+  { label: "Manage graphics", href: "/admin/graphics", min: "admin", admin: true, group: "Content" },
+  { label: "Update Documents", href: "/admin/documents", min: "admin", admin: true, group: "Content" },
+  { label: "Submissions", min: "admin", admin: true, heading: true, group: "Submissions" },
+  { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Submissions" },
+  { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true, group: "Submissions" },
+  { label: "Activity and Emails", min: "admin", admin: true, heading: true, group: "Activity and Emails" },
+  { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Activity and Emails" },
+  { label: "Emails", href: "/admin/emails", min: "admin", admin: true, group: "Activity and Emails" },
 ];
 
 /** Home and Chats first, then the "FLC Calls", "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
@@ -69,9 +73,11 @@ function ordered(items: NavItem[]): NavItem[] {
   const sales = items.filter((n) => n.group === "Placing Sales");
   const calls = items.filter((n) => n.group === "FLC Calls");
   const rest = items.filter((n) => n.label !== "Home" && n.label !== "Chats" && !n.admin && !n.group).sort(az);
-  const admin = items.filter((n) => n.admin);
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
-  return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...rest, ...sections(admin)];
+  /* the admin menu is several folding sections, each with its tabs A to Z, in the order they are listed above */
+  const adminHeads = items.filter((n) => n.admin && n.heading);
+  const adminTabs = adminHeads.flatMap((h) => [h, ...items.filter((n) => n.admin && !n.heading && n.group === h.label).sort(az)]);
+  return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...rest, ...adminTabs];
 }
 
 export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {

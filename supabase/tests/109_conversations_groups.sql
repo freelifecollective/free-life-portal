@@ -38,7 +38,7 @@ update public.profiles set first_name='Lena', last_name='L', username='lenalead'
 -- Conversations and groups
 do $$ declare g uuid; m1 uuid; m2 uuid; cid uuid; p1 uuid; p2 uuid; n int; begin
   perform tests.eq('community chats became conversations', (select count(*) from public.chats where mode = 'conversation' and slug = 'important-updates'), 0::bigint);
-  perform tests.eq('the voting chat stays a feed', (select mode from public.chats where slug = 'verbiage-objections'), 'feed');
+  perform tests.eq('the voting chat is an ongoing chat (people still vote)', (select mode from public.chats where slug = 'verbiage-objections'), 'conversation');
   perform tests.eq('a normal chat is a conversation', (select mode from public.chats where slug = 'wins'), 'conversation');
   select id into cid from public.chats where slug = 'qa-discussion';
   perform tests.login('00000000-0000-0000-0000-0000000000a1');

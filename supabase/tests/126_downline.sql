@@ -56,7 +56,7 @@ begin
   perform tests.logout();
 
   -- calls
-  insert into public.calls (title, starts_at, audience) values ('Downline call', now() + interval '2 days', 'downline_open') returning id into c_dl;
+  insert into public.calls (title, starts_at, audience, downline_open) values ('Downline call', now() + interval '2 days', 'affiliates_only', true) returning id into c_dl;
   insert into public.calls (title, starts_at, audience) values ('Lead call', now() + interval '2 days', 'leads_open') returning id into c_lead;
   insert into public.calls (title, starts_at, audience) values ('FLC call', now() + interval '2 days', 'affiliates_only') returning id into c_aff;
   perform tests.login(dl);
@@ -99,10 +99,14 @@ begin
 
   -- messages
   perform tests.login(dl);
-  perform tests.eq('downline cannot message anyone', public.can_message(mia), false);
+  perform tests.eq('downline can message an affiliate', public.can_message(mia), true);
+  perform tests.eq('downline cannot message a lead', public.can_message(lena), false);
   perform tests.logout();
   perform tests.login(mia);
-  perform tests.eq('nobody can message the downline', public.can_message(dl), false);
+  perform tests.eq('an affiliate can message the downline', public.can_message(dl), true);
+  perform tests.logout();
+  perform tests.login(lena);
+  perform tests.eq('a lead cannot message the downline', public.can_message(dl), false);
   perform tests.logout();
 
   -- the public sign-up page

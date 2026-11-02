@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ token: stri
   if (!p || p.removed_at) return new NextResponse("Not found", { status: 404 });
   let q = db.from("calls").select(CALL_COLUMNS).gte("starts_at", new Date(Date.now() - 30 * 86400_000).toISOString()).order("starts_at");
   if (p.role === "lead") q = q.eq("audience", "leads_open");
-  else if (p.role === "downline") q = q.eq("audience", "downline_open");
+  else if (p.role === "downline") q = q.eq("downline_open", true);
   const { data } = await q;
   const ics = buildIcs((data ?? []) as Call[], `${req.nextUrl.origin}/calls`);
   return new NextResponse(ics, { headers: { "content-type": "text/calendar; charset=utf-8", "cache-control": "private, max-age=300" } });
