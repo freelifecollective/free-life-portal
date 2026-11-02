@@ -19,7 +19,7 @@ import { UserMenu } from "./UserMenu";
 import { ProfilePopupProvider } from "./people/ProfilePopup";
 import { isAffiliate } from "@/lib/roles";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean; downline?: boolean };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean; downline?: boolean; caption?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
@@ -44,6 +44,7 @@ const NAV: NavItem[] = [
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
   { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
+  { label: "Admin only", min: "admin", admin: true, caption: true },
   { label: "Calls and Recordings", min: "admin", admin: true, heading: true, group: "Calls and Recordings" },
   { label: "Manage calls", href: "/admin/calls", min: "admin", admin: true, group: "Calls and Recordings" },
   { label: "Manage recordings", href: "/admin/recordings", min: "admin", admin: true, group: "Calls and Recordings" },
@@ -76,7 +77,8 @@ function ordered(items: NavItem[]): NavItem[] {
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
   /* the admin menu is several folding sections, each with its tabs A to Z, in the order they are listed above */
   const adminHeads = items.filter((n) => n.admin && n.heading);
-  const adminTabs = adminHeads.flatMap((h) => [h, ...items.filter((n) => n.admin && !n.heading && n.group === h.label).sort(az)]);
+  const cap = (n: NavItem) => (n.caption ? [n] : [n, ...items.filter((x) => x.admin && !x.heading && x.group === n.label).sort(az)]);
+  const adminTabs = [...items.filter((n) => n.caption), ...adminHeads].flatMap(cap);
   return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...rest, ...adminTabs];
 }
 
@@ -113,7 +115,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => (canSee(p.role, n.min) || (!!n.downline && p.role === "downline")) && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map(({ label, href, heading, group }) => ({ label, href, heading, group, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => (canSee(p.role, n.min) || (!!n.downline && p.role === "downline")) && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map(({ label, href, heading, group, caption }) => ({ label, href, heading, group, caption, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
         </NavPanel>
         <main className="main" id="main">{session.mode === "supabase" && isAffiliate(p.role) ? <BirthdayBanner /> : null}{children}</main>
       </div>

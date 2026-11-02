@@ -219,6 +219,7 @@ export const conversations: readonly Entry[] = [
   ["Content", "Contenido", "Contenu", "Contenuti", "Inhalte"],
   ["Submissions", "Envíos", "Soumissions", "Invii", "Einreichungen"],
   ["Activity and Emails", "Actividad y correos", "Activité et e-mails", "Attività ed email", "Aktivität und E-Mails"],
+  ["Admin only", "Solo administradores", "Réservé aux administrateurs", "Solo amministratori", "Nur für Admins"],
   ["Balanced", "Equilibrado", "Équilibré", "Bilanciato", "Ausgeglichen"],
   ["Add your first accounts", "Añade tus primeras cuentas", "Ajoute tes premiers comptes", "Aggiungi i tuoi primi account", "Füge deine ersten Konten hinzu"],
   ["Anyone with this link can look at this chart (they cannot change it). Stop sharing and the link stops working.", "Cualquiera con este enlace puede ver este gráfico (no puede cambiarlo). Deja de compartir y el enlace deja de funcionar.", "Toute personne avec ce lien peut voir ce graphique (sans pouvoir le modifier). Arrête le partage et le lien ne fonctionne plus.", "Chiunque abbia questo link può vedere questo grafico (senza modificarlo). Interrompi la condivisione e il link smette di funzionare.", "Jeder mit diesem Link kann dieses Diagramm ansehen (aber nicht ändern). Beende das Teilen und der Link funktioniert nicht mehr."],
