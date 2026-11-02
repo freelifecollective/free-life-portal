@@ -3,7 +3,7 @@
 import { openDockChat } from "@/components/messages/MessageDock";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { ExpressionSpecification, LayerSpecification, Map as GLMap, Marker, Popup, SourceSpecification } from "maplibre-gl";
+import type { ExpressionSpecification, LayerSpecification, Map as GLMap, Marker, Popup } from "maplibre-gl";
 import { currentLang } from "@/lib/language";
 import { Avatar } from "@/components/Avatar";
 import { ProfileCard, type MemberPerson } from "@/components/chats/ProfileCard";
@@ -51,8 +51,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       if (cancelled || !box.current) return;
       lib.current = ml;
       const lang = currentLang();
-      /* The map's base is drawn from country shapes that ship with the portal, so it always appears (no outside map server has to answer).
-         Street-level pictures are laid on top when they load, and the country names are written in the member's own language. */
+      /* The map itself is OpenFreeMap (land, water, borders, states, towns). Country names are drawn by us, in the member's language, from the country shapes bundled with the portal. */
       const [{ feature }, atlas, iso] = await Promise.all([import("topojson-client"), import("world-atlas/countries-110m.json"), import("i18n-iso-countries")]);
       if (cancelled || !box.current) return;
       const topo = (atlas.default ?? atlas) as unknown as Parameters<typeof feature>[0];
@@ -60,16 +59,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       ml.setWorkerUrl(`${location.origin}/maplibre-gl-worker.mjs`);
       const m = new ml.Map({
         container: box.current, center: [5, 25], zoom: 1.6, minZoom: 1.2, maxZoom: 18, attributionControl: { compact: true },
-        style: {
-          version: 8,
-          glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
-          sources: { land: { type: "geojson", data: `${location.origin}/world-countries.geojson` } },
-          layers: [
-            { id: "sea", type: "background", paint: { "background-color": "#cfe3ee" } },
-            { id: "land", type: "fill", source: "land", paint: { "fill-color": "#f3efe6" } },
-            { id: "borders", type: "line", source: "land", paint: { "line-color": "#b9ae9c", "line-width": 0.8 } },
-          ],
-        },
+        style: "https://tiles.openfreemap.org/styles/liberty",
       });
       m.addControl(new ml.NavigationControl({ showCompass: false }), "top-right");
       /* if the map ever reports a problem, say so in a small box (so it can be read from a screenshot) */
@@ -80,26 +70,18 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       const say = (t: string) => { if (diag.textContent!.length < 1500) diag.textContent += t + "\n"; };
       const bad = (t: string) => { diag.hidden = false; say(t); };
       m.on("error", (e) => bad("error: " + String((e as unknown as { error?: { message?: string } }).error?.message ?? e).slice(0, 200)));
-      /* Street-level detail (water, roads, towns) from OpenFreeMap is added on top when it answers. If it does not, the map above still works. */
+      /* Once the map has loaded: its own country names are replaced by ours (written in the member's language), and every other place name (states, cities, towns) is switched to that language too. Done once. */
       m.once("load", () => {
-        void (async () => {
+        const field = ["coalesce", ["get", `name:${lang}`], ["get", `name_${lang}`], ["get", "name:latin"], ["get", "name"]] as ExpressionSpecification;
+        let layers: LayerSpecification[] = [];
+        try { layers = m.getStyle().layers ?? []; } catch { return; }
+        for (const l of layers) {
+          if (l.type !== "symbol") continue;
           try {
-            const res = await fetch("https://tiles.openfreemap.org/styles/liberty");
-            if (!res.ok || cancelled) return;
-            const st = (await res.json()) as { sources: Record<string, SourceSpecification>; layers: LayerSpecification[] };
-            for (const [id, src] of Object.entries(st.sources)) { if (!m.getSource(id)) m.addSource(id, src); }
-            const field = ["coalesce", ["get", `name:${lang}`], ["get", `name_${lang}`], ["get", "name:latin"], ["get", "name"]] as ExpressionSpecification;
-            for (const l of st.layers) {
-              if (l.type === "symbol") {
-                /* only town and city names (country names are drawn above); nothing that needs the map's own icon sheet */
-                if (!/^label_(city|town|village|other)/.test(l.id) || l.layout?.["icon-image"]) continue;
-                l.layout = { ...l.layout, "text-field": field };
-              }
-              /* the open map's own land, water and roads sit on top of the bundled country map (which stays underneath as a backup) */
-              try { m.addLayer(l, l.type === "background" ? "land" : undefined); } catch { /* skip a layer this map cannot draw */ }
-            }
-          } catch { /* no street detail; the country map stays */ }
-        })();
+            if (/^label_(country|continent)/.test(l.id)) { m.setLayoutProperty(l.id, "visibility", "none"); continue; }
+            if (lang !== "en" && l.layout?.["text-field"] !== undefined && JSON.stringify(l.layout["text-field"]).includes("name") && /^label_/.test(l.id)) m.setLayoutProperty(l.id, "text-field", field);
+          } catch { /* keep this layer's own names */ }
+        }
       });
       /* country names in the member's language, put on the map as plain text so they never depend on a font server */
       const names = (() => { try { return new Intl.DisplayNames([lang], { type: "region" }); } catch { return null; } })();
@@ -129,7 +111,7 @@ export function WaterMap({ pins, myId, search = searchPlace }: { pins: WaterPin[
       labels.sort((x, y) => y.area - x.area);
       /* the biggest countries get their names first; a name that would sit on top of one already shown is left out until you zoom in */
       const showNames = () => {
-        const hide = m.getZoom() >= 6;
+        const hide = m.getZoom() >= 7;
         box.current?.classList.toggle("ws-no-names", hide);
         if (hide) return;
         const taken: { x0: number; y0: number; x1: number; y1: number }[] = [];
