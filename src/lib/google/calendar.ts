@@ -4,8 +4,8 @@ import type { Busy } from "./busy";
 
 const ID = process.env.GOOGLE_CLIENT_ID ?? "";
 const SECRET = process.env.GOOGLE_CLIENT_SECRET ?? "";
-/** Only the times you are busy are read: never the names or details of your events. */
-export const SCOPES = "openid email https://www.googleapis.com/auth/calendar.freebusy";
+/** The portal reads only when you are busy (never the names or details of your events), and adds the calls that get booked with you. */
+export const SCOPES = "openid email https://www.googleapis.com/auth/calendar.freebusy https://www.googleapis.com/auth/calendar.events";
 
 export const googleConfigured = Boolean(ID && SECRET);
 
@@ -54,4 +54,40 @@ export async function busyIntervals(memberId: string, fromIso: string, toIso: st
     const j = (await r.json()) as { calendars?: { primary?: { busy?: { start: string; end: string }[] } } };
     return (j.calendars?.primary?.busy ?? []).map((b) => ({ start: new Date(b.start).getTime(), end: new Date(b.end).getTime() })).filter((b) => Number.isFinite(b.start) && Number.isFinite(b.end));
   } catch { return null; }
+}
+
+async function accessFor(memberId: string): Promise<string | null> {
+  if (!googleConfigured) return null;
+  const db = createAdminClient();
+  if (!db) return null;
+  const { data } = await db.from("google_calendar_links").select("refresh_token").eq("member_id", memberId).maybeSingle();
+  const refresh = (data as { refresh_token: string } | null)?.refresh_token;
+  if (!refresh) return null;
+  try {
+    const t = await token({ refresh_token: refresh, grant_type: "refresh_token" });
+    if (t.error === "invalid_grant") { await db.from("google_calendar_links").delete().eq("member_id", memberId); return null; }
+    return t.access_token ?? null;
+  } catch { return null; }
+}
+
+/** Puts a booked call on this member's linked Google Calendar. Returns the event's id, or null when nothing is linked (or the link was made before the portal could add events). */
+export async function addCallEvent(memberId: string, ev: { start: string; end: string; summary: string; description: string; location: string }): Promise<string | null> {
+  const access = await accessFor(memberId);
+  if (!access) return null;
+  try {
+    const r = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=none", {
+      method: "POST", cache: "no-store",
+      headers: { authorization: `Bearer ${access}`, "content-type": "application/json" },
+      body: JSON.stringify({ summary: ev.summary, description: ev.description, location: ev.location, start: { dateTime: ev.start }, end: { dateTime: ev.end }, reminders: { useDefault: true } }),
+    });
+    if (!r.ok) return null;
+    return ((await r.json()) as { id?: string }).id ?? null;
+  } catch { return null; }
+}
+
+/** Takes a cancelled call off the calendar again. */
+export async function removeCallEvent(memberId: string, eventId: string): Promise<void> {
+  const access = await accessFor(memberId);
+  if (!access) return;
+  try { await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}?sendUpdates=none`, { method: "DELETE", cache: "no-store", headers: { authorization: `Bearer ${access}` } }); } catch { /* it stays on their calendar; harmless */ }
 }

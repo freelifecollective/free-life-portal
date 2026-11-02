@@ -8,6 +8,7 @@ import { Avatar } from "@/components/Avatar";
 import { money, type PayRule } from "@/lib/closer/pay";
 import { owedOf, totalOf, type HubCall } from "@/lib/closer/types";
 import { formatInZone } from "@/lib/time";
+import { RoomLink } from "@/components/room/RoomLink";
 import { CallEditor } from "./CallEditor";
 import { PayRules } from "./PayRules";
 
@@ -22,8 +23,10 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
   const router = useRouter();
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState<string | null>(null);
-  const upcoming = calls.filter((c) => new Date(c.starts_at).getTime() > now).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const past = calls.filter((c) => new Date(c.starts_at).getTime() <= now).sort((a, b) => b.starts_at.localeCompare(a.starts_at));
+  /* a call stays "upcoming" while it is happening (and a couple of hours after) until it is completed or recorded */
+  const live = (c: HubCall) => new Date(c.starts_at).getTime() > now - 2 * 3600_000 && !c.completed_at && c.outcome === null;
+  const upcoming = calls.filter((c) => new Date(c.starts_at).getTime() > now || live(c)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  const past = calls.filter((c) => new Date(c.starts_at).getTime() <= now && !live(c)).sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const owing = past.filter((c) => c.outcome === "took_place" && owedOf(c) > 0);
   const byMember = new Map<string, HubCall[]>();
   for (const c of owing) byMember.set(c.member_id, [...(byMember.get(c.member_id) ?? []), c]);
@@ -84,6 +87,7 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
               <li key={c.id}>
                 <div><strong translate="no">{c.lead_name}</strong><br /><span className="when" translate="no">{formatInZone(new Date(c.starts_at))}</span></div>
                 <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>
+                {c.lead_id ? <RoomLink id={c.id} startsAt={c.starts_at} nowIso={new Date(now).toISOString()} /> : null}
                 {c.note ? <p className="when" style={{ margin: 0, flexBasis: "100%" }} translate="no">{c.note}</p> : null}
               </li>
             ))}

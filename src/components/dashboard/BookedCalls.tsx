@@ -4,9 +4,10 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { removeBookedCall } from "@/app/(app)/booked-calls/actions";
 import { Avatar } from "@/components/Avatar";
+import { RoomLink } from "@/components/room/RoomLink";
 import { TrashButton } from "@/components/tasks/TrashButton";
 
-export type BookedCall = { id: string; lead_name: string; when: string; closer: { name: string; photo_url: string | null } | null };
+export type BookedCall = { id: string; lead_name: string; when: string; closer: { name: string; photo_url: string | null } | null; /** set when you are the one taking this call in the portal */ room?: { startsAt: string; nowIso: string } | null };
 
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
 
@@ -36,6 +37,7 @@ export function BookedCalls({ calls }: { calls: BookedCall[] }) {
                   <span><small>Call closer</small><strong>{c.closer.name}</strong></span>
                 </div>
               ) : <span className="when">You are taking this call</span>}
+              {c.room ? <RoomLink id={c.id} startsAt={c.room.startsAt} nowIso={c.room.nowIso} /> : null}
               <TrashButton label={c.lead_name} busy={pending} onConfirm={() => run(async () => { await removeBookedCall(c.id); router.refresh(); })} />
             </li>
           ))}

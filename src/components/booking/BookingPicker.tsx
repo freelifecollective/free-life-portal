@@ -3,13 +3,14 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { bookCall, cancelBooking } from "@/app/(app)/book/actions";
+import { RoomLink } from "@/components/room/RoomLink";
 
 export type Mine = { id: string; starts_at: string };
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
 /** Free times grouped by day, in the time zone of the device you are on. Pick one, confirm, done. */
-export function BookingPicker({ slots, mine, who, minutes, withCloser }: { slots: string[]; mine: Mine[]; who: string; minutes: number; withCloser: boolean }) {
+export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }: { nowIso: string; slots: string[]; mine: Mine[]; who: string; minutes: number; withCloser: boolean }) {
   const router = useRouter();
   const [pick, setPick] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -42,7 +43,10 @@ export function BookingPicker({ slots, mine, who, minutes, withCloser }: { slots
           {mine.map((m) => (
             <div key={m.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
               <div><strong translate="no">{full(m.starts_at)}</strong><br /><span className="when">{`With ${who}`}</span></div>
-              <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await cancelBooking(m.id); router.refresh(); })}>Cancel this call</button>
+              <div className="rs-actions" style={{ margin: 0 }}>
+                <RoomLink id={m.id} startsAt={m.starts_at} nowIso={nowIso} minutes={minutes} />
+                {new Date(m.starts_at).getTime() > new Date(nowIso).getTime() ? <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await cancelBooking(m.id); router.refresh(); })}>Cancel this call</button> : null}
+              </div>
             </div>
           ))}
         </section>
