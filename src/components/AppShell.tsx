@@ -59,7 +59,6 @@ const NAV: NavItem[] = [
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Approvals" },
   { label: "Financing submissions", href: "/admin/financing", min: "admin", admin: true, group: "Approvals" },
   { label: "Emails and Activity", min: "admin", admin: true, heading: true, group: "Emails and Activity" },
-  { label: "Announcements", href: "/admin/announcements", min: "admin", admin: true, group: "Emails and Activity" },
   { label: "Emails", href: "/admin/emails", min: "admin", admin: true, group: "Emails and Activity" },
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Emails and Activity" },
 ];

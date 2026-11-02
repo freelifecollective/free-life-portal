@@ -22,7 +22,7 @@ const TABS: Record<string, string> = {
   "Financing Options": "Different ways to fund your business, sorted by country. Affiliates can suggest new ones for approval.",
   "Outsourcing": "Find help from other members, or list what you can do for others. See their rates, how many people hired them, and reviews.",
   "Verbiage + Objections": "The answers the community has voted best for replying to leads' questions and objections.",
-  "Admin only": "Your admin tools: manage calls, people and invites, review submissions, send announcements, and the activity log where you can undo changes. Open this section to see them.",
+  "Admin only": "Your admin tools: manage calls, people and invites, review submissions, and the activity log where you can undo changes. Open this section to see them.",
 };
 
 function buildSteps(): Step[] {
