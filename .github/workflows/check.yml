@@ -27,4 +27,8 @@ jobs:
           export PGBIN="$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -1)"
           bash scripts/test-db.sh
       - name: Build
+        env:
+          # stand-ins so the build treats the portal as connected (pages that depend on who is signed in are not pre-built)
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-key
         run: npm run build
