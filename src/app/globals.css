@@ -2166,3 +2166,13 @@ html, body { max-width: 100%; overflow-x: clip; }
 .routine-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; }
 .routine-links .linkbtn { display: inline; width: auto; padding: 0; }
 .routine-star { color: var(--accent); font-size: 13px; }
+
+/* Resources */
+.res-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.res-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.res-link { display: grid; gap: 6px; text-decoration: none; color: inherit; padding-bottom: 14px; }
+.res-link:hover .res-title { text-decoration: underline; text-underline-offset: 3px; }
+.res-img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--tint); display: block; }
+.res-fallback { display: grid; place-items: center; color: var(--accent); font-size: 32px; }
+.res-title { font-weight: 700; padding: 6px 14px 0; }
+.res-desc { color: var(--muted); font-size: 14px; padding: 0 14px; }

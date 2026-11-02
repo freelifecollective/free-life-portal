@@ -45,6 +45,11 @@ const NAV: NavItem[] = [
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
   { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
+  { label: "Resources", min: "member", heading: true, group: "Resources" },
+  { label: "Books", href: "/resources/books", min: "member", group: "Resources" },
+  { label: "Pictures/Videos", href: "/resources/pictures-videos", min: "member", group: "Resources" },
+  { label: "Product Information", href: "/resources/product-information", min: "member", group: "Resources" },
+  { label: "Canva Templates", href: "/resources/canva-templates", min: "member", group: "Resources" },
   { label: "Admin only", min: "admin", admin: true, caption: true },
   { label: "Members and Leads", min: "admin", admin: true, heading: true, group: "Members and Leads" },
   { label: "Members, leads and invites", href: "/admin/people", min: "admin", admin: true, group: "Members and Leads" },
@@ -55,6 +60,7 @@ const NAV: NavItem[] = [
   { label: "Library", min: "admin", admin: true, heading: true, group: "Library" },
   { label: "Manage Documents", href: "/admin/documents", min: "admin", admin: true, group: "Library" },
   { label: "Manage graphics", href: "/admin/graphics", min: "admin", admin: true, group: "Library" },
+  { label: "Manage resources", href: "/admin/resource-library", min: "admin", admin: true, group: "Library" },
   { label: "Approvals", min: "admin", admin: true, heading: true, group: "Approvals" },
   { label: "Call closer applications", href: "/admin/closer-applications", min: "admin", admin: true, group: "Approvals" },
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Approvals" },
@@ -71,6 +77,7 @@ function ordered(items: NavItem[]): NavItem[] {
   const onboarding = items.filter((n) => n.group === "Onboarding");
   const sales = items.filter((n) => n.group === "Placing Sales");
   const calls = items.filter((n) => n.group === "FLC Calls");
+  const resources = items.filter((n) => n.group === "Resources");
   const rest = items.filter((n) => n.label !== "Home" && n.label !== "Chats" && !n.admin && !n.group).sort(az);
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
   /* the admin menu is several folding sections, each with its tabs A to Z, in the order they are listed above */
@@ -78,7 +85,7 @@ function ordered(items: NavItem[]): NavItem[] {
   const cap = (n: NavItem) => (n.caption || !n.heading ? [n] : [n, ...items.filter((x) => x.admin && !x.heading && x.group === n.label).sort(az)]);
   const adminLoose = items.filter((n) => n.admin && !n.heading && !n.caption && !n.group);   /* admin tabs that stand on their own (People) */
   const adminTabs = [...items.filter((n) => n.caption), ...adminLoose, ...adminHeads].flatMap(cap);
-  return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...rest, ...adminTabs];
+  return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...(resources.some((n) => !n.heading) ? [...resources.filter((n) => n.heading), ...resources.filter((n) => !n.heading)] : []), ...rest, ...adminTabs];
 }
 
 export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {
