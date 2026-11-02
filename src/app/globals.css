@@ -1977,3 +1977,12 @@ html, body { max-width: 100%; overflow-x: clip; }
 @media print { .ft-mini, .ft-charts, .ft-newform { display: none; } }
 .ws-country { pointer-events: none; font-family: var(--font-label, system-ui); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #6b6354; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; white-space: nowrap; }
 .ws-no-names .ws-country { display: none; }
+/* birthdays */
+.bday-bar { display: grid; gap: 6px; margin: -8px 0 18px; }
+.bday-item { display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-radius: 999px; background: #FFF4DD; border: 1px solid #F0D9A8; color: var(--ink); text-decoration: none; font-size: 14px; line-height: 1.3; }
+.bday-item:hover { background: #FFEEC8; }
+.bday-page { display: grid; gap: 14px; max-width: 720px; }
+.bday-compose { display: grid; gap: 6px; }
+.bday-compose textarea { font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; resize: vertical; }
+.bday-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.bday-wish { display: flex; gap: 12px; align-items: flex-start; }
