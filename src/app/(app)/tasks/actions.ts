@@ -5,6 +5,7 @@ import { tagOf } from "@/lib/badges/defs";
 import { complete, REPEATS, split, undo, type Area, type Repeat, type Task } from "@/lib/tasks/schedule";
 import { getTz, listTasks, todayIn, validZone } from "@/lib/tasks/queries";
 import { isAffiliate } from "@/lib/roles";
+import { DAILY_ROUTINE } from "@/lib/tasks/routine";
 
 export type TaskInput = { area: string; title: string; note: string; repeat: string; due_on: string };
 type Result = { ok: true; tasks: Task[]; badges?: string[] } | { ok: false; error: string; tasks?: Task[] };
@@ -42,6 +43,21 @@ export async function addTask(input: TaskInput): Promise<Result> {
   const p = parse(input); if (!p.ok) return p;
   const { data: last } = await c.supabase.from("tasks").select("position").order("position", { ascending: false }).limit(1).maybeSingle();
   const { error } = await c.supabase.from("tasks").insert({ user_id: c.me, ...p.v, position: (last?.position ?? 0) + 1 });
+  return error ? FAIL() : fresh(c);
+}
+
+/** Adds the chosen items of the recommended daily routine (by position in the list) to the end of the person's list. They can then edit, reorder or delete them like any task. */
+export async function addDailyRoutine(picks: number[]): Promise<Result> {
+  const c = await ctx(); if (!c) return NO;
+  const chosen = [...new Set((Array.isArray(picks) ? picks : []).filter((n) => Number.isInteger(n) && n >= 0 && n < DAILY_ROUTINE.length))].sort((a, b) => a - b);
+  if (chosen.length === 0) return FAIL("Choose at least one thing to add.");
+  const existing = await listTasks(c.supabase);
+  const have = new Set(existing.map((t) => t.title.trim().toLowerCase()));
+  const last = existing.reduce((m, t) => Math.max(m, t.position), 0);
+  const rows = chosen.map((i) => DAILY_ROUTINE[i]).filter((r) => !have.has(r.title.toLowerCase()))
+    .map((r, k) => ({ user_id: c.me, area: r.area, title: r.title, note: r.note, repeat: r.repeat, due_on: r.repeat === "daily" ? null : c.today, position: last + k + 1 }));
+  if (rows.length === 0) return fresh(c);
+  const { error } = await c.supabase.from("tasks").insert(rows);
   return error ? FAIL() : fresh(c);
 }
 

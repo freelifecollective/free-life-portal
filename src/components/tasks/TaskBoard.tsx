@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addTask, completeTask, deleteTask, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
+import { addDailyRoutine, addTask, completeTask, deleteTask, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
 import { complete, dueLabel, REPEAT_LABEL, split, stateOf, suggestOrder, taskHelp, undo, type Suggestion, type Task } from "@/lib/tasks/schedule";
 import { BadgeStrip } from "@/components/badges/BadgeStrip";
 import { BadgeToast } from "@/components/badges/BadgeToast";
@@ -12,6 +12,7 @@ import type { BadgeState } from "@/lib/badges/defs";
 import { Fireworks } from "./Fireworks";
 import { TaskForm } from "./TaskForm";
 import { TrashButton } from "./TrashButton";
+import { DAILY_ROUTINE } from "@/lib/tasks/routine";
 
 /** The whole Tasks screen: today's list (drag or use the arrows to reorder), what is coming up, and what is done. */
 export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial: Task[]; today: string; tz: string; badgeKeys: string[]; streaks: BadgeState["streaks"] | null }) {
@@ -27,6 +28,8 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
   const [party, setParty] = useState(false);
   const [newBadges, setNewBadges] = useState<string[]>([]);
   const [pending, run] = useTransition();
+  const [routineOpen, setRoutineOpen] = useState(initial.length === 0);
+  const [picks, setPicks] = useState<number[]>(DAILY_ROUTINE.map((_, i) => i));
 
   const { todayList, upcoming, doneToday } = split(tasks, today);
   const total = todayList.length + doneToday.length;
@@ -114,12 +117,39 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
         </div>
         <div className="tasks-actions">
           {todayList.length > 1 ? <button type="button" className="btn" onClick={() => setSuggestion(suggestOrder(todayList, today))}>Suggest the best order</button> : null}
+          <button type="button" className="btn" onClick={() => setRoutineOpen((o) => !o)}>Recommended daily routine</button>
           <button type="button" className="btn primary" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
           <BadgeStrip keys={badgeKeys} />
         </div>
       </div>
 
       {error ? <p className="err" role="alert">{error}</p> : null}
+
+      {routineOpen ? (
+        <section className="card-s" aria-label="Recommended daily routine">
+          <h2 className="qh" style={{ margin: "0 0 4px", fontSize: 20 }}>Our recommended routine</h2>
+          <p className="muted-line" style={{ margin: "0 0 10px" }}>A simple routine to build on: daily habits plus a few weekly ones. Untick anything you do not want. Once added, you can rename, reorder, delete or add to any of it.</p>
+          {[...new Set(DAILY_ROUTINE.map((r) => r.group))].map((g) => (
+            <div key={g} style={{ marginTop: 12 }}>
+              <h3 style={{ margin: "0 0 6px", fontSize: 16 }}>{g}</h3>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }}>
+                {DAILY_ROUTINE.map((r, i) => r.group !== g ? null : (
+                  <li key={r.title}>
+                    <label style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      <input type="checkbox" checked={picks.includes(i)} onChange={(e) => setPicks(e.target.checked ? [...picks, i] : picks.filter((x) => x !== i))} />
+                      <span><strong>{r.title}</strong>{r.repeat === "weekly" ? <span className="muted-line"> (weekly)</span> : null}{r.note ? <><br /><span className="muted-line">{r.note}</span></> : null}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <div className="actions" style={{ marginTop: 12 }}>
+            <button type="button" className="btn primary" disabled={pending || picks.length === 0} onClick={() => run(async () => { const r = await addDailyRoutine(picks); if (r.ok) { setTasks(r.tasks); setRoutineOpen(false); setSuggestion(null); } else setError(r.error); })}>Add these to my list</button>
+            <button type="button" className="btn" onClick={() => setRoutineOpen(false)}>Not now</button>
+          </div>
+        </section>
+      ) : null}
 
       {suggestion ? (
         <section className="card-s tasks-suggest" aria-label="Suggested order">
