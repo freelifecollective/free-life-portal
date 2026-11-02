@@ -2130,7 +2130,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .rt-item input:focus-visible + .rt-box { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
 .rt-text { display: grid; gap: 2px; line-height: 24px; }
 .rt-title { font-weight: 400; color: var(--ink); }
-.rt-tag { justify-self: start; margin-top: 2px; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font-size: 12px; font-weight: 700; }
+.rt-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rt-tag { margin: 0; padding: 0 8px; line-height: 20px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font-size: 12px; font-weight: 700; }
 .rt-note { color: var(--muted); font-size: 14px; line-height: 1.4; }
 
 /* balanced chat pills: BalancedPills closes each row so rows are even (8 chats become 4 + 4, never 7 + 1) without changing the pill size */
@@ -2141,3 +2142,13 @@ html, body { max-width: 100%; overflow-x: clip; }
 .invite-grid .card-s { max-width: none; }
 /* "See new members" / "See FLC members": a smidge in from the chat's right edge */
 .chats .chats-head .chat-members { margin-right: 6px; }
+
+/* tasks: the badges sit in a column to the right of the list on wide screens */
+.tasks-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.tasks-badges { padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.tasks-badges .badge-strip { margin: 0; padding: 0; border-left: 0; }
+@media (min-width: 1000px) {
+  .tasks-page { max-width: 1240px; }
+  .tasks-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+  .tasks-badges { position: sticky; top: 20px; }
+}

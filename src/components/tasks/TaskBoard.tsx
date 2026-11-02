@@ -110,6 +110,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
   const alreadyBest = suggestion && suggestion.ids.join() === todayList.map((t) => t.id).join();
 
   return (
+    <div className="tasks-layout">
     <div className="tasks">
       <div className="tasks-top">
         <div className="tasks-progress" aria-label={`${doneToday.length} of ${total} done today`}>
@@ -122,7 +123,6 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
           <button type="button" className="btn" onClick={() => openRoutine("faith")}>{ROUTINES.faith.label}</button>
           <button type="button" className="btn" onClick={() => openRoutine("spiritual")}>{ROUTINES.spiritual.label}</button>
           <button type="button" className="btn primary" onClick={() => { setFormError(""); setFormKey((k) => k + 1); setEditing("new"); }}>Add a task</button>
-          <BadgeStrip keys={badgeKeys} />
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
                     <label className="rt-item">
                       <input type="checkbox" checked={picks.includes(i)} onChange={(e) => setPicks(e.target.checked ? [...picks, i] : picks.filter((x) => x !== i))} />
                       <span className="rt-box" aria-hidden="true">✓</span>
-                      <span className="rt-text"><span className="rt-title">{r.title}</span>{r.repeat === "weekly" ? <span className="rt-tag">weekly</span> : null}{r.note ? <span className="rt-note">{r.note}</span> : null}</span>
+                      <span className="rt-text"><span className="rt-line"><span className="rt-title">{r.title}</span>{r.repeat === "weekly" ? <span className="rt-tag">weekly</span> : null}</span>{r.note ? <span className="rt-note">{r.note}</span> : null}</span>
                     </label>
                   </li>
                 ))}
@@ -256,6 +256,8 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
         onSave={save} onClose={() => setEditing(null)} />
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
       {newBadges.length ? <BadgeToast keys={newBadges} onClose={() => setNewBadges([])} /> : null}
+    </div>
+    {badgeKeys.length ? <aside className="tasks-badges" aria-label="Your badges"><h2 className="qh" style={{ margin: "0 0 10px", fontSize: 18 }}>Your badges</h2><BadgeStrip keys={badgeKeys} /></aside> : null}
     </div>
   );
 }
