@@ -127,7 +127,6 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
 
       {routineOpen ? (
         <section className="card-s" aria-label="Recommended daily routine">
-          <h2 className="qh" style={{ margin: "0 0 4px", fontSize: 20 }}>Our recommended routine</h2>
           <div className="muted-line" style={{ margin: "0 0 10px", textAlign: "center", display: "grid", gap: 14 }}>
             <p style={{ margin: 0 }}>In the beginning of your business, we recommend picking 1 activity from each category to do every day for a total of 4 daily activities.<br />Do those same 4 activities every day until it becomes a routine for you.</p>
             <p style={{ margin: 0 }}>{"Once you're used to that routine, add another activity from each section, bringing you to a total of 8 daily activities."}<br />{"Continue adding activities in as you become accustomed to your new routine until you're performing every activity on this list daily."}</p>
