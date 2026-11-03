@@ -73,22 +73,24 @@ const NAV: NavItem[] = [
   { label: "Activity log", href: "/admin/activity", min: "admin", admin: true, group: "Emails and Activity" },
 ];
 
-/** Home and Chats first, then the "FLC Calls", "Onboarding" and "Placing Sales" sections, then everything else A to Z. The admin section stays at the bottom, also A to Z. */
+/** Home, Chats and the Onboarding section stay at the top. Everything else (sections and single tabs together) is A to Z, and the tabs inside each section are A to Z too. The admin section stays at the bottom, also A to Z. */
 function ordered(items: NavItem[]): NavItem[] {
   const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
   const top = ["Home", "Chats"].flatMap((l) => items.filter((n) => n.label === l));
-  const onboarding = items.filter((n) => n.group === "Onboarding");
-  const sales = items.filter((n) => n.group === "Placing Sales");
-  const calls = items.filter((n) => n.group === "FLC Calls");
-  const resources = items.filter((n) => n.group === "Resources" || n.group === "Advertising");
-  const rest = items.filter((n) => n.label !== "Home" && n.label !== "Chats" && !n.admin && !n.group).sort(az);
-  const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
-  /* the admin menu is several folding sections, each with its tabs A to Z, in the order they are listed above */
-  const adminHeads = items.filter((n) => n.admin && n.heading);
-  const cap = (n: NavItem) => (n.caption || !n.heading ? [n] : [n, ...items.filter((x) => x.admin && !x.heading && x.group === n.label).sort(az)]);
-  const adminLoose = items.filter((n) => n.admin && !n.heading && !n.caption && !n.group);   /* admin tabs that stand on their own (People) */
-  const adminTabs = [...items.filter((n) => n.caption), ...adminLoose, ...adminHeads].flatMap(cap);
-  return [...top, ...sections(calls), ...sections(onboarding), ...sections(sales), ...(resources.some((n) => !n.heading) ? [...resources.filter((n) => n.heading), ...resources.filter((n) => !n.heading)] : []), ...rest, ...adminTabs];
+  /* a section is its heading followed by its tabs A to Z (a section with no tabs for this person is left out) */
+  const section = (label: string, admin: boolean): NavItem[] => {
+    const head = items.find((n) => n.heading && n.label === label && !!n.admin === admin);
+    const kids = items.filter((n) => !n.heading && n.group === label && !!n.admin === admin).sort(az);
+    return head && kids.length ? [head, ...kids] : [];
+  };
+  const blocks = (admin: boolean, skip: string[]) => {
+    const heads = items.filter((n) => n.heading && !!n.admin === admin && !skip.includes(n.label)).map((n) => section(n.label, admin));
+    const loose = items.filter((n) => !n.heading && !n.caption && !n.group && !!n.admin === admin && n.label !== "Home" && n.label !== "Chats").map((n) => [n]);
+    return [...heads, ...loose].filter((b) => b.length > 0).sort((x, y) => az(x[0], y[0])).flat();
+  };
+  const caption = items.filter((n) => n.caption);
+  const adminBlocks = blocks(true, []);
+  return [...top, ...section("Onboarding", false), ...blocks(false, ["Onboarding"]), ...(adminBlocks.length ? [...caption, ...adminBlocks] : caption)];
 }
 
 export function AppShell({ session, badges = {}, unread = 0, showTour = false, buddyRemind = null, pendingFeedback = [], liveNow = false, waterPrompt = false, children }: { session: AppSession; badges?: Record<string, number>; unread?: number; showTour?: boolean; buddyRemind?: string | null; pendingFeedback?: PendingCall[]; liveNow?: boolean; waterPrompt?: boolean; children: ReactNode }) {
