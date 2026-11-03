@@ -11,7 +11,7 @@ export function ResourceForm() {
   return (
     <form action={action} className="admin-form" style={{ maxWidth: 560 }}>
       <div className="field"><label htmlFor="rl-cat">Where does it go?</label>
-        <select id="rl-cat" name="category" defaultValue="books">{RESOURCE_TABS.map((t) => <option key={t.category} value={t.category}>{t.label} ({t.section === "advertising" ? "Advertising" : "Resources"})</option>)}</select></div>
+        <select id="rl-cat" name="category" defaultValue="books">{RESOURCE_TABS.filter((t) => t.category !== "canva").map((t) => <option key={t.category} value={t.category}>{t.label} ({t.section === "advertising" ? "Advertising" : "Resources"})</option>)}</select></div>
       <div className="field"><label htmlFor="rl-title">Title</label><input id="rl-title" name="title" maxLength={160} required /></div>
       <div className="field"><label htmlFor="rl-url">Link (opens when someone taps it)</label><input id="rl-url" name="url" type="url" placeholder="https://" required /></div>
       <div className="field"><label htmlFor="rl-img">Picture link (optional)</label><input id="rl-img" name="image_url" type="url" placeholder="https://" /></div>

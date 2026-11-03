@@ -65,6 +65,7 @@ const NAV: NavItem[] = [
   { label: "Manage Documents", href: "/admin/documents", min: "admin", admin: true, group: "Library" },
   { label: "Manage graphics", href: "/admin/graphics", min: "admin", admin: true, group: "Library" },
   { label: "Manage resources", href: "/admin/resource-library", min: "admin", admin: true, group: "Library" },
+  { label: "Manage Canva Templates", href: "/admin/canva-templates", min: "admin", admin: true, group: "Library" },
   { label: "Manage Evidence Manual", href: "/admin/evidence", min: "admin", admin: true, group: "Library" },
   { label: "Approvals", min: "admin", admin: true, heading: true, group: "Approvals" },
   { label: "Call closer applications", href: "/admin/closer-applications", min: "admin", admin: true, group: "Approvals" },
