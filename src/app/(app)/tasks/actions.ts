@@ -119,6 +119,35 @@ export async function deleteTasks(ids: string[]): Promise<Result> {
   return error ? FAIL() : fresh(c);
 }
 
+/** Undo and redo: puts the person's list back exactly as the given snapshot (tasks removed since come back, tasks added since go away, changes are reversed). */
+export async function restoreTasks(target: Task[]): Promise<Result> {
+  const c = await ctx(); if (!c) return NO;
+  const want = (Array.isArray(target) ? target : []).slice(0, 500);
+  const day = (d: unknown) => d === null || (typeof d === "string" && DAY.test(d));
+  for (const t of want) {
+    if (!t || !UUID.test(String(t.id)) || (t.area !== "business" && t.area !== "personal") || !REPEATS.includes(t.repeat)
+      || typeof t.title !== "string" || !t.title.trim() || t.title.length > 120 || (t.note !== null && (typeof t.note !== "string" || t.note.length > 1000))
+      || !day(t.due_on) || !day(t.done_on) || !day(t.prev_due_on) || !Number.isFinite(t.position)) return FAIL("Something went wrong.");
+  }
+  const now = await listTasks(c.supabase);
+  const nowById = new Map(now.map((t) => [t.id, t]));
+  const wantIds = new Set(want.map((t) => t.id));
+  const gone = now.filter((t) => !wantIds.has(t.id)).map((t) => t.id);
+  if (gone.length) { const { error } = await c.supabase.from("tasks").delete().in("id", gone); if (error) return FAIL(); }
+  for (const t of want) {
+    const cur = nowById.get(t.id);
+    const row = { area: t.area, title: t.title.trim(), note: t.note, repeat: t.repeat, due_on: t.due_on, position: t.position, done_on: t.done_on, prev_due_on: t.prev_due_on };
+    const r = cur ? await c.supabase.from("tasks").update(row).eq("id", t.id) : await c.supabase.from("tasks").insert({ id: t.id, user_id: c.me, ...row });
+    if (r.error) return FAIL();
+    /* ticks and un-ticks keep the streak records in step */
+    if (cur && cur.done_on !== t.done_on) {
+      if (cur.done_on) { await c.supabase.from("task_completions").delete().eq("task_id", t.id).eq("done_on", cur.done_on); await c.supabase.from("task_clear_days").delete().eq("day", cur.done_on); }
+      if (t.done_on) await c.supabase.from("task_completions").insert({ user_id: c.me, task_id: t.id, tag: tagOf(t.title), done_on: t.done_on });
+    }
+  }
+  return fresh(c);
+}
+
 /** Saves the order: the ids given, first to last, get the places 1, 2, 3 and so on (the other tasks keep theirs after them). */
 export async function reorderTasks(ids: string[]): Promise<Result> {
   const list = (Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && UUID.test(x)).slice(0, 500);

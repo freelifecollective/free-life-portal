@@ -2206,3 +2206,10 @@ html, body { max-width: 100%; overflow-x: clip; }
 .tasks-selbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; background: var(--tint); border: 1px solid var(--accent); border-radius: 12px; }
 .tasks-selbar .trash-wrap { margin: 0; }
 .task.selected { border-color: var(--accent-deep); box-shadow: 0 0 0 2px var(--accent); background: #EFE9E3; }
+
+/* undo and redo arrows, top right above the first task */
+.tasks-hrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 10px; }
+.tasks-hrow .tasks-h { margin: 0; }
+.undo-redo { display: inline-flex; gap: 6px; }
+.undo-redo .icon-btn { width: 34px; height: 34px; display: grid; place-items: center; font-size: 17px; line-height: 1; }
+.undo-redo .icon-btn:disabled { opacity: .35; cursor: default; }
