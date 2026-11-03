@@ -34,16 +34,45 @@ export async function deleteResource(form: FormData): Promise<void> {
   revalidatePath("/admin/resource-library");
 }
 
-/** Best effort: Canva's own preview picture and name for a link (nothing is lost if Canva does not answer). */
+/** Best effort: Canva's own name (and preview picture) for a link. Tries Canva's oEmbed first, then the page's own title. Nothing is lost if Canva does not answer. */
 async function canvaInfo(url: string): Promise<{ image: string | null; title: string | null }> {
+  const clean = (t: string) => t.replace(/\s*[-|–—]\s*Canva\s*$/i, "").replace(/&amp;/g, "&").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').trim().slice(0, 160);
   try {
-    const r = await fetch(`https://www.canva.com/_oembed?url=${encodeURIComponent(url)}&format=json`, { signal: AbortSignal.timeout(4000), cache: "no-store" });
+    const r = await fetch(`https://www.canva.com/_oembed?url=${encodeURIComponent(url)}&format=json`, { signal: AbortSignal.timeout(5000), cache: "no-store" });
+    if (r.ok) {
+      const j = (await r.json()) as { thumbnail_url?: unknown; title?: unknown };
+      const image = typeof j.thumbnail_url === "string" && /^https:\/\/\S+$/.test(j.thumbnail_url) ? j.thumbnail_url : null;
+      const title = typeof j.title === "string" && clean(j.title) ? clean(j.title) : null;
+      if (title || image) return { image, title };
+    }
+  } catch { /* try the page itself */ }
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000), cache: "no-store", headers: { "user-agent": "Mozilla/5.0 (compatible; FLCPortal/1.0)", accept: "text/html" } });
     if (!r.ok) return { image: null, title: null };
-    const j = (await r.json()) as { thumbnail_url?: unknown; title?: unknown };
-    const image = typeof j.thumbnail_url === "string" && /^https:\/\/\S+$/.test(j.thumbnail_url) ? j.thumbnail_url : null;
-    const title = typeof j.title === "string" && j.title.trim() ? j.title.trim().slice(0, 160) : null;
-    return { image, title };
+    const html = (await r.text()).slice(0, 200000);
+    const og = /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i.exec(html) ?? /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i.exec(html) ?? /<title>([^<]+)<\/title>/i.exec(html);
+    const img = /<meta[^>]+property=["']og:image["'][^>]+content=["'](https:\/\/[^"']+)["']/i.exec(html);
+    const title = og && clean(og[1]) && !/^canva$/i.test(clean(og[1])) ? clean(og[1]) : null;
+    return { image: img ? img[1].replace(/&amp;/g, "&").slice(0, 1000) : null, title };
   } catch { return { image: null, title: null }; }
+}
+
+/** Gives every template still called "Canva template N" its real name from Canva (names you typed yourself are left alone). */
+export async function refreshCanvaNames(): Promise<AddState> {
+  const { supabase } = await requireAdmin();
+  const { data } = await supabase.from("resource_items").select("id, title, url, image_url").eq("category", "canva").limit(500);
+  const todo = ((data ?? []) as { id: string; title: string; url: string; image_url: string | null }[]).filter((r) => /^Canva template \d+$/.test(r.title)).slice(0, 40);
+  if (todo.length === 0) return { error: "", done: "Every template already has its own name." };
+  let named = 0;
+  for (const r of todo) {
+    const info = await canvaInfo(r.url);
+    if (!info.title) continue;
+    const { error } = await supabase.from("resource_items").update({ title: info.title, ...(info.image && !r.image_url && !canvaEmbedUrl(r.url) ? { image_url: info.image } : {}) }).eq("id", r.id);
+    if (!error) named++;
+  }
+  revalidatePath("/admin/resource-library"); revalidatePath("/advertising/canva-templates");
+  if (named === 0) return { error: "Canva did not share the names. You can type them in yourself: delete a template and add it again with its name in front of the link.", done: "" };
+  return { error: "", done: `Got ${named} of ${todo.length} names from Canva.${named < todo.length ? " The rest keep their number for now." : ""}` };
 }
 
 /** Paste many Canva links at once (one per line, with an optional name before the link). Each becomes a template card with a preview. */

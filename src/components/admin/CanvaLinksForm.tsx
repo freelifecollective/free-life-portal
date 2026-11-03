@@ -1,9 +1,21 @@
 "use client";
 
 import { useActionState } from "react";
-import { addCanvaLinks, type AddState } from "@/app/(app)/admin/resource-library/actions";
+import { addCanvaLinks, refreshCanvaNames, type AddState } from "@/app/(app)/admin/resource-library/actions";
 
 const initial: AddState = { error: "", done: "" };
+
+/** One press: every template still called "Canva template 3" and so on gets its real name from Canva. */
+export function RefreshCanvaNames() {
+  const [state, action, pending] = useActionState(refreshCanvaNames, initial);
+  return (
+    <form action={action} style={{ marginTop: 14 }}>
+      <button className="btn" type="submit" disabled={pending}>{pending ? "Asking Canva…" : "Get the real names from Canva"}</button>
+      {state.error ? <p className="err" role="alert">{state.error}</p> : null}
+      {state.done ? <p className="ok" role="status">{state.done}</p> : null}
+    </form>
+  );
+}
 
 /** Paste a pile of Canva links; each one becomes a template card with a preview. */
 export function CanvaLinksForm() {
