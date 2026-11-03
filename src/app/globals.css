@@ -2196,6 +2196,10 @@ html, body { max-width: 100%; overflow-x: clip; }
 .placed-docs .doc-grid { margin-bottom: 20px; }
 .placed-divider { border: 0; border-top: 2px solid var(--line); margin: 0; }
 
+/* the Admin block folds as a whole */
+.nav .nav-caption.nav-admin { padding: 0; }
+.nav-admin-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 6px 4px; border: 0; background: none; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: inherit; }
+.nav-admin-toggle:hover { opacity: .8; }
 /* the little bin opens a right-click style menu: Delete, Cancel */
 .trash-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 40; display: grid; min-width: 150px; padding: 5px; background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 28px rgba(43, 37, 34, 0.2); }
 .trash-item { background: none; border: 0; text-align: left; padding: 8px 12px; border-radius: 7px; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; white-space: nowrap; }

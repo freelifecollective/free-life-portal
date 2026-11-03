@@ -25,7 +25,7 @@ type NavItem = { label: string; href?: string; min: Role; admin?: boolean; headi
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead", downline: true },
   { label: "Calendar", href: "/calendar", min: "lead", downline: true, group: "FLC Calls" },
-  { label: "Outsourcing", href: "/outsourcing", min: "member" },
+  { label: "Outsourcing", href: "/outsourcing", min: "member", group: "DMO" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead", downline: true },
   { label: "Weekly Focus", href: "/support", min: "lead", downline: true, group: "DMO" },
@@ -38,7 +38,7 @@ const NAV: NavItem[] = [
   { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
   { label: "Earnings Estimator", href: "/calculator", min: "member", group: "Placing Sales" },
-  { label: "Graphic maker", href: "/graphic-maker", min: "member" },
+  { label: "Graphic maker", href: "/graphic-maker", min: "member", group: "Onboarding" },
   { label: "Your Organization", href: "/family-tree", min: "member", group: "Placing Sales" },
   { label: "Tasks", href: "/tasks", min: "member", group: "DMO" },
   { label: "DMO", min: "lead", downline: true, heading: true, group: "DMO" },
