@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addDailyRoutine, addTask, completeTask, deleteTask, deleteTasks, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
+import { addDailyRoutine, addTask, completeTask, deleteTask, deleteTasks, restoreTasks, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
 import { complete, dueLabel, REPEAT_LABEL, split, stateOf, suggestOrder, taskHelp, undo, type Suggestion, type Task } from "@/lib/tasks/schedule";
 import { BadgeStrip } from "@/components/badges/BadgeStrip";
 import { BadgeToast } from "@/components/badges/BadgeToast";
@@ -28,6 +28,9 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
   const [party, setParty] = useState(false);
   const [newBadges, setNewBadges] = useState<string[]>([]);
   const [pending, run] = useTransition();
+  /* undo and redo: the list as it was before each action, and as it was before each undo */
+  const [past, setPast] = useState<Task[][]>([]);
+  const [future, setFuture] = useState<Task[][]>([]);
   /* select several tasks: drag a box over the empty space around them, or hold Ctrl/Cmd and click */
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -91,7 +94,8 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
     setParty(true);
   }
 
-  function apply(call: () => Promise<{ ok: true; tasks: Task[]; badges?: string[] } | { ok: false; error: string }>, rollback: Task[], refresh = false) {
+  function apply(call: () => Promise<{ ok: true; tasks: Task[]; badges?: string[] } | { ok: false; error: string }>, rollback: Task[], refresh = false, record = true) {
+    if (record) { setPast((p) => [...p.slice(-49), rollback]); setFuture([]); }
     run(async () => {
       const r = await call();
       if (r.ok) {
@@ -100,6 +104,17 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
         if (refresh) router.refresh(); // so the streaks below update
       } else { setTasks(rollback); setError(r.error); }
     });
+  }
+
+  function undoStep() {
+    const prev = past[past.length - 1]; if (!prev) return;
+    setPast(past.slice(0, -1)); setFuture([...future, tasks]); setTasks(prev); setSuggestion(null); setSel(new Set());
+    apply(() => restoreTasks(prev), tasks, true, false);
+  }
+  function redoStep() {
+    const next = future[future.length - 1]; if (!next) return;
+    setFuture(future.slice(0, -1)); setPast([...past, tasks]); setTasks(next); setSuggestion(null); setSel(new Set());
+    apply(() => restoreTasks(next), tasks, true, false);
   }
 
   function tick(t: Task) {
@@ -115,9 +130,10 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
 
   function save(v: TaskInput) {
     setFormError("");
+    const before = tasks;
     run(async () => {
       const r = editing && editing !== "new" ? await updateTask(editing.id, v) : await addTask(v);
-      if (r.ok) { setTasks(r.tasks); setEditing(null); setSuggestion(null); } else setFormError(r.error);
+      if (r.ok) { setPast((p) => [...p.slice(-49), before]); setFuture([]); setTasks(r.tasks); setEditing(null); setSuggestion(null); } else setFormError(r.error);
     });
   }
   function removeTask(id: string) {
@@ -165,7 +181,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
       {chosen.length ? (
         <div className="tasks-selbar" role="toolbar" aria-label="Selected tasks">
           <strong>{chosen.length} selected</strong>
-          <TrashButton label="the selected tasks" busy={pending} deleteText={`Delete ${chosen.length} ${chosen.length === 1 ? "task" : "tasks"}`} onConfirm={removeChosen} />
+          <TrashButton label="the selected tasks" busy={pending} onConfirm={removeChosen} />
           <button className="linkbtn" type="button" onClick={() => setSel(new Set())}>Clear</button>
         </div>
       ) : null}
@@ -212,7 +228,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
             </div>
           ))}
           <div className="actions" style={{ marginTop: 12 }}>
-            <button type="button" className="btn primary" disabled={pending || picks.length === 0} onClick={() => run(async () => { const r = await addDailyRoutine(routineOpen ?? "faith", picks); if (r.ok) { setTasks(r.tasks); setRoutineOpen(null); setSuggestion(null); } else setError(r.error); })}>Add these to my list</button>
+            <button type="button" className="btn primary" disabled={pending || picks.length === 0} onClick={() => run(async () => { const r = await addDailyRoutine(routineOpen ?? "faith", picks); if (r.ok) { setPast((p) => [...p.slice(-49), tasks]); setFuture([]); setTasks(r.tasks); setRoutineOpen(null); setSuggestion(null); } else setError(r.error); })}>Add these to my list</button>
             <button type="button" className="btn" onClick={() => setRoutineOpen(null)}>Not now</button>
           </div>
         </section>
@@ -233,7 +249,13 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
       ) : null}
 
       <section aria-label="To do today">
-        <h2 className="qh tasks-h">Today</h2>
+        <div className="tasks-hrow">
+          <h2 className="qh tasks-h">Today</h2>
+          <div className="undo-redo" role="group" aria-label="Undo and redo">
+            <button type="button" className="icon-btn" aria-label="Undo" title="Undo" disabled={past.length === 0 || pending} onClick={undoStep}>←</button>
+            <button type="button" className="icon-btn" aria-label="Redo" title="Redo" disabled={future.length === 0 || pending} onClick={redoStep}>→</button>
+          </div>
+        </div>
         {todayList.length === 0 ? (
           <p className="card-s" style={{ margin: 0 }}>{doneToday.length ? "Everything for today is done. Lovely work!" : "Nothing to do today. Add a task to get started."}</p>
         ) : (
