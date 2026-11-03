@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
 import { bySlug, hrefOfTab, type ResourceSection } from "@/lib/resources/kinds";
 import { isAffiliate } from "@/lib/roles";
@@ -19,6 +20,7 @@ export async function ResourceGrid({ slug, section }: { slug: string; section: R
   return (
     <>
       <PageHeading lede={tab.lede}>{tab.label}</PageHeading>
+      <PlacedDocs placement={tab.category} />
       {items.length === 0 ? <p className="card-s" style={{ margin: 0 }}>Nothing here yet. Check back soon!</p> : (
         <ul className="res-grid">
           {items.map((i) => (

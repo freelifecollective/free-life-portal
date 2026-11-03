@@ -3,6 +3,7 @@ import { ApplyForm } from "@/components/closers/ApplyForm";
 import { CloserCard } from "@/components/closers/CloserCard";
 import { OpenHoursCard } from "@/components/booking/OpenHoursCard";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
 import type { ActiveHire } from "@/components/closers/HireButton";
 import { HireRequests, type Request } from "@/components/closers/HireRequests";
@@ -35,6 +36,7 @@ export default async function CallClosersPage() {
     <>
       <OpenHoursCard />
       <PageHeading lede="Hire an experienced closer to take your coaching calls for you for one or two calls or hire them indefinitely going forward.">Call Closers for Hire</PageHeading>
+      <PlacedDocs placement="closers" />
       <div className="stack">
         <HireRequests requests={requests} />
         {closers.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>No call closers are listed yet.</p></section> : (

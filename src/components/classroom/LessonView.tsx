@@ -7,7 +7,7 @@ import { setLessonDone } from "@/app/(app)/classroom/actions";
 import { vimeoSrc, type LessonRow } from "@/lib/classroom/types";
 
 /** One lesson: the video, the notes, and a button to tick it off and move on. */
-export function LessonView({ lesson, courseId, done, nextId, nextTitle }: { lesson: LessonRow; courseId: string; done: boolean; nextId: string | null; nextTitle: string | null }) {
+export function LessonView({ lesson, courseId, done, nextId, nextTitle, basePath }: { lesson: LessonRow; courseId: string; done: boolean; nextId: string | null; nextTitle: string | null; basePath?: string }) {
   const router = useRouter();
   const [isDone, setDone] = useState(done);
   const [pending, start] = useTransition();
@@ -21,7 +21,7 @@ export function LessonView({ lesson, courseId, done, nextId, nextTitle }: { less
       {lesson.body ? <p className="cl-notes" translate="no">{lesson.body}</p> : null}
       <div className="rs-actions">
         <button type="button" className={"btn " + (isDone ? "" : "primary")} disabled={pending} onClick={toggle}>{isDone ? "✓ Done. Tap to undo" : "Mark as done"}</button>
-        {nextId ? <Link className="btn" href={`/classroom/${courseId}?lesson=${nextId}`} style={{ textDecoration: "none" }}>{`Next: ${nextTitle ?? ""} →`}</Link> : null}
+        {nextId ? <Link className="btn" href={`${basePath ?? `/classroom/${courseId}`}?lesson=${nextId}`} style={{ textDecoration: "none" }}>{`Next: ${nextTitle ?? ""} →`}</Link> : null}
       </div>
     </article>
   );

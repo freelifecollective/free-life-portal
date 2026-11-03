@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { BuddyHome, type MatchCard } from "@/components/buddy/BuddyHome";
 import { BuddyQuestionnaire } from "@/components/buddy/BuddyQuestionnaire";
 import { requireMember } from "@/lib/auth/guards";
@@ -42,6 +43,7 @@ export default async function BuddyPage(props: PageProps<"/buddy">) {
   return (
     <>
       <PageHeading lede="Find someone to keep you on track.">Accountability Buddy</PageHeading>
+      <PlacedDocs placement="buddy" />
       <BuddyHome status={status} top={top} others={others} buddy={buddy} rank={rank || "4A"} />
     </>
   );

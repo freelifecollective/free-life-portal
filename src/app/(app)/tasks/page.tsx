@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { TaskBoard } from "@/components/tasks/TaskBoard";
 import { newestFirst, type BadgeState } from "@/lib/badges/defs";
 import { requireMember } from "@/lib/auth/guards";
@@ -19,6 +20,7 @@ export default async function TasksPage() {
   return (
     <div className="tasks-page">
       <PageHeading lede="Everything you want to get done, for your business and your life. Tick things off, reorder them, and we will remind you.">Tasks</PageHeading>
+      <PlacedDocs placement="tasks" />
       <TaskBoard initial={tasks} today={todayIn(tz)} tz={tz} badgeKeys={badges ? newestFirst(badges.earned) : []} streaks={badges?.streaks ?? null} />
     </div>
   );

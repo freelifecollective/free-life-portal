@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
+import { isLaunchCourse } from "@/lib/classroom/launch";
 import type { CourseRow } from "@/lib/classroom/types";
 
 export const instant = false;
@@ -10,10 +12,11 @@ export default async function ClassroomPage() {
   const { session, supabase } = await requireMember();
   if (!supabase) return <><PageHeading>Courses</PageHeading><p className="page-lede">This needs the database.</p></>;
   const { data } = await supabase.rpc("classroom_overview");
-  const courses = ((data ?? []) as CourseRow[]).filter((c) => c.published || session.profile.role === "admin");
+  const courses = ((data ?? []) as CourseRow[]).filter((c) => !isLaunchCourse(c.title) && (c.published || session.profile.role === "admin"));
   return (
     <>
       <PageHeading lede="Courses with video lessons to help you learn, grow and build. Tick lessons off as you go.">Courses</PageHeading>
+      <PlacedDocs placement="courses" />
       {session.profile.role === "admin" ? <p style={{ margin: "-8px 0 16px" }}><Link className="btn small" href="/admin/classroom" style={{ textDecoration: "none" }}>Manage courses</Link></p> : null}
       {courses.length === 0 ? <section className="card-s" style={{ maxWidth: 640 }}><p style={{ margin: 0 }}>No courses are open yet. Check back soon.</p></section> : (
         <ul className="doc-grid rec-grid">
