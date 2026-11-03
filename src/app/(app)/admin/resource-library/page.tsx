@@ -1,5 +1,5 @@
 import { PageHeading } from "@/components/PageHeading";
-import { CanvaLinksForm } from "@/components/admin/CanvaLinksForm";
+import { CanvaLinksForm, RefreshCanvaNames } from "@/components/admin/CanvaLinksForm";
 import { ResourceForm } from "@/components/admin/ResourceForm";
 import { requireAdmin } from "@/lib/auth/guards";
 import { RESOURCE_TABS } from "@/lib/resources/kinds";
@@ -18,7 +18,7 @@ export default async function ManageResourcesPage() {
     <>
       <PageHeading lede="Add books, pictures and videos, product information and Canva templates to the Resources section. Each one is a link that opens when someone taps it.">Manage resources</PageHeading>
       <section className="card-s" style={{ maxWidth: 620 }}><ResourceForm /></section>
-      <section className="card-s" style={{ maxWidth: 680, marginTop: 20 }}><h2 className="qh" style={{ marginTop: 0 }}>Add many Canva templates at once</h2><CanvaLinksForm /></section>
+      <section className="card-s" style={{ maxWidth: 680, marginTop: 20 }}><h2 className="qh" style={{ marginTop: 0 }}>Add many Canva templates at once</h2><CanvaLinksForm /><RefreshCanvaNames /></section>
       {RESOURCE_TABS.map((t) => {
         const mine = items.filter((i) => i.category === t.category);
         return (
