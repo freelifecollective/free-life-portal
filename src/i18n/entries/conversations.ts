@@ -325,7 +325,6 @@ export const conversations: readonly Entry[] = [
   ["Worksheet or tracker", "Hoja de trabajo o seguimiento", "Fiche ou suivi", "Scheda o tracker", "Arbeitsblatt oder Tracker"],
   ["Template", "Plantilla", "Modèle", "Modello", "Vorlage"],
   ["Presentation", "Presentación", "Présentation", "Presentazione", "Präsentation"],
-  ["Daily Method of Operations", "Método diario de operaciones", "Méthode quotidienne de fonctionnement", "Metodo operativo quotidiano", "Tägliche Arbeitsweise"],
   ["Business Launch Course", "Curso de lanzamiento de negocio", "Cours de lancement d'entreprise", "Corso di avvio dell'attività", "Geschäftsstart-Kurs"],
   ["Advertising", "Publicidad", "Publicité", "Pubblicità", "Werbung"],
   ["Edit this course", "Editar este curso", "Modifier ce cours", "Modifica questo corso", "Diesen Kurs bearbeiten"],
