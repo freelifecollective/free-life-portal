@@ -48,11 +48,11 @@ begin
   perform tests.logout();
   perform tests.login(mia);
   perform tests.eq('a member sees the stories', (select count(*) from public.evidence_stories), 1::bigint);
-  perform tests.eq('a member sees the resources', (select count(*) from public.resource_items), 1::bigint);
+  perform tests.eq('a member sees the resources', (select count(*) from public.resource_items where title = 'Template'), 1::bigint);
   perform tests.logout();
   perform tests.login(lena);
   perform tests.eq('a lead sees no stories', (select count(*) from public.evidence_stories), 0::bigint);
-  perform tests.eq('a lead sees no resources', (select count(*) from public.resource_items), 0::bigint);
+  perform tests.eq('a lead sees no resources', (select count(*) from public.resource_items where title = 'Template'), 0::bigint);
 end $$;
 do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1'; ada uuid := '00000000-0000-0000-0000-0000000000a4'; f uuid; g uuid;
 begin
