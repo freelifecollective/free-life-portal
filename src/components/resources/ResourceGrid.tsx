@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
 import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
+import { canvaEmbedUrl } from "@/lib/resources/canva";
 import { bySlug, hrefOfTab, type ResourceSection } from "@/lib/resources/kinds";
 import { isAffiliate } from "@/lib/roles";
 
@@ -29,6 +30,8 @@ export async function ResourceGrid({ slug, section }: { slug: string; section: R
                 {i.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img className="res-img" src={i.image_url} alt="" loading="lazy" />
+                ) : tab.category === "canva" && canvaEmbedUrl(i.url) ? (
+                  <span className="res-img res-embed"><iframe src={canvaEmbedUrl(i.url)!} title={`Preview of ${i.title}`} loading="lazy" tabIndex={-1} sandbox="allow-scripts allow-same-origin" /></span>
                 ) : <span className="res-img res-fallback" aria-hidden="true">✦</span>}
                 <span className="res-title" translate="no">{i.title}</span>
                 {i.description ? <span className="res-desc" translate="no">{i.description}</span> : null}
