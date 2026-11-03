@@ -109,3 +109,22 @@ export async function addCanvaLinks(_p: AddState, form: FormData): Promise<AddSt
   const skipped = found.length - fresh.length;
   return { error: "", done: `Added ${rows.length} template${rows.length === 1 ? "" : "s"}${skipped ? ` (${skipped} already on the page, skipped)` : ""}.` };
 }
+
+/** Change a saved item's name, link, picture or description. */
+export async function updateResource(id: string, v: { title: string; url: string; image_url: string; description: string }): Promise<{ ok: boolean; error?: string }> {
+  const { supabase } = await requireAdmin();
+  if (!UUID.test(id)) return { ok: false, error: "Something went wrong." };
+  const title = String(v.title ?? "").trim();
+  const url = String(v.url ?? "").trim();
+  const image = String(v.image_url ?? "").trim();
+  const description = String(v.description ?? "").trim();
+  if (!title || title.length > 160) return { ok: false, error: "Give it a name of up to 160 characters." };
+  if (!/^https:\/\/\S+$/.test(url) || url.length > 1000) return { ok: false, error: "The link must start with https://" };
+  if (image && (!/^https:\/\/\S+$/.test(image) || image.length > 1000)) return { ok: false, error: "The picture link must start with https://" };
+  if (description.length > 600) return { ok: false, error: "Keep the description under 600 characters." };
+  const { error } = await supabase.from("resource_items").update({ title, url, image_url: image || null, description: description || null }).eq("id", id);
+  if (error) return { ok: false, error: "We could not save that. Please try again." };
+  revalidatePath("/admin/resource-library"); revalidatePath("/admin/canva-templates");
+  for (const t of RESOURCE_TABS) revalidatePath(`/${t.section}/${t.slug}`);
+  return { ok: true };
+}
