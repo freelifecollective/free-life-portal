@@ -21,7 +21,7 @@ export default async function ManageResourcesPage() {
         const mine = items.filter((i) => i.category === t.category);
         return (
           <section key={t.category} style={{ marginTop: 28 }}>
-            <h2 className="qh">{t.label} ({mine.length})</h2>
+            <h2 className="qh">{t.label} <span className="muted-line">({t.section === "advertising" ? "Advertising" : "Resources"}) · {mine.length}</span></h2>
             {mine.length === 0 ? <p className="page-lede">Nothing yet.</p> : (
               <ul className="admin-list">
                 {mine.map((i) => (
