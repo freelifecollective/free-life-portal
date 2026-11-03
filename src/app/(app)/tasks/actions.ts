@@ -110,6 +110,15 @@ export async function deleteTask(id: string): Promise<Result> {
   return error ? FAIL() : fresh(c);
 }
 
+/** Delete several tasks at once. */
+export async function deleteTasks(ids: string[]): Promise<Result> {
+  const list = (Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && UUID.test(x)).slice(0, 500);
+  if (list.length === 0) return FAIL("Select the tasks you want to delete.");
+  const c = await ctx(); if (!c) return NO;
+  const { error } = await c.supabase.from("tasks").delete().in("id", list);
+  return error ? FAIL() : fresh(c);
+}
+
 /** Saves the order: the ids given, first to last, get the places 1, 2, 3 and so on (the other tasks keep theirs after them). */
 export async function reorderTasks(ids: string[]): Promise<Result> {
   const list = (Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && UUID.test(x)).slice(0, 500);
