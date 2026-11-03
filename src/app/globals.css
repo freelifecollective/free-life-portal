@@ -2176,3 +2176,17 @@ html, body { max-width: 100%; overflow-x: clip; }
 .res-fallback { display: grid; place-items: center; color: var(--accent); font-size: 32px; }
 .res-title { font-weight: 700; padding: 6px 14px 0; }
 .res-desc { color: var(--muted); font-size: 14px; padding: 0 14px; }
+
+/* Evidence Manual */
+.ev-filters { display: flex; gap: 16px; flex-wrap: wrap; margin: 0 0 8px; }
+.ev-filters .field { min-width: 200px; }
+.ev-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.ev-card { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; align-items: start; }
+.ev-photo { width: 120px; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: var(--tint); display: grid; place-items: center; color: var(--accent); font-size: 28px; }
+.ev-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ev-name { margin: 0; font-family: var(--font-display); font-size: 20px; }
+.ev-meta { margin: 4px 0 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ev-rank { font-weight: 700; color: var(--accent-deep); }
+.ev-story { margin: 0 0 10px; white-space: pre-line; max-height: 14em; overflow: auto; }
+.ev-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+@media (max-width: 520px) { .ev-card { grid-template-columns: 1fr; } .ev-photo { width: 100%; max-width: 220px; } }

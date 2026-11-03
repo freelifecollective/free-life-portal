@@ -47,9 +47,11 @@ const NAV: NavItem[] = [
   { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
   { label: "Resources", min: "member", heading: true, group: "Resources" },
   { label: "Books", href: "/resources/books", min: "member", group: "Resources" },
-  { label: "Pictures/Videos", href: "/resources/pictures-videos", min: "member", group: "Resources" },
   { label: "Product Information", href: "/resources/product-information", min: "member", group: "Resources" },
-  { label: "Canva Templates", href: "/resources/canva-templates", min: "member", group: "Resources" },
+  { label: "Advertising", min: "member", heading: true, group: "Advertising" },
+  { label: "Pictures/Videos", href: "/advertising/pictures-videos", min: "member", group: "Advertising" },
+  { label: "Canva Templates", href: "/advertising/canva-templates", min: "member", group: "Advertising" },
+  { label: "Evidence Manual", href: "/advertising/evidence-manual", min: "member", group: "Advertising" },
   { label: "Admin only", min: "admin", admin: true, caption: true },
   { label: "Members and Leads", min: "admin", admin: true, heading: true, group: "Members and Leads" },
   { label: "Members, leads and invites", href: "/admin/people", min: "admin", admin: true, group: "Members and Leads" },
@@ -61,6 +63,7 @@ const NAV: NavItem[] = [
   { label: "Manage Documents", href: "/admin/documents", min: "admin", admin: true, group: "Library" },
   { label: "Manage graphics", href: "/admin/graphics", min: "admin", admin: true, group: "Library" },
   { label: "Manage resources", href: "/admin/resource-library", min: "admin", admin: true, group: "Library" },
+  { label: "Manage Evidence Manual", href: "/admin/evidence", min: "admin", admin: true, group: "Library" },
   { label: "Approvals", min: "admin", admin: true, heading: true, group: "Approvals" },
   { label: "Call closer applications", href: "/admin/closer-applications", min: "admin", admin: true, group: "Approvals" },
   { label: "Resource submissions", href: "/admin/resources", min: "admin", admin: true, group: "Approvals" },
@@ -77,7 +80,7 @@ function ordered(items: NavItem[]): NavItem[] {
   const onboarding = items.filter((n) => n.group === "Onboarding");
   const sales = items.filter((n) => n.group === "Placing Sales");
   const calls = items.filter((n) => n.group === "FLC Calls");
-  const resources = items.filter((n) => n.group === "Resources");
+  const resources = items.filter((n) => n.group === "Resources" || n.group === "Advertising");
   const rest = items.filter((n) => n.label !== "Home" && n.label !== "Chats" && !n.admin && !n.group).sort(az);
   const sections = (g: NavItem[]) => (g.some((n) => !n.heading) ? [...g.filter((n) => n.heading), ...g.filter((n) => !n.heading).sort(az)] : []);
   /* the admin menu is several folding sections, each with its tabs A to Z, in the order they are listed above */
