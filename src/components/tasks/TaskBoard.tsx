@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addDailyRoutine, addTask, completeTask, deleteTask, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
+import { addDailyRoutine, addTask, completeTask, deleteTask, deleteTasks, reorderTasks, saveTimezone, undoTask, updateTask, type TaskInput } from "@/app/(app)/tasks/actions";
 import { complete, dueLabel, REPEAT_LABEL, split, stateOf, suggestOrder, taskHelp, undo, type Suggestion, type Task } from "@/lib/tasks/schedule";
 import { BadgeStrip } from "@/components/badges/BadgeStrip";
 import { BadgeToast } from "@/components/badges/BadgeToast";
@@ -28,6 +28,49 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
   const [party, setParty] = useState(false);
   const [newBadges, setNewBadges] = useState<string[]>([]);
   const [pending, run] = useTransition();
+  /* select several tasks: drag a box over the empty space around them, or hold Ctrl/Cmd and click */
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const host = useRef<HTMLDivElement>(null);
+  const selRef = useRef(sel);
+  useEffect(() => { selRef.current = sel; });
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setSel(new Set()); };
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.button !== 0 || e.pointerType === "touch" || t.closest("[data-sel], button, a, input, select, textarea, label, dialog, .tasks-selbar, .trash-menu, .tour")) return;
+      const el = host.current; if (!el) return;
+      const sx = e.clientX + window.scrollX, sy = e.clientY + window.scrollY;
+      const additive = e.metaKey || e.ctrlKey || e.shiftKey;
+      const base = additive ? new Set(selRef.current) : new Set<string>();
+      let moved = false;
+      const move = (ev: PointerEvent) => {
+        const cx = ev.clientX + window.scrollX, cy = ev.clientY + window.scrollY;
+        if (!moved && Math.hypot(cx - sx, cy - sy) < 6) return;
+        if (!moved) { document.body.classList.add("doc-dragging"); }
+        moved = true;
+        const x1 = Math.min(sx, cx), x2 = Math.max(sx, cx), y1 = Math.min(sy, cy), y2 = Math.max(sy, cy);
+        setBox({ x: x1 - window.scrollX, y: y1 - window.scrollY, w: x2 - x1, h: y2 - y1 });
+        const hit = new Set(base);
+        el.querySelectorAll<HTMLElement>("[data-sel]").forEach((it) => { const r = it.getBoundingClientRect(); const l = r.left + window.scrollX, tp = r.top + window.scrollY; if (l < x2 && l + r.width > x1 && tp < y2 && tp + r.height > y1) hit.add(it.dataset.sel!); });
+        setSel(hit);
+      };
+      const up = () => {
+        window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+        setBox(null); document.body.classList.remove("doc-dragging");
+        if (!moved && !additive) setSel(new Set());
+      };
+      e.preventDefault();
+      window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.addEventListener("pointerdown", onDown);
+    return () => { window.removeEventListener("keydown", onKey); document.body.removeEventListener("pointerdown", onDown); };
+  }, []);
+  const toggleSel = (id: string) => setSel((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const rowClick = (e: React.MouseEvent, id: string) => { if (e.metaKey || e.ctrlKey || e.shiftKey) { e.preventDefault(); toggleSel(id); } };
+  const rowProps = (id: string) => ({ "data-sel": id, onClickCapture: (e: React.MouseEvent) => rowClick(e, id) });
+  const chosen = tasks.filter((t) => sel.has(t.id)).map((t) => t.id);
   const [routineOpen, setRoutineOpen] = useState<RoutineKey | null>(null);
   const [picks, setPicks] = useState<number[]>(ROUTINES.faith.items.map((_, i) => i));
   const DAILY_ROUTINE = ROUTINES[routineOpen ?? "faith"].items;
@@ -83,6 +126,13 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
     apply(() => deleteTask(id), before);
   }
 
+  function removeChosen() {
+    const ids = chosen; if (ids.length === 0) return;
+    const before = tasks;
+    setTasks(tasks.filter((t) => !ids.includes(t.id))); setSuggestion(null); setSel(new Set());
+    apply(() => deleteTasks(ids), before);
+  }
+
   function setOrder(ids: string[]) {
     const rest = tasks.filter((t) => !ids.includes(t.id)).sort((a, b) => a.position - b.position).map((t) => t.id);
     const order = [...ids, ...rest];
@@ -111,7 +161,14 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
 
   return (
     <div className="tasks-layout">
-    <div className="tasks">
+    <div className="tasks" ref={host}>
+      {chosen.length ? (
+        <div className="tasks-selbar" role="toolbar" aria-label="Selected tasks">
+          <strong>{chosen.length} selected</strong>
+          <TrashButton label="the selected tasks" busy={pending} deleteText={`Delete ${chosen.length} ${chosen.length === 1 ? "task" : "tasks"}`} onConfirm={removeChosen} />
+          <button className="linkbtn" type="button" onClick={() => setSel(new Set())}>Clear</button>
+        </div>
+      ) : null}
       <div className="tasks-top">
         <div className="tasks-progress" aria-label={`${doneToday.length} of ${total} done today`}>
           <div className="tasks-count"><strong>{doneToday.length}</strong> of {total} done today</div>
@@ -185,7 +242,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
               const s = stateOf(t, today);
               const help = helpOpen === t.id ? taskHelp(t) : null;
               return (
-                <li key={t.id} className={"task" + (dragId === t.id ? " dragging" : "") + (s.kind === "overdue" ? " late" : "")}
+                <li key={t.id} {...rowProps(t.id)} className={"task" + (sel.has(t.id) ? " selected" : "") + (dragId === t.id ? " dragging" : "") + (s.kind === "overdue" ? " late" : "")}
                   onDragOver={(e) => { if (dragId) e.preventDefault(); }} onDrop={() => dropOn(t.id)}>
                   <div className="task-row">
                     <button type="button" className="task-grip" draggable aria-label={`Drag to reorder ${t.title}`} onDragStart={() => setDragId(t.id)} onDragEnd={() => setDragId(null)}>⋮⋮</button>
@@ -225,7 +282,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
           <h2 className="qh tasks-h">Coming up</h2>
           <ul className="task-list quiet">
             {upcoming.map((t) => (
-              <li key={t.id} className="task"><div className="task-row">
+              <li key={t.id} {...rowProps(t.id)} className={"task" + (sel.has(t.id) ? " selected" : "")}><div className="task-row">
                 <div className="task-main">
                   <strong>{t.title}</strong>
                   <span className="task-meta"><span className={"pill " + t.area}>{t.area === "business" ? "Business" : "Personal"}</span><span className="pill">{REPEAT_LABEL[t.repeat]}</span><span className="task-due">{dueLabel(t, today)}</span></span>
@@ -242,7 +299,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
           <h2 className="qh tasks-h">Done today</h2>
           <ul className="task-list quiet">
             {doneToday.map((t) => (
-              <li key={t.id} className="task done"><div className="task-row">
+              <li key={t.id} {...rowProps(t.id)} className={"task done" + (sel.has(t.id) ? " selected" : "")}><div className="task-row">
                 <button type="button" className="task-check on" aria-label={`Undo: ${t.title}`} onClick={() => untick(t)}>✓</button>
                 <div className="task-main"><strong>{t.title}</strong><span className="task-meta"><span className={"pill " + t.area}>{t.area === "business" ? "Business" : "Personal"}</span><span className="pill">{REPEAT_LABEL[t.repeat]}</span></span></div>
                 <div className="task-tools"><TrashButton label={t.title} busy={pending} onConfirm={() => removeTask(t.id)} /></div>
@@ -256,6 +313,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
 
       <TaskForm key={formKey} open={editing !== null} task={editing && editing !== "new" ? editing : null} today={today} busy={pending} error={formError}
         onSave={save} onClose={() => setEditing(null)} />
+      {box ? <div className="doc-marquee" style={{ left: box.x, top: box.y, width: box.w, height: box.h }} aria-hidden="true" /> : null}
       {party ? <Fireworks onClose={() => setParty(false)} /> : null}
       {newBadges.length ? <BadgeToast keys={newBadges} onClose={() => setNewBadges([])} /> : null}
     </div>
