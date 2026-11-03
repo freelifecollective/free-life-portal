@@ -2195,3 +2195,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .placed-docs { margin: 0 0 24px; }
 .placed-docs .doc-grid { margin-bottom: 20px; }
 .placed-divider { border: 0; border-top: 2px solid var(--line); margin: 0; }
+
+/* the Admin block folds as a whole */
+.nav .nav-caption.nav-admin { padding: 0; }
+.nav-admin-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 10px 6px 4px; border: 0; background: none; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: inherit; }
+.nav-admin-toggle:hover { opacity: .8; }

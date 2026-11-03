@@ -9,14 +9,18 @@ export type NavEntry = { label: string; href?: string; heading?: boolean; captio
 
 /* Only one section is open at a time. Each device remembers which one (or "none"), under its own key. */
 const KEY = "flc_nav_open";
+const ADMIN_KEY = "flc_nav_admin";   /* the whole Admin block: "open" or "closed" */
 const NONE = "none";
 const listeners = new Set<() => void>();
 const subscribe = (cb: () => void) => { listeners.add(cb); window.addEventListener("storage", cb); return () => { listeners.delete(cb); window.removeEventListener("storage", cb); }; };
-const read = () => { try { return localStorage.getItem(KEY) ?? ""; } catch { return ""; /* storage may be blocked */ } };
-function remember(value: string) {
-  try { localStorage.setItem(KEY, value); } catch { /* not saved, still works this visit */ }
+const readKey = (key: string) => () => { try { return localStorage.getItem(key) ?? ""; } catch { return ""; /* storage may be blocked */ } };
+const read = readKey(KEY);
+const readAdmin = readKey(ADMIN_KEY);
+function rememberKey(key: string, value: string) {
+  try { localStorage.setItem(key, value); } catch { /* not saved, still works this visit */ }
   listeners.forEach((l) => l());
 }
+const remember = (value: string) => rememberKey(KEY, value);
 
 function Item({ n, path }: { n: NavEntry; path: string }) {
   if (!n.href) return <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}><span title="Coming soon">{n.label}</span></li>;
@@ -35,6 +39,7 @@ function Item({ n, path }: { n: NavEntry; path: string }) {
 export function NavLinks({ items }: { items: NavEntry[] }) {
   const path = usePathname();
   const saved = useSyncExternalStore(subscribe, read, () => "");
+  const savedAdmin = useSyncExternalStore(subscribe, readAdmin, () => "");
   const on = (n: NavEntry) => !!n.href && (n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/"));
   const sections = items.filter((g) => g.heading).map((g) => g.label);
   /* until someone chooses, the section holding the page they are on is open, otherwise the first one */
@@ -61,10 +66,26 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
     );
   };
 
+  /* everything after the "Admin only" caption is the Admin block: it folds away as a whole, and its sections fold as usual */
+  const capAt = items.findIndex((g) => g.caption);
+  const main = capAt < 0 ? items : items.slice(0, capAt);
+  const adminItems = capAt < 0 ? [] : items.slice(capAt + 1);
+  const adminOpen = savedAdmin ? savedAdmin === "open" : items.some((g) => g.group && on(g) && adminItems.includes(g)) || adminItems.some((g) => !g.heading && on(g));
+  const row = (n: NavEntry) => (n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} />);
+
   return (
     <>
       <ul>
-        {items.map((n) => (n.caption ? <li key={n.label} className="nav-caption" data-nav={n.label}>{n.label}</li> : n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} />))}
+        {main.map(row)}
+        {capAt >= 0 ? (
+          <li className={"nav-caption nav-admin" + (adminOpen ? " open" : "")} data-nav={items[capAt].label}>
+            <button type="button" className="nav-admin-toggle" aria-expanded={adminOpen} onClick={() => rememberKey(ADMIN_KEY, adminOpen ? "closed" : "open")}>
+              <span>{items[capAt].label}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: adminOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }}><path d="m6 9 6 6 6-6" /></svg>
+            </button>
+          </li>
+        ) : null}
+        {adminOpen ? adminItems.map(row) : null}
       </ul>
       {/* never shown: it holds every name, folded away or not, so the menu is always wide enough for all of them in this language */}
       <ul className="nav-sizer" aria-hidden="true">
