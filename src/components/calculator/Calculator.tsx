@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { COMMISSIONS } from "@/lib/calculator/data";
+import { QuoteBuilder } from "@/components/quote/QuoteBuilder";
+import { expandSelection } from "@/lib/quote/model";
 
 const COMBO = /^(K8 \+ Ukon|Trifecta|Quad)/;
 const POINTS = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -26,6 +28,8 @@ export function Calculator({ initialCountry }: { initialCountry?: string }) {
 
   let sum = 0, n = 0;
   for (const pr of c.products) { const q = qty[pr.name] ?? 0; sum += (pr.rates[String(points)] ?? 0) * q; n += q; }
+
+  const quoteProducts = c.name === "United States" ? expandSelection(qty) : null;
 
   /* the products in order (packages last), with empty slots where a row must start fresh */
   const layout: ((typeof c.products)[number] | null)[] = [];
@@ -74,6 +78,7 @@ export function Calculator({ initialCountry }: { initialCountry?: string }) {
         </div>
       </div>
       <div className="calc-bubbles">{layout.map((item, i) => item === null ? <span key={`gap-${i}`} className="calc-gap" aria-hidden="true" /> : bubble(item))}</div>
+      {quoteProducts ? <QuoteBuilder products={quoteProducts} /> : n ? <p className="when" style={{ margin: "14px 0 0" }}>Quotes for leads are available for K8, Anespa, Ukon Sigma and their packages in the United States, for now.</p> : null}
     </div>
   );
 }

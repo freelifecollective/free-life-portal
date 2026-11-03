@@ -19,7 +19,7 @@ export default async function ManageCanvaPage() {
         <RefreshCanvaNames />
       </section>
       <h2 className="qh" style={{ marginTop: 28 }}>Templates ({items.length})</h2>
-      {items.length === 0 ? <p className="page-lede">Nothing yet.</p> : <ResourceEditList items={items} />}
+      {items.length === 0 ? <p className="page-lede">Nothing yet.</p> : <ResourceEditList items={items} cards />}
     </>
   );
 }
