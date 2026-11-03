@@ -63,7 +63,8 @@ begin
   insert into public.doc_files (folder_id, name, storage_path) values (null, 'loose.pdf', 'x/loose.pdf');
   perform tests.logout();
   perform tests.login(mia);
-  perform tests.eq('a page shows its folder and sub-folder documents', (select count(*) from public.placed_documents('verbiage')), 2::bigint);
+  perform tests.eq('a page shows the files in its folder', (select count(*) from public.placed_documents('verbiage')), 1::bigint);
+  perform tests.eq('and the folders inside it as folders', (select count(*) from public.placed_folders('verbiage')), 1::bigint);
   perform tests.eq('another page shows none', (select count(*) from public.placed_documents('financing')), 0::bigint);
   perform tests.logout();
 end $$;
