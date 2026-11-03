@@ -2190,3 +2190,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .ev-story { margin: 0 0 10px; white-space: pre-line; max-height: 14em; overflow: auto; }
 .ev-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 @media (max-width: 520px) { .ev-card { grid-template-columns: 1fr; } .ev-photo { width: 100%; max-width: 220px; } }
+
+/* documents shown on a page: cards under the subtitle, then a divider */
+.placed-docs { margin: 0 0 24px; }
+.placed-docs .doc-grid { margin-bottom: 20px; }
+.placed-divider { border: 0; border-top: 2px solid var(--line); margin: 0; }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
 import { EvidenceCard } from "@/components/resources/EvidenceCard";
 import { EvidenceFilters } from "@/components/resources/EvidenceFilters";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
 import { RANKS, STORY_TYPES, storyLabel } from "@/lib/resources/kinds";
 import { isAffiliate } from "@/lib/roles";
@@ -27,6 +28,7 @@ export default async function EvidenceManualPage(props: PageProps<"/advertising/
   return (
     <>
       <PageHeading lede="Real people who have found success. Copy a story or download a picture to share. Highest rank first.">Evidence Manual</PageHeading>
+      <PlacedDocs placement="evidence" />
       <EvidenceFilters rank={rank} story={story} />
       {groups.length === 0 ? <p className="card-s" style={{ margin: 0 }}>{rank || story ? "No one matches that yet." : "Nothing here yet. Check back soon!"}</p> : groups.map((g) => (
         <section key={g.rank} style={{ marginTop: 24 }} aria-label={`Rank ${g.rank}`}>

@@ -1,4 +1,5 @@
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { FollowsBoard, type Listing } from "@/components/follows/FollowsBoard";
 import { requireMember } from "@/lib/auth/guards";
 import { isAffiliate } from "@/lib/roles";
@@ -13,6 +14,7 @@ export default async function FacebookFollowsPage() {
   return (
     <>
       <PageHeading lede="Help new members reach their first 50 Facebook follows. Follow their page, then tap “I followed”. Once a page reaches 50, it comes off the list.">Facebook Follows</PageHeading>
+      <PlacedDocs placement="facebook" />
       <FollowsBoard listings={(data ?? []) as Listing[]} isAdmin={session.profile.role === "admin"} canList={isAffiliate(session.profile.role)} suggested={session.profile.facebook ?? ""} />
     </>
   );

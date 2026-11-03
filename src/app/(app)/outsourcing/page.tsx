@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { ListingForm } from "@/components/outsourcing/ListingForm";
 import { ProviderList } from "@/components/outsourcing/ProviderList";
 import { requireMember } from "@/lib/auth/guards";
@@ -17,6 +18,7 @@ export default async function OutsourcingPage() {
   return (
     <>
       <PageHeading lede="Find help from people in the community, or offer your own skills.">Outsourcing</PageHeading>
+      <PlacedDocs placement="outsourcing" />
       <div className="stack">
         <ListingForm mine={mine} />
         <ProviderList providers={providers} hired={hired} reviews={reviews} me={session.user.id} isAdmin={session.profile.role === "admin"} />

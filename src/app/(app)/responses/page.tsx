@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
 import { authorsById } from "@/lib/chats/queries";
 import { isAffiliate } from "@/lib/roles";
@@ -20,6 +21,7 @@ export default async function ResponsesPage() {
   return (
     <>
       <PageHeading lede="The below are answers the community has voted for in the Verbiage/Objections chat as being quality responses. These are from other members in the community looking for help to respond to messages from their leads.">Verbiage + Objections</PageHeading>
+      <PlacedDocs placement="verbiage" />
       {rows.length === 0 ? (
         <section className="card-s" style={{ maxWidth: 560 }}>
           <p style={{ margin: 0 }}>Nothing has reached 15 votes yet. Add and vote on answers in <Link href="/chats/verbiage-objections">Verbiage/Objections chat</Link>.</p>

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { FamilyTree } from "@/components/tree/FamilyTree";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
 import type { TreeNode } from "@/lib/tree/layout";
 import { isAffiliate } from "@/lib/roles";
@@ -34,6 +35,7 @@ export default async function FamilyTreePage(props: PageProps<"/family-tree">) {
   return (
     <>
       <PageHeading lede="Map out your current organization or use this feature to vision-board your way to higher ranks. Add as many accounts as you like, change it any time, and keep both sides stacked evenly.">Your Organization</PageHeading>
+      <PlacedDocs placement="organization" />
       <FamilyTree key={active.id} chartId={active.id} chartName={active.name} charts={charts.map((c) => ({ id: c.id, name: c.name }))} initial={(nodes ?? []) as TreeNode[]} ownerName={name} ownerRank={t?.root_rank || (rankId ? ranks[rankId - 1] ?? null : null)} token={t?.share_token ?? null} rootEdited={!!t?.root_label} />
     </>
   );

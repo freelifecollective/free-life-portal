@@ -1,6 +1,7 @@
 import { countryCodeFromPlace } from "@/lib/countries";
 import { redirect } from "next/navigation";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { Calculator } from "@/components/calculator/Calculator";
 import { requireMember } from "@/lib/auth/guards";
 import { cookies } from "next/headers";
@@ -27,6 +28,7 @@ export default async function CalculatorPage() {
   return (
     <>
       <PageHeading lede="Select your country and amount of points you currently receive to see your commissions">Earnings Estimator</PageHeading>
+      <PlacedDocs placement="calculator" />
       <p className="calc-fine">**These are estimates and not a guarantee of the commission you will receive.<br />Commission is dependent on stacking, account status, and how the product is purchased.</p>
       <Calculator initialCountry={country} />
     </>

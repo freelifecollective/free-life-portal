@@ -1,4 +1,5 @@
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { SuggestForm } from "@/components/financing/SuggestForm";
 import Link from "next/link";
 import { COUNTRIES, countryBySlug, countryValue } from "@/lib/financing/countries";
@@ -20,6 +21,7 @@ export default async function FinancingPage(props: PageProps<"/financing">) {
   return (
     <>
       <PageHeading lede={role === "lead" ? "Different ways to find the funds to get your business started." : "Different options to help your leads get started."}>Financing Options</PageHeading>
+      <PlacedDocs placement="financing" />
       <nav className="country-tabs" aria-label="Country">
         {COUNTRIES.map((c) => <Link key={c.slug} href={`/financing?country=${c.slug}`} aria-current={c.slug === chosen.slug ? "page" : undefined}>{c.name}</Link>)}
       </nav>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireMember } from "@/lib/auth/guards";
+import { PLACEMENTS } from "@/lib/documents/placements";
 import { isDocType, isPreviewable, isViewable, MAX_FILE_BYTES } from "@/lib/documents/types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -202,6 +203,17 @@ export async function setFileDetails(id: string, docType: string, keywords: stri
   if (!UUID.test(id) || !isDocType(docType)) return { ok: false, error: "Something went wrong." };
   const { supabase } = await requireAdmin();
   const { error } = await supabase.from("doc_files").update({ doc_type: docType, keywords: String(keywords ?? "").trim().slice(0, 600) || null }).eq("id", id);
+  if (error) return { ok: false, error: "We could not save that." };
+  refresh();
+  return { ok: true };
+}
+
+/** Choose which page a folder's documents show on (below that page's subtitle). Empty means none. */
+export async function setFolderPlacement(id: string, placement: string): Promise<Result> {
+  if (!UUID.test(id)) return { ok: false, error: "Something went wrong." };
+  if (placement && !PLACEMENTS.some(([v]) => v === placement)) return { ok: false, error: "Choose a page from the list." };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("doc_folders").update({ placement: placement || null }).eq("id", id);
   if (error) return { ok: false, error: "We could not save that." };
   refresh();
   return { ok: true };

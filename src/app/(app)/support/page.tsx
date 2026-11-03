@@ -1,4 +1,5 @@
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { FocusForm } from "@/components/support/FocusForm";
 import { requireMember } from "@/lib/auth/guards";
 
@@ -11,6 +12,7 @@ export default async function SupportPage() {
   return (
     <>
       <PageHeading lede="What do you want to improve on or deepen your knowledge in?">{"What's your focus this week?"}</PageHeading>
+      <PlacedDocs placement="weekly" />
       <FocusForm />
     </>
   );

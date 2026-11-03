@@ -54,4 +54,17 @@ begin
   perform tests.eq('a lead sees no stories', (select count(*) from public.evidence_stories), 0::bigint);
   perform tests.eq('a lead sees no resources', (select count(*) from public.resource_items), 0::bigint);
 end $$;
+do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1'; ada uuid := '00000000-0000-0000-0000-0000000000a4'; f uuid; g uuid;
+begin
+  perform tests.login(ada);
+  insert into public.doc_folders (name, placement) values ('Talking to Leads', 'verbiage') returning id into f;
+  insert into public.doc_folders (name, parent_id) values ('Scripts', f) returning id into g;
+  insert into public.doc_files (folder_id, name, storage_path) values (f, 'one.pdf', 'x/one.pdf'), (g, 'two.pdf', 'x/two.pdf');
+  insert into public.doc_files (folder_id, name, storage_path) values (null, 'loose.pdf', 'x/loose.pdf');
+  perform tests.logout();
+  perform tests.login(mia);
+  perform tests.eq('a page shows its folder and sub-folder documents', (select count(*) from public.placed_documents('verbiage')), 2::bigint);
+  perform tests.eq('another page shows none', (select count(*) from public.placed_documents('financing')), 0::bigint);
+  perform tests.logout();
+end $$;
 rollback;

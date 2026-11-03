@@ -1,5 +1,6 @@
 import { GraphicMaker, type Template } from "@/components/graphics/GraphicMaker";
 import { PageHeading } from "@/components/PageHeading";
+import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
 import { cleanLayout } from "@/lib/graphics/layout";
 import { headers } from "next/headers";
@@ -23,6 +24,7 @@ export default async function GraphicMakerPage() {
   return (
     <>
       <PageHeading lede="Make a picture with your photo, name and invite link on it, ready to post.">Graphic maker</PageHeading>
+      <PlacedDocs placement="graphics" />
       {templates.length === 0 ? <section className="card-s" style={{ maxWidth: 640 }}><p style={{ margin: 0 }}>No templates are ready yet. Check back soon.</p></section> : <GraphicMaker templates={templates} name={name} photoUrl={p.avatar_url ?? null} link={link} />}
     </>
   );
