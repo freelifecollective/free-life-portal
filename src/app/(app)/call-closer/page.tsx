@@ -36,7 +36,7 @@ export default async function CallCloserPage(props: PageProps<"/call-closer">) {
         <PageHeading>Call Closer</PageHeading>
         <section className="card-s" style={{ maxWidth: 640 }}>
           <h2 className="qh" style={{ marginTop: 0 }}>The Call Closer page could not load</h2>
-          <p style={{ margin: "0 0 10px" }}>The latest database update for this page probably has not been run yet. Please run <b>0070_closer_hub.sql</b>, then refresh.</p>
+          <p style={{ margin: "0 0 10px" }}>The latest database update for this page probably has not been run yet. Please run <b>{problems.some((m) => /completed_at|auto_completed|room_/.test(m)) ? "0104_call_rooms.sql" : "0070_closer_hub.sql"}</b>, then refresh.</p>
           <p className="when" style={{ margin: 0 }} translate="no">{[...new Set(problems)].join(" · ")}</p>
         </section>
       </>
