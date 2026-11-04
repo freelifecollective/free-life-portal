@@ -30,3 +30,14 @@ describe("emails", () => {
     expect(verifyUnsubscribe("a@b.com", "bad")).toBe(false);
   });
 });
+
+describe("quote email", () => {
+  it("links to the quote and names who sent it", async () => {
+    const { renderEmail } = await import("./templates");
+    const m = renderEmail("quote_share", { name: "Ana", from_name: "Mia M", token: "a".repeat(32) }, { siteUrl: "https://x.test", unsubscribeUrl: null })!;
+    expect(m.subject).toBe("Ana, here is your quote");
+    expect(m.html).toContain("https://x.test/q/" + "a".repeat(32));
+    expect(m.text).toContain("Mia M");
+    expect(renderEmail("quote_share", { token: "nope" }, { siteUrl: "https://x.test", unsubscribeUrl: null })).toBeNull();
+  });
+});

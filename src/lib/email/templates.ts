@@ -34,6 +34,12 @@ export function renderEmail(template: string, payload: Record<string, unknown>, 
       return shell("What are you hoping to get out of this?", [`Hi ${name}, we would love to know what brought you to the Free Life Collective and what you are hoping for.`, "Just reply to this email with a sentence or two. A real person reads every reply, and it helps us point you to the right call or person."], null, ctx);
     case "lead_series_3":
       return shell(`Ready for the next step, ${name}?`, ["If you have been watching and learning, the best next step is a one-to-one conversation. Sign in and book a time that suits you.", "There is no pressure. It is simply a chance to ask your questions and hear what could work for you."], { label: "Book a call", url: `${ctx.siteUrl}/book` }, ctx);
+    case "quote_share": {
+      const from = typeof payload.from_name === "string" && payload.from_name.trim() ? payload.from_name.trim() : "your Free Life Collective contact";
+      const token = typeof payload.token === "string" && /^[0-9a-f]{20,64}$/.test(payload.token) ? payload.token : "";
+      if (!token) return null;
+      return shell(`${name}, here is your quote`, [`Hi ${name}, ${from} put together a quote for you.`, "Tap the button to see it. You can save the picture or share the link with anyone you like."], { label: "See your quote", url: `${ctx.siteUrl}/q/${token}` }, ctx);
+    }
     default:
       return null;
   }

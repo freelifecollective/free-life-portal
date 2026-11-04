@@ -47,5 +47,16 @@ begin
   perform tests.eq('a wrong code finds nothing', public.get_quote('0123456789abcdef0123456789') is null, true);
   perform tests.eq('and cannot list quotes', (select count(*) from public.quotes), 0::bigint);
   perform tests.logout();
+  perform tests.login(mia);
+  perform public.queue_quote_email(t, 'Ana@Example.com', 'Ana');
+  perform tests.logout();
+  perform tests.eq('the email waits in the outbox', (select count(*) from public.email_outbox where template = 'quote_share' and to_email = 'ana@example.com'), 1::bigint);
+  perform tests.login(mia);
+  perform tests.fails('only to a real address', format('select public.queue_quote_email(%L, ''not-an-email'', ''x'')', t), '22023');
+  perform tests.fails('only for your own quote', 'select public.queue_quote_email(''0123456789abcdef0123456789'', ''a@b.co'', ''x'')', '42501');
+  perform tests.logout();
+  perform tests.login(lena);
+  perform tests.fails('a lead cannot email quotes', format('select public.queue_quote_email(%L, ''a@b.co'', ''x'')', t), '42501');
+  perform tests.logout();
 end $$;
 rollback;
