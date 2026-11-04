@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { LiveDot } from "./LiveBadge";
 
-export type NavEntry = { label: string; href?: string; heading?: boolean; caption?: boolean; group?: string; badge?: number; live?: boolean };
+export type NavEntry = { label: string; href?: string; heading?: boolean; caption?: boolean; group?: string; badge?: number; live?: boolean; locked?: boolean };
 
 /* Only one section is open at a time. Each device remembers which one (or "none"), under its own key. */
 const KEY = "flc_nav_open";
@@ -22,7 +22,14 @@ function rememberKey(key: string, value: string) {
 }
 const remember = (value: string) => rememberKey(KEY, value);
 
-function Item({ n, path }: { n: NavEntry; path: string }) {
+function Item({ n, path, onLocked }: { n: NavEntry; path: string; onLocked: () => void }) {
+  if (n.locked) {
+    return (
+      <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}>
+        <button type="button" className="nav-locked" aria-haspopup="dialog" onClick={onLocked}><span>{n.label}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg><span className="sr-only">(locked)</span></button>
+      </li>
+    );
+  }
   if (!n.href) return <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}><span title="Coming soon">{n.label}</span></li>;
   const active = n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/");
   return (
@@ -38,6 +45,8 @@ function Item({ n, path }: { n: NavEntry; path: string }) {
  */
 export function NavLinks({ items }: { items: NavEntry[] }) {
   const path = usePathname();
+  const lockDlg = useRef<HTMLDialogElement>(null);
+  const onLocked = () => lockDlg.current?.showModal();
   const saved = useSyncExternalStore(subscribe, read, () => "");
   const savedAdmin = useSyncExternalStore(subscribe, readAdmin, () => "");
   const on = (n: NavEntry) => !!n.href && (n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/"));
@@ -61,7 +70,7 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: opened ? "rotate(180deg)" : undefined, transition: "transform .15s" }}><path d="M6 9l6 6 6-6" /></svg>
           </span>
         </button>
-        {opened ? <ul className="nav-kids">{kids.map((n) => <Item key={n.label} n={n} path={path} />)}</ul> : null}
+        {opened ? <ul className="nav-kids">{kids.map((n) => <Item key={n.label} n={n} path={path} onLocked={onLocked} />)}</ul> : null}
       </li>
     );
   };
@@ -71,7 +80,7 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
   const main = capAt < 0 ? items : items.slice(0, capAt);
   const adminItems = capAt < 0 ? [] : items.slice(capAt + 1);
   const adminOpen = savedAdmin ? savedAdmin === "open" : items.some((g) => g.group && on(g) && adminItems.includes(g)) || adminItems.some((g) => !g.heading && on(g));
-  const row = (n: NavEntry) => (n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} />);
+  const row = (n: NavEntry) => (n.heading ? section(n.label) : n.group ? null : <Item key={n.label} n={n} path={path} onLocked={onLocked} />);
 
   return (
     <>
@@ -87,6 +96,14 @@ export function NavLinks({ items }: { items: NavEntry[] }) {
         ) : null}
         {adminOpen ? adminItems.map(row) : null}
       </ul>
+      <dialog ref={lockDlg} className="rs-dialog" aria-labelledby="locked-title">
+        <h2 id="locked-title" className="qh" style={{ marginTop: 0 }}>Members only</h2>
+        <p>Sorry, this feature is only available to paying members.</p>
+        <div className="dlg-actions">
+          <button type="button" className="btn" onClick={() => lockDlg.current?.close()}>Close</button>
+          <Link className="btn primary" href="/plans" style={{ textDecoration: "none" }} onClick={() => lockDlg.current?.close()}>See the plans</Link>
+        </div>
+      </dialog>
       {/* never shown: it holds every name, folded away or not, so the menu is always wide enough for all of them in this language */}
       <ul className="nav-sizer" aria-hidden="true">
         {items.map((n) => {

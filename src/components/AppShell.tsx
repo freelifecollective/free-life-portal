@@ -19,11 +19,12 @@ import { UserMenu } from "./UserMenu";
 import { ProfilePopupProvider } from "./people/ProfilePopup";
 import { isAffiliate } from "@/lib/roles";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean; downline?: boolean; caption?: boolean };
+type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean; downline?: boolean; downlineOnly?: boolean; caption?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead", downline: true },
+  { label: "Choose Your Plan", href: "/plans", min: "downline", downline: true, downlineOnly: true },
   { label: "Calendar", href: "/calendar", min: "lead", downline: true, group: "FLC Calls" },
   { label: "Outsourcing", href: "/outsourcing", min: "member", group: "DMO" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
@@ -131,7 +132,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => (canSee(p.role, n.min) || (!!n.downline && p.role === "downline")) && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map(({ label, href, heading, group, caption }) => ({ label, href, heading, group, caption, badge: href ? badges[href] : undefined, live: liveNow && href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => p.role === "downline" ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map((n) => ({ label: n.label, href: n.href, heading: n.heading, group: n.group, caption: n.caption, locked: p.role === "downline" && !n.heading && !n.caption && !n.downline && !canSee(p.role, n.min), badge: n.href ? badges[n.href] : undefined, live: liveNow && n.href === "/calls" }))} />
         </NavPanel>
         <main className="main" id="main">{session.mode === "supabase" && isAffiliate(p.role) ? <BirthdayBanner /> : null}{children}</main>
       </div>
