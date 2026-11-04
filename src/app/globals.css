@@ -2258,3 +2258,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .calc-bubble .soon-tag { font-size: 11px; color: var(--muted); }
 .qb-num { width: 90px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 .qb-top { align-items: flex-start; }
+
+/* Advertising > Landing Page: the member's own page shown inside the portal */
+.lp-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 0 0 16px; }
+.lp-frame { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; }
+.lp-frame iframe { display: block; width: 100%; height: 80dvh; min-height: 560px; border: 0; }

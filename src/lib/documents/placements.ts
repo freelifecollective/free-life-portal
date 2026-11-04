@@ -4,6 +4,6 @@ export const PLACEMENTS: [string, string][] = [
   ["buddy", "Accountability Buddy"], ["facebook", "Facebook Follows"], ["organization", "Your Organization"],
   ["outsourcing", "Outsourcing"], ["closers", "Call Closers for Hire"], ["graphics", "Graphic maker"],
   ["tasks", "Tasks"], ["weekly", "Weekly Focus"], ["courses", "Courses"], ["launch", "Business Launch Course"],
-  ["books", "Books"], ["products", "Product Information"], ["media", "Pictures/Videos"], ["canva", "Canva Templates"], ["evidence", "Evidence Manual"],
+  ["books", "Books"], ["products", "Product Information"], ["media", "Pictures/Videos"], ["canva", "Canva Templates"], ["evidence", "Evidence Manual"], ["landing", "Landing Page"],
 ];
 export const placementLabel = (k: string | null | undefined) => PLACEMENTS.find(([v]) => v === k)?.[1] ?? null;

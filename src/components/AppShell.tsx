@@ -55,6 +55,7 @@ const NAV: NavItem[] = [
   { label: "Pictures/Videos", href: "/advertising/pictures-videos", min: "member", group: "Advertising" },
   { label: "Canva Templates", href: "/advertising/canva-templates", min: "member", group: "Advertising" },
   { label: "Evidence Manual", href: "/advertising/evidence-manual", min: "member", group: "Advertising" },
+  { label: "Landing Page", href: "/advertising/landing-page", min: "member", group: "Advertising" },
   { label: "Admin Only", min: "admin", admin: true, caption: true },
   { label: "Members and Leads", min: "admin", admin: true, heading: true, group: "Members and Leads" },
   { label: "Members, Leads and Invites", href: "/admin/people", min: "admin", admin: true, group: "Members and Leads" },
