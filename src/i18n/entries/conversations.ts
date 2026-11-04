@@ -111,6 +111,7 @@ export const conversations: readonly Entry[] = [
   ["New member", "Nuevo miembro", "Nouveau membre", "Nuovo membro", "Neues Mitglied"],
   ["Courses", "Cursos", "Cours", "Corsi", "Kurse"],
   ["Manage courses", "Gestionar cursos", "Gérer les cours", "Gestisci i corsi", "Kurse verwalten"],
+  ["Manage Courses", "Gestionar cursos", "Gérer les cours", "Gestisci i corsi", "Kurse verwalten"],
   ["Cover photo", "Foto de portada", "Photo de couverture", "Foto di copertina", "Titelbild"],
   ["Remove photo", "Quitar foto", "Retirer la photo", "Rimuovi foto", "Foto entfernen"],
   ["This is the picture people see on the Courses page.", "Esta es la imagen que la gente ve en la página de Cursos.", "C'est l'image que les gens voient sur la page Cours.", "Questa è l'immagine che le persone vedono nella pagina Corsi.", "Dieses Bild sehen die Leute auf der Kursseite."],
