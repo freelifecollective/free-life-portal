@@ -53,3 +53,17 @@ export async function emailQuote(raw: unknown, to: string, name: string): Promis
   try { await drainOutbox(5); } catch { /* it goes out on the next round */ }
   return { ok: true };
 }
+
+/** Marks a sent quote as followed up (the reminders stop), or open again. */
+export async function setQuoteFollowedUp(token: string, done: boolean): Promise<void> {
+  const { session, supabase } = await requireMember();
+  if (!supabase || !isAffiliate(session.profile.role) || !/^[0-9a-f]{20,64}$/.test(token)) return;
+  await supabase.rpc("set_quote_followed_up", { p_token: token, p_done: !!done });
+}
+
+/** Removes one of your own quotes (its link stops working). */
+export async function deleteQuote(token: string): Promise<void> {
+  const { session, supabase } = await requireMember();
+  if (!supabase || !isAffiliate(session.profile.role) || !/^[0-9a-f]{20,64}$/.test(token)) return;
+  await supabase.from("quotes").delete().eq("token", token).eq("user_id", session.user.id);
+}

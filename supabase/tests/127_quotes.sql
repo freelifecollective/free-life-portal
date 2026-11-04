@@ -59,4 +59,26 @@ begin
   perform tests.fails('a lead cannot email quotes', format('select public.queue_quote_email(%L, ''a@b.co'', ''x'')', t), '42501');
   perform tests.logout();
 end $$;
+do $$ declare mia uuid := '00000000-0000-0000-0000-0000000000a1'; t text; z text; k integer;
+begin
+  -- a time zone where it is past 9 in the morning right now, so the test does not depend on the hour it runs
+  select zz into z from unnest(array['UTC', 'Asia/Singapore', 'America/Los_Angeles']) zz where extract(hour from now() at time zone zz) >= 9 limit 1;
+  insert into public.member_prefs (member_id, tz) values (mia, z) on conflict (member_id) do update set tz = excluded.tz;
+  insert into public.quotes (user_id, data, sent_at) values (mia, '{"lead":"Ana","lang":"en","country":"United States","lines":[{"name":"K8","tax":0,"shipping":0}]}', now() - interval '2 days') returning token into t;
+  perform tests.eq('nothing is due after 2 days', public.queue_quote_followups(), 0);
+  update public.quotes set sent_at = now() - interval '3 days 1 hour' where token = t;
+  perform tests.eq('a nudge after 3 days', public.queue_quote_followups(), 1);
+  perform tests.eq('it names the lead', (select count(*) from public.notifications where user_id = mia and kind = 'quote_followup' and title like '%Ana%'), 1::bigint);
+  perform tests.eq('and does not repeat', public.queue_quote_followups(), 0);
+  update public.quotes set sent_at = now() - interval '7 days 1 hour' where token = t;
+  perform tests.eq('a nudge after 7 days', public.queue_quote_followups(), 1);
+  update public.quotes set sent_at = now() - interval '10 days 1 hour' where token = t;
+  perform tests.eq('a nudge after 10 days', public.queue_quote_followups(), 1);
+  perform tests.eq('and then no more', public.queue_quote_followups(), 0);
+  update public.quotes set nudges = 0, sent_at = now() - interval '4 days' where token = t;
+  perform tests.login(mia);
+  perform public.set_quote_followed_up(t, true);
+  perform tests.logout();
+  perform tests.eq('followed up quotes are left alone', public.queue_quote_followups(), 0);
+end $$;
 rollback;

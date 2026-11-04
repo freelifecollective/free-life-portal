@@ -8,7 +8,7 @@ import { formatInZone } from "@/lib/time";
 import { createClient } from "@/lib/supabase/client";
 
 type Item = { id: string; kind: string; title: string; body: string | null; url: string | null; created_at: string; read_at: string | null };
-const ICON: Record<string, string> = { new_lead: "🌱", call_reminder: "📞", call_new: "🗓️", important_update: "📣", submission_result: "✅", announcement: "✨", direct_message: "💬", payment: "💳", task: "📝" };
+const ICON: Record<string, string> = { new_lead: "🌱", call_reminder: "📞", call_new: "🗓️", important_update: "📣", submission_result: "✅", announcement: "✨", direct_message: "💬", payment: "💳", quote_followup: "💌", task: "📝" };
 
 /** The bell at the top right with the unread count. It also puts the same number on the app icon, and refreshes when something new arrives. */
 export function NotificationBell({ count, userId }: { count: number; userId: string }) {
