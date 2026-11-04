@@ -25,7 +25,7 @@ export async function drainOutbox(limit = 40): Promise<DrainResult> {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from, to: [r.to_email], subject: mail.subject, html: mail.html, text: mail.text, ...(link ? { headers: { "List-Unsubscribe": `<${link}>` } } : {}) }),
+        body: JSON.stringify({ from, to: [r.to_email], subject: mail.subject, html: mail.html, text: mail.text, ...(typeof r.payload?.reply_to === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(r.payload.reply_to) ? { reply_to: r.payload.reply_to } : {}), ...(link ? { headers: { "List-Unsubscribe": `<${link}>` } } : {}) }),
       });
       if (!res.ok) throw new Error(`${res.status} ${(await res.text()).slice(0, 200)}`);
       await db.from("email_outbox").update({ status: "sent", sent_at: new Date().toISOString(), attempts: r.attempts + 1, error: null }).eq("id", r.id);

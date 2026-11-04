@@ -2224,21 +2224,22 @@ html, body { max-width: 100%; overflow-x: clip; }
 .placed-group + .placed-group { margin-top: 22px; }
 .placed-h { margin: 0 0 10px; font-size: 18px; }
 
-/* the quote card (also drawn into the saved picture by src/lib/quote/draw.ts: keep the proportions in step) */
+/* the quote card, in the portal's own fonts and colours (also drawn into the saved picture by src/lib/quote/draw.ts: sizes follow the card's width) */
 .qc-wrap { width: 100%; max-width: 620px; }
-.qc { --u: calc(100cqw / 1244); container-type: inline-size; width: 100%; aspect-ratio: 1244 / 1608; background: #fff; position: relative; box-shadow: 0 2px 14px rgba(43,37,34,.14); color: #222; }
-.qc-frame { position: absolute; left: calc(var(--u) * 60); right: calc(var(--u) * 60); top: calc(var(--u) * 50); bottom: calc(var(--u) * 55); border: calc(var(--u) * 3) solid #AB9080; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.qc { --u: calc(100cqw / 1244); container-type: inline-size; width: 100%; aspect-ratio: 1244 / 1608; background: var(--surface); position: relative; box-shadow: 0 2px 14px rgba(43,37,34,.14); color: var(--ink); font-family: var(--font-body); }
+.qc-frame { position: absolute; left: calc(var(--u) * 60); right: calc(var(--u) * 60); top: calc(var(--u) * 50); bottom: calc(var(--u) * 55); border: calc(var(--u) * 3) solid var(--accent); display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .qc-body { width: 100%; display: flex; flex-direction: column; align-items: center; padding-bottom: calc(var(--u) * 60); }
-.qc-title { margin: 0; font-family: var(--font-label); font-weight: 300; font-size: calc(var(--u) * 84); letter-spacing: .1em; text-align: center; line-height: 1.1; padding: 0 calc(var(--u) * 30); overflow-wrap: anywhere; color: #1f1f1f; }
-.qc-imgs { display: flex; gap: calc(var(--u) * 28); align-items: flex-end; justify-content: center; height: calc(var(--u) * 140); margin: calc(var(--u) * 50) 0 calc(var(--u) * 60); }
+.qc-title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: calc(var(--u) * 78); letter-spacing: .05em; text-align: center; line-height: 1.12; padding: 0 calc(var(--u) * 30); overflow-wrap: anywhere; color: var(--ink); }
+.qc-imgs { display: flex; gap: calc(var(--u) * 28); align-items: flex-end; justify-content: center; min-height: calc(var(--u) * 60); height: calc(var(--u) * 140); margin: calc(var(--u) * 50) 0 calc(var(--u) * 60); }
+.qc-imgs:empty { display: none; }
 .qc-imgs img { height: calc(var(--u) * 130); width: auto; max-width: calc(var(--u) * 150); object-fit: contain; }
-.qc-table { width: calc(var(--u) * 920); border-collapse: collapse; border: calc(var(--u) * 3) solid #AB9080; table-layout: fixed; font-size: calc(var(--u) * 26); }
-.qc-table th { background: #E3DDD8; font-family: var(--font-label); font-weight: 700; font-size: calc(var(--u) * 24); letter-spacing: .02em; text-transform: uppercase; height: calc(var(--u) * 82); color: #444; border: calc(var(--u) * 3) solid #E8E0DB; }
-.qc-table td { text-align: center; height: calc(var(--u) * 76); border: calc(var(--u) * 3) solid #E8E0DB; background: #fff; }
-.qc-table td.p { font-weight: 700; color: #000; }
-.qc-total { margin: calc(var(--u) * 56) 0 0; font-family: var(--font-label); font-weight: 700; font-size: calc(var(--u) * 42); color: #3d3a37; }
-.qc-note { margin: calc(var(--u) * 44) 0 0; font-family: var(--font-label); font-style: italic; font-weight: 300; font-size: calc(var(--u) * 31); letter-spacing: .08em; text-align: center; padding: 0 calc(var(--u) * 30); color: #333; }
-.qc-brand { position: absolute; right: calc(var(--u) * 32); bottom: calc(var(--u) * 14); background: #EEE8E3; color: #9A8579; font-family: var(--font-label); font-weight: 500; font-size: calc(var(--u) * 26); letter-spacing: .2em; padding: calc(var(--u) * 6) calc(var(--u) * 24); border-radius: calc(var(--u) * 8); }
+.qc-table { width: calc(var(--u) * 920); border-collapse: collapse; border: calc(var(--u) * 3) solid var(--accent); table-layout: fixed; font-size: calc(var(--u) * 26); }
+.qc-table th { background: var(--tint); font-family: var(--font-label); font-weight: 700; font-size: calc(var(--u) * 23); letter-spacing: .12em; text-transform: uppercase; height: calc(var(--u) * 82); color: var(--muted); border: calc(var(--u) * 3) solid var(--line); }
+.qc-table td { text-align: center; height: calc(var(--u) * 76); border: calc(var(--u) * 3) solid var(--line); background: var(--surface); color: var(--ink); }
+.qc-table td.p { font-weight: 700; padding: 0 calc(var(--u) * 8); overflow-wrap: anywhere; }
+.qc-total { margin: calc(var(--u) * 56) 0 0; font-family: var(--font-display); font-weight: 600; font-size: calc(var(--u) * 46); color: var(--ink); }
+.qc-note { margin: calc(var(--u) * 44) 0 0; font-family: var(--font-body); font-style: italic; font-weight: 400; font-size: calc(var(--u) * 30); letter-spacing: .03em; text-align: center; padding: 0 calc(var(--u) * 30); color: var(--muted); }
+.qc-brand { position: absolute; right: calc(var(--u) * 32); bottom: calc(var(--u) * 14); background: var(--tint); color: var(--accent-deep); font-family: var(--font-label); font-weight: 600; font-size: calc(var(--u) * 25); letter-spacing: .2em; padding: calc(var(--u) * 6) calc(var(--u) * 24); border-radius: calc(var(--u) * 8); }
 
 /* quote builder under the Earnings Estimator products */
 .qb { margin-top: 22px; }
@@ -2252,3 +2253,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .res-admin { display: flex; gap: 14px; padding: 0 14px; align-items: center; }
 .res-admin .linkbtn { padding: 4px 0; font-size: 14px; }
 .qp-bubbles { max-width: 760px; }
+
+.calc-bubble.soon { opacity: .6; }
+.calc-bubble .soon-tag { font-size: 11px; color: var(--muted); }
+.qb-num { width: 90px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.qb-top { align-items: flex-start; }
