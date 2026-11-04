@@ -12,8 +12,8 @@ const portalLang = (): QuoteLang => {
 };
 
 /** Under the products: make a quote for a lead. Base prices are fixed; the distributor types the lead's name, the tax and the shipping, and the total follows. */
-export function QuoteBuilder({ products }: { products: ProductKey[] }) {
-  const [open, setOpen] = useState(false);
+export function QuoteBuilder({ products, startOpen }: { products: ProductKey[]; startOpen?: boolean }) {
+  const [open, setOpen] = useState(!!startOpen);
   const [lead, setLead] = useState("");
   const [lang, setLang] = useState<QuoteLang>(portalLang);
   const [extra, setExtra] = useState<Record<string, { tax: string; shipping: string }>>({});

@@ -38,6 +38,7 @@ const NAV: NavItem[] = [
   { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
   { label: "Earnings Estimator", href: "/calculator", min: "member", group: "Placing Sales" },
+  { label: "Create a Quote", href: "/create-quote", min: "member", group: "Placing Sales" },
   { label: "Graphic maker", href: "/graphic-maker", min: "member", group: "Onboarding" },
   { label: "Your Organization", href: "/family-tree", min: "member", group: "Placing Sales" },
   { label: "Tasks", href: "/tasks", min: "member", group: "DMO" },
