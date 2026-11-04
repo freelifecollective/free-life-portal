@@ -2251,3 +2251,4 @@ html, body { max-width: 100%; overflow-x: clip; }
 .qb-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .res-admin { display: flex; gap: 14px; padding: 0 14px; align-items: center; }
 .res-admin .linkbtn { padding: 4px 0; font-size: 14px; }
+.qp-bubbles { max-width: 760px; }
