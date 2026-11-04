@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { CaptionHint } from "./CaptionHint";
 import { LANDING as T } from "./content";
 
 /** The video picture with its play button, the sign-up button under it, and the sign-up box that opens from either. */
@@ -21,6 +22,7 @@ export function HeroVideo({ children }: { children: React.ReactNode }) {
           </button>
         )}
       </div>
+      <CaptionHint />
       <button type="button" className="lpn-cta" onClick={open}>{T.hero.cta} <span aria-hidden="true">➜</span></button>
       <dialog ref={dlg} className="rs-dialog lpn-dialog" aria-labelledby="lpn-join-title">
         <h2 id="lpn-join-title" className="qh" style={{ marginTop: 0 }}>{T.join.title}</h2>

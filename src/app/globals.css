@@ -2298,3 +2298,5 @@ html, body { max-width: 100%; overflow-x: clip; }
 .lpn-legal { width: 100%; max-width: 1040px; background: #000; padding: 22px 28px; text-align: center; display: grid; gap: 16px; font-size: 14px; }
 .lpn-legal p { margin: 0; }
 .lpn-small { font-size: 13px; color: #E7E0DA; }
+.lpn-cc { margin: 14px 0 0; font-size: 15px; color: #E7DDD5; max-width: 760px; }
+.lpn-cc + .lpn-cta { margin-top: 20px; }
