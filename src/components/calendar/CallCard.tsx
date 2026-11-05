@@ -33,7 +33,7 @@ function ReviewBlock({ review, call }: { review: Review; call: Pick<Call, "id" |
 }
 
 /** A call with its time, who it is for, the RSVP buttons and who is coming. Once it is over, it shows what you did and a button to the replay. */
-export function CallCard({ call, summary, featured = false, now, review, attendance }: { call: Call; summary: RsvpSummary; featured?: boolean; now: number; review?: Review; attendance?: RsvpSummary }) {
+export function CallCard({ call, summary, featured = false, now, review, attendance, viewer }: { viewer?: string | null; call: Call; summary: RsvpSummary; featured?: boolean; now: number; review?: Review; attendance?: RsvpSummary }) {
   const start = new Date(call.starts_at);
   const live = now >= start.getTime() && now < endsAt(start, call.duration_minutes).getTime();
   const notOver = now < endsAt(start, call.duration_minutes).getTime();
@@ -42,7 +42,7 @@ export function CallCard({ call, summary, featured = false, now, review, attenda
       <div className="call-tags">
         {featured ? <span className="tag tag-pin">Next call</span> : null}
         <span className="tag">{KIND_LABEL[call.kind]}</span>
-        {audienceTags(call).map((t) => <span key={t.label} className={"tag" + (t.dark ? " tag-dark" : "")}>{t.label}</span>)}
+        {audienceTags(call, viewer).map((t) => <span key={t.label} className={"tag" + (t.dark ? " tag-dark" : "")}>{t.label}</span>)}
         {live ? <LiveBadge>LIVE · Happening now</LiveBadge> : null}
       </div>
       <h2 id={`call-${call.id}`} className="call-title"><UserText text={call.title} /></h2>

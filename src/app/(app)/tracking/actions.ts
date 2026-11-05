@@ -177,3 +177,12 @@ export async function logCheckIn(memberId: string, note: string): Promise<Team> 
   const { error } = await c.supabase.from("team_members").update({ last_check_in_at: new Date().toISOString(), last_check_in_note: clean(note, 200) || "Checked in" }).eq("id", memberId);
   return error ? FAIL() : freshTeam(c);
 }
+
+/** Who takes this person's leads' coaching calls: "for" them, "together" with them, or neither (empty). Until a rank, or always. */
+export async function setCallPlan(id: string, mode: string, until: string): Promise<Team> {
+  const c = await ctx(); if (!c) return NO; if (!UUID.test(id)) return FAIL();
+  const m = mode === "for" || mode === "together" ? mode : null;
+  const u = m && (TEAM_RANKS as readonly string[]).includes(until) ? until : null;
+  const { error } = await c.supabase.rpc("set_team_call_plan", { p_member: id, p_mode: m, p_until: u });
+  return error ? FAIL() : freshTeam(c);
+}

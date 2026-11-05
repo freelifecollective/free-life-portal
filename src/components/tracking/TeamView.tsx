@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { addCheck, addTeamMember, deleteCheck, deleteTeamMember, logCheckIn, setTeamRank, setTeamStatus, toggleCheck } from "@/app/(app)/tracking/actions";
+import { useRef, useState, useTransition } from "react";
+import { addCheck, addTeamMember, deleteCheck, setCallPlan, deleteTeamMember, logCheckIn, setTeamRank, setTeamStatus, toggleCheck } from "@/app/(app)/tracking/actions";
 import { TEAM_RANKS, type TeamCheck, type TeamMember, type TeamStatus } from "@/lib/tracking/types";
 
 type Res = { ok: true; team: TeamMember[] } | { ok: false; error: string };
@@ -30,7 +30,7 @@ function Label({ c, teamChat }: { c: TeamCheck; teamChat: string | null }) {
 }
 
 /** The team, A to Z. Each name opens a check-in list with tick boxes. */
-export function TeamView({ initial, openId, teamChat }: { initial: TeamMember[]; openId?: string; teamChat: string | null }) {
+export function TeamView({ initial, openId, ask, teamChat }: { initial: TeamMember[]; openId?: string; ask?: boolean; teamChat: string | null }) {
   const [team, setTeam] = useState(initial);
   const [open, setOpen] = useState<Set<string>>(new Set(openId ? [openId] : []));
   const [rank, setRank] = useState("");
@@ -40,6 +40,19 @@ export function TeamView({ initial, openId, teamChat }: { initial: TeamMember[];
   const [nv, setNv] = useState({ name: "", email: "", rank: "New" });
   const [extra, setExtra] = useState<Record<string, string>>({});
   const [note, setNote] = useState<Record<string, string>>({});
+  /* the question that opens right after someone is marked as affiliated: who takes their leads' coaching calls? */
+  const [planFor, setPlanFor] = useState<string | null>(ask && openId && initial.some((m) => m.id === openId && !m.callsMode) ? openId : null);
+  const [planMode, setPlanMode] = useState<"" | "for" | "together">("");
+  const [planHow, setPlanHow] = useState<"always" | "until">("always");
+  const [planRank, setPlanRank] = useState<string>("6A2");
+  const planDlg = useRef<HTMLDialogElement | null>(null);
+  const setPlanDlg = (el: HTMLDialogElement | null) => { planDlg.current = el; if (el && planFor && !el.open) el.showModal(); };
+  const planMember = team.find((m) => m.id === planFor) ?? null;
+  const closePlan = () => { planDlg.current?.close(); setPlanFor(null); setPlanMode(""); setPlanHow("always"); };
+  const savePlan = (mode: "" | "for" | "together") => {
+    if (!planFor) return;
+    run(() => setCallPlan(planFor, mode, mode && planHow === "until" ? planRank : ""), closePlan);
+  };
 
   const run = (fn: () => Promise<Res>, after?: () => void) => start(async () => { const r = await fn(); if (r.ok) { setTeam(r.team); setError(""); after?.(); } else setError(r.error); });
   const toggleOpen = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -80,6 +93,11 @@ export function TeamView({ initial, openId, teamChat }: { initial: TeamMember[];
                 {isOpen ? (
                   <div className="tm-body">
                     <p className="when" style={{ margin: "0 0 8px" }}>{doneCount} of {m.checks.length} done{m.email ? <> · <span translate="no">{m.email}</span></> : null}</p>
+                    <p className="when" style={{ margin: "0 0 8px" }}>
+                      Coaching calls for their leads: <strong>{m.callsMode === "for" ? "I take them for them" : m.callsMode === "together" ? "I take them together with them" : "They take their own"}</strong>
+                      {m.callsMode ? (m.callsUntil ? ` until they reach ${m.callsUntil}` : ", indefinitely") : ""}{" "}
+                      <button type="button" className="linkbtn" style={{ padding: 0 }} onClick={() => { setPlanMode(m.callsMode ?? ""); setPlanHow(m.callsUntil ? "until" : "always"); setPlanRank(m.callsUntil ?? "6A2"); setPlanFor(m.id); }}>Change</button>
+                    </p>
                     <ul className="tm-checks">
                       {m.checks.map((c) => {
                         const auto = autoDone(m, c.kind);
@@ -118,6 +136,29 @@ export function TeamView({ initial, openId, teamChat }: { initial: TeamMember[];
           })}
         </ul>
       )}
+      {planFor && planMember ? (
+        <dialog ref={setPlanDlg} className="rs-dialog" aria-labelledby="tm-plan-title" onClose={() => setPlanFor(null)}>
+          <h2 id="tm-plan-title" className="qh" style={{ marginTop: 0 }}>Coaching calls</h2>
+          <p>Will you be taking <strong translate="no">{planMember.name}</strong>&apos;s coaching calls for them or together with them?</p>
+          <div className="tm-plan-modes">
+            <button type="button" className={"btn" + (planMode === "for" ? " primary" : "")} onClick={() => setPlanMode("for")}>For them</button>
+            <button type="button" className={"btn" + (planMode === "together" ? " primary" : "")} onClick={() => setPlanMode("together")}>Together with them</button>
+          </div>
+          {planMode ? (
+            <fieldset className="tm-plan-how">
+              <legend>For how long?</legend>
+              <label className="check"><input type="radio" name="plan-how" checked={planHow === "always"} onChange={() => setPlanHow("always")} /> Indefinitely</label>
+              <label className="check"><input type="radio" name="plan-how" checked={planHow === "until"} onChange={() => setPlanHow("until")} /> Until they reach a rank
+                <select aria-label="Rank" value={planRank} disabled={planHow !== "until"} onChange={(e) => setPlanRank(e.target.value)} style={{ marginLeft: 8 }}>{TEAM_RANKS.filter((r) => r !== "New").map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
+            </fieldset>
+          ) : null}
+          <p className="when">Their leads will see your calendar when they book a call.</p>
+          <div className="dlg-actions">
+            <button type="button" className="btn" onClick={() => savePlan("")}>{planMember.callsMode ? "Stop taking them" : "Neither, they take their own"}</button>
+            <button type="button" className="btn primary" disabled={!planMode || pending} onClick={() => savePlan(planMode)}>Save</button>
+          </div>
+        </dialog>
+      ) : null}
     </div>
   );
 }

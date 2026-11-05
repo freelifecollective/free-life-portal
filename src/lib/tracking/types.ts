@@ -8,6 +8,7 @@ export type TeamMember = {
   id: string; name: string; email: string | null; rank: string; status: TeamStatus;
   lastCheckIn: string | null; lastNote: string | null; checks: TeamCheck[];
   started: boolean; doneLessons: number; totalLessons: number;
+  callsMode: "for" | "together" | null; callsUntil: string | null;
 };
 /** Ranks a team member can be at, lowest first. */
 export const TEAM_RANKS = ["New", "6A", "6A2", "6A2-2", "6A2-3", "6A2-4", "6A2-5", "6A2-6", "6A2-7", "6A2-8"] as const;

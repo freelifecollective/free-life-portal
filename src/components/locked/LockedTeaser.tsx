@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { GhostKind } from "@/lib/locked";
 
 /** A very faint, grey outline of the page (just the rough shape of what is inside). */
@@ -21,13 +21,13 @@ function Ghost({ kind }: { kind: GhostKind }) {
 }
 
 /** The locked page: its name and subtitle in full, the rough shape of the page greyed out, and the "members only" message on top. */
-export function LockedTeaser({ title, lede, kind }: { title: string; lede: string; kind: GhostKind }) {
+export function LockedTeaser({ title, lede, kind, preview }: { title: string; lede: string; kind: GhostKind; preview?: ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="lk">
       <h1 className="page-heading">{title}</h1>
       <p className="page-lede">{lede}</p>
-      <div className="lk-ghost" aria-hidden="true"><Ghost kind={kind} /></div>
+      <div className={"lk-ghost" + (preview ? " lk-live" : "")} aria-hidden="true" inert>{preview ?? <Ghost kind={kind} />}</div>
       {open ? (
         <div className="lk-overlay" role="dialog" aria-modal="true" aria-labelledby="lk-title">
           <div className="lk-box">

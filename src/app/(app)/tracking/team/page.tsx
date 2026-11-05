@@ -24,7 +24,7 @@ export default async function MyTeamPage(props: PageProps<"/tracking/team">) {
     <>
       <PageHeading lede="Everyone on your team, A to Z. Open a name for their check-in list, and see who is active, who has left, and when you last checked in.">My Team</PageHeading>
       <PlacedDocs placement="team" />
-      <TeamView initial={team} openId={open && /^[0-9a-f-]{36}$/i.test(open) ? open : undefined} teamChat={teamChat} />
+      <TeamView initial={team} openId={open && /^[0-9a-f-]{36}$/i.test(open) ? open : undefined} ask={sp.ask === "1"} teamChat={teamChat} />
     </>
   );
 }
