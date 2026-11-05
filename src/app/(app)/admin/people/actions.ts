@@ -78,3 +78,14 @@ export async function removePerson(id: string, mode: "remove" | "block", reason:
   revalidatePath("/admin/people");
   return { ok: true };
 }
+
+/** Puts a paying member on one of the plans (47, 77 or 297), or takes them off (empty). Admins only. */
+export async function setPlan(id: string, plan: string): Promise<{ ok: boolean }> {
+  const { supabase } = await requireAdmin();
+  if (!UUID.test(id)) return { ok: false };
+  const n = plan === "" ? null : Number(plan);
+  if (n !== null && n !== 47 && n !== 77 && n !== 297) return { ok: false };
+  const { error } = await supabase.from("profiles").update({ plan: n }).eq("id", id);
+  revalidatePath("/admin/people"); revalidatePath("/plans");
+  return { ok: !error };
+}

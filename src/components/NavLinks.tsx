@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { LiveDot } from "./LiveBadge";
 
-export type NavEntry = { label: string; href?: string; heading?: boolean; caption?: boolean; group?: string; badge?: number; live?: boolean };
+export type NavEntry = { label: string; href?: string; heading?: boolean; caption?: boolean; group?: string; badge?: number; live?: boolean; locked?: boolean };
 
 /* Only one section is open at a time. Each device remembers which one (or "none"), under its own key. */
 const KEY = "flc_nav_open";
@@ -23,6 +23,14 @@ function rememberKey(key: string, value: string) {
 const remember = (value: string) => rememberKey(KEY, value);
 
 function Item({ n, path }: { n: NavEntry; path: string }) {
+  if (n.locked && n.href) {
+    /* a locked page opens as a very faint outline with the members-only message on top */
+    return (
+      <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}>
+        <Link href={`/locked?f=${encodeURIComponent(n.href)}`} className="nav-locked"><span>{n.label}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg><span className="sr-only">(locked)</span></Link>
+      </li>
+    );
+  }
   if (!n.href) return <li data-nav={n.label} className={n.group ? "nav-sub" : undefined}><span title="Coming soon">{n.label}</span></li>;
   const active = n.href === "/" ? path === "/" : path === n.href || path.startsWith(n.href + "/");
   return (
