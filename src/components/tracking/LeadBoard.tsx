@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addBoard, addCard, addList, addTag, affiliateCard, deleteBoard, deleteCard, deleteList, deleteTag, moveCard, registerCard, renameBoard, renameList, restoreBoards, updateCard, type CardInput } from "@/app/(app)/tracking/actions";
 import type { Board, Card, Tag } from "@/lib/tracking/types";
@@ -11,6 +11,13 @@ const blank: CardInput = { name: "", email: "", phone: "", instagram: "", facebo
 const ink = (hex: string) => { const n = parseInt(hex.slice(1), 16); const l = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); return l > 160 ? "#2B2522" : "#fff"; };
 const today = () => new Date().toISOString().slice(0, 10);
 const dayText = (d: string) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(d + "T00:00:00Z"));
+
+/* like Trello: tapping any tag on a card shrinks all tags to little colour bars, tapping again brings the names back (remembered on this device) */
+const TAGS_KEY = "flc_tags_compact";
+const tagListeners = new Set<() => void>();
+const subscribeTags = (cb: () => void) => { tagListeners.add(cb); window.addEventListener("storage", cb); return () => { tagListeners.delete(cb); window.removeEventListener("storage", cb); }; };
+const readCompact = () => { try { return localStorage.getItem(TAGS_KEY) === "1"; } catch { return false; } };
+const setCompact = (on: boolean) => { try { localStorage.setItem(TAGS_KEY, on ? "1" : "0"); } catch { /* still works this visit */ } tagListeners.forEach((l) => l()); };
 
 /** An internal Trello: boards with lists with lead cards and colour tags. Drag a card to move it. Several things happen by themselves (tags, follow-ups). */
 export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialTags: Tag[] }) {
@@ -33,6 +40,7 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
   const sureDlg = useRef<HTMLDialogElement>(null);
   const board = boards.find((b) => b.id === boardId) ?? boards[0];
   const tagById = new Map(tags.map((t) => [t.id, t]));
+  const compact = useSyncExternalStore(subscribeTags, readCompact, () => false);
 
   const apply = (r: Res, keepFocus = true) => {
     if (r.ok) { setBoards(r.boards); setTags(r.tags); setError(""); if (r.focus && r.boards.some((b) => b.id === r.focus)) setBoardId(r.focus); else if (keepFocus && !r.boards.some((b) => b.id === boardId)) setBoardId(r.boards[0]?.id ?? ""); }
@@ -109,7 +117,7 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
                       <li key={c.id} className={"lb-card" + (drag === c.id ? " dragging" : "")} draggable onDragStart={() => setDrag(c.id)} onDragEnd={() => { setDrag(null); setOver(null); }}
                         onDragOver={(e) => { if (drag && drag !== c.id) { e.preventDefault(); e.stopPropagation(); setOver(l.id); } }} onDrop={(e) => { e.stopPropagation(); drop(l.id, i); }}>
                         <button type="button" className="lb-card-x" aria-label={`Delete ${c.name}`} title="Delete this lead" onClick={() => { setSure(c); sureDlg.current?.showModal(); }}>×</button>
-                        {c.tags.length ? <span className="lb-tags">{c.tags.map((id) => { const t = tagById.get(id); return t ? <span key={id} className="lb-tag" style={{ background: t.color, color: ink(t.color) }}>{t.name}</span> : null; })}</span> : null}
+                        {c.tags.length ? <span className={"lb-tags" + (compact ? " compact" : "")}>{c.tags.map((id) => { const t = tagById.get(id); return t ? <button type="button" key={id} className={"lb-tag flip" + (compact ? " compact" : "")} style={{ background: t.color, color: ink(t.color) }} title={compact ? `${t.name} (tap to show names)` : "Tap to shrink the tags"} aria-label={compact ? t.name : `${t.name}. Tap to shrink the tags`} onClick={() => setCompact(!compact)}>{compact ? "" : t.name}</button> : null; })}</span> : null}
                         <button type="button" className="lb-card-name" onClick={() => openCard(l.id, c)}>{c.name}</button>
                         {c.instagram || c.facebook ? <span className="lb-meta" translate="no">{[c.instagram, c.facebook].filter(Boolean).join(" · ")}</span> : null}
                         {c.email || c.phone ? <span className="lb-meta" translate="no">{[c.email, c.phone].filter(Boolean).join(" · ")}</span> : null}

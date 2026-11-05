@@ -2430,3 +2430,7 @@ button.lb-tag.pick.on { opacity: 1; outline-color: var(--ink); outline-offset: 1
 .tm-checks li .check { padding: 2px 0; margin: 0; gap: 8px; line-height: 1.3; }
 .tm-checks li .check input { margin: 0; }
 .tm-body { gap: 6px; }
+/* tags on a card behave like Trello's: tap to shrink to a colour bar, tap again for the names */
+button.lb-tag.flip { cursor: pointer; transition: min-width .15s ease, height .15s ease, padding .15s ease; }
+button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding: 0; border-radius: 5px; font-size: 0; overflow: hidden; }
+.lb-tags.compact { gap: 4px; }
