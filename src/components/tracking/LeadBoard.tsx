@@ -4,6 +4,7 @@ import { useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addBoard, addCard, addList, addTag, affiliateCard, deleteBoard, deleteCard, deleteList, deleteTag, moveCard, moveList, registerCard, renameBoard, renameList, restoreBoards, updateCard, type CardInput } from "@/app/(app)/tracking/actions";
+import { UndoRedo } from "@/components/UndoRedo";
 import type { Board, Card, Tag } from "@/lib/tracking/types";
 
 type Res = { ok: true; boards: Board[]; tags: Tag[]; focus?: string } | { ok: false; error: string };
@@ -101,10 +102,7 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
       <div className="lb-tabs" role="tablist" aria-label="Boards">
         {boards.map((b) => <button key={b.id} type="button" role="tab" aria-selected={b.id === board?.id} className={"chip" + (b.id === board?.id ? " on" : "")} onClick={() => setBoardId(b.id)}>{b.name}</button>)}
         <button type="button" className="chip" onClick={() => { const n = ask("Name your new board"); if (n) run(() => addBoard(n)); }}>+ New board</button>
-        <span className="lb-undo" role="group" aria-label="Undo and redo">
-          <button type="button" className="icon-btn" aria-label="Undo" title="Undo" disabled={past.length === 0 || pending} onClick={undo}>←</button>
-          <button type="button" className="icon-btn" aria-label="Redo" title="Redo" disabled={future.length === 0 || pending} onClick={redo}>→</button>
-        </span>
+        <span className="lb-undo"><UndoRedo canUndo={past.length > 0} canRedo={future.length > 0} busy={pending} onUndo={undo} onRedo={redo} /></span>
       </div>
       {error ? <p className="err" role="alert">{error}</p> : null}
       {!board ? <p className="page-lede">You have no boards. Make one with “+ New board”.</p> : (
