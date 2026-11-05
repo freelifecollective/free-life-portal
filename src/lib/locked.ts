@@ -21,5 +21,8 @@ export const LOCKED: Record<string, { title: string; lede: string; kind: GhostKi
   "/advertising/pictures-videos": { title: "Pictures/Videos", lede: "Pictures and videos you can use and share.", kind: "gallery" },
   "/advertising/canva-templates": { title: "Canva Templates", lede: "Templates you can open and make your own in Canva.", kind: "gallery" },
   "/advertising/evidence-manual": { title: "Evidence Manual", lede: "Real people who have found success. Copy a story or download a picture to share.", kind: "cards" },
+  "/tracking/leads": { title: "Lead Tracking", lede: "Keep track of where each of your leads is, from first message to affiliate.", kind: "cards" },
+  "/tracking/numbers": { title: "Know Your Numbers", lede: "The numbers behind your business.", kind: "table" },
+  "/tracking/team": { title: "My Team", lede: "Everyone on your team, with check-in lists to help them get started.", kind: "list" },
   "/advertising/landing-page": { title: "Landing Page", lede: "The page your leads see when you send them your link.", kind: "video" },
 };
