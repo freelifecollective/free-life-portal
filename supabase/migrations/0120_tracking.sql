@@ -58,13 +58,21 @@ create table public.team_checks (
 create index team_members_user on public.team_members (user_id);
 create index team_checks_member on public.team_checks (member_id, position);
 
-do $$ declare t text;
-begin
-  foreach t in array array['lead_boards', 'lead_lists', 'lead_cards', 'team_members', 'team_checks'] loop
-    execute format('alter table public.%I enable row level security', t);
-    execute format('create policy %I on public.%I for all to authenticated using (user_id = auth.uid() and public.can_see(''member'')) with check (user_id = auth.uid() and public.can_see(''member''))', t || '_own', t);
-  end loop;
-end $$;
+alter table public.lead_boards enable row level security;
+create policy lead_boards_own on public.lead_boards for all to authenticated
+  using (user_id = auth.uid() and public.can_see('member')) with check (user_id = auth.uid() and public.can_see('member'));
+alter table public.lead_lists enable row level security;
+create policy lead_lists_own on public.lead_lists for all to authenticated
+  using (user_id = auth.uid() and public.can_see('member')) with check (user_id = auth.uid() and public.can_see('member'));
+alter table public.lead_cards enable row level security;
+create policy lead_cards_own on public.lead_cards for all to authenticated
+  using (user_id = auth.uid() and public.can_see('member')) with check (user_id = auth.uid() and public.can_see('member'));
+alter table public.team_members enable row level security;
+create policy team_members_own on public.team_members for all to authenticated
+  using (user_id = auth.uid() and public.can_see('member')) with check (user_id = auth.uid() and public.can_see('member'));
+alter table public.team_checks enable row level security;
+create policy team_checks_own on public.team_checks for all to authenticated
+  using (user_id = auth.uid() and public.can_see('member')) with check (user_id = auth.uid() and public.can_see('member'));
 
 -- the two starter boards (made once, the first time someone opens Lead Tracking; they can edit or delete everything)
 create or replace function public.make_default_boards(p_user uuid) returns void
