@@ -12,7 +12,7 @@ export function PlanSelect({ id, name, plan }: { id: string; name: string; plan:
     <span className="inline-form">
       <label className="sr-only" htmlFor={`plan-${id}`}>Plan for {name}</label>
       <select id={`plan-${id}`} value={value} disabled={pending} onChange={(e) => { const v = e.target.value; setValue(v); setSaved(false); start(async () => { const r = await setPlan(id, v); if (r.ok) setSaved(true); else setValue(plan === null ? "" : String(plan)); }); }}>
-        <option value="">No plan</option><option value="47">$47</option><option value="77">$77</option><option value="297">$297</option>
+        <option value="">No plan</option><option value="47">$47</option><option value="97">$97</option><option value="297">$297</option>
       </select>
       {saved ? <span className="muted-line">Saved ✓</span> : null}
     </span>

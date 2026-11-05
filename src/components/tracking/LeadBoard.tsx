@@ -43,7 +43,7 @@ export function LeadBoard({ initial }: { initial: Board[] }) {
   }
   function affiliate(c: Card) {
     if (!window.confirm(`Mark ${c.name} as affiliated? They move to your My Team page.`)) return;
-    start(async () => { const r = await affiliateCard(c.id, "New"); if (r.ok) router.push(`/tracking/team?open=${r.teamId}`); else setError(r.error); });
+    start(async () => { const r = await affiliateCard(c.id, "New"); if (r.ok) router.push(`/tracking/team?open=${r.teamId}&ask=1`); else setError(r.error); });
   }
   function drop(listId: string, index: number) {
     if (!drag) return;

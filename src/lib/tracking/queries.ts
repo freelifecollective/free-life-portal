@@ -17,7 +17,7 @@ export async function loadBoards(supabase: SupabaseClient): Promise<Board[]> {
   return ((bs ?? []) as { id: string; name: string; kind: string | null }[]).map((b) => ({ ...b, lists: lists.get(b.id) ?? [] }));
 }
 
-type Row = { id: string; name: string; email: string | null; rank: string; status: TeamStatus | "not_in_portal"; last_check_in_at: string | null; last_check_in_note: string | null; started: boolean; done_lessons: number; total_lessons: number | null };
+type Row = { id: string; name: string; email: string | null; rank: string; status: TeamStatus | "not_in_portal"; last_check_in_at: string | null; last_check_in_note: string | null; started: boolean; done_lessons: number; total_lessons: number | null; calls_mode: "for" | "together" | null; calls_until_rank: string | null };
 
 /** The team, A to Z, each with their check-in list. */
 export async function loadTeam(supabase: SupabaseClient): Promise<TeamMember[]> {
@@ -29,6 +29,6 @@ export async function loadTeam(supabase: SupabaseClient): Promise<TeamMember[]> 
   for (const c of (ck ?? []) as (TeamCheck & { member_id: string })[]) checks.set(c.member_id, [...(checks.get(c.member_id) ?? []), { id: c.id, label: c.label, kind: c.kind, done: c.done }]);
   return ((ov ?? []) as Row[]).map((r) => ({
     id: r.id, name: r.name, email: r.email, rank: r.rank, status: r.status as TeamStatus, lastCheckIn: r.last_check_in_at, lastNote: r.last_check_in_note,
-    checks: checks.get(r.id) ?? [], started: r.started, doneLessons: r.done_lessons, totalLessons: r.total_lessons ?? 0,
+    checks: checks.get(r.id) ?? [], started: r.started, doneLessons: r.done_lessons, totalLessons: r.total_lessons ?? 0, callsMode: r.calls_mode, callsUntil: r.calls_until_rank,
   })).sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
 }

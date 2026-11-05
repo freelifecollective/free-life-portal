@@ -40,14 +40,14 @@ begin
   perform tests.fails('nobody puts themselves on a plan', format('update public.profiles set plan = 47 where id = %L', mia), '42501');
   perform tests.logout();
   perform tests.login(ada);
-  update public.profiles set plan = 77 where id = mia;
+  update public.profiles set plan = 97 where id = mia;
   update public.profiles set plan = 47 where id = ada;
   perform tests.fails('only the three plans exist', format('update public.profiles set plan = 50 where id = %L', mia), '23514');
   perform tests.logout();
   perform tests.login(dee);
-  perform tests.eq('anyone signed in sees the counts', (select n from public.plan_counts() where tier = 77), 1);
+  perform tests.eq('anyone signed in sees the counts', (select n from public.plan_counts() where tier = 97), 1);
   perform tests.eq('and the other plans', (select n from public.plan_counts() where tier = 297), 0);
-  perform tests.eq('and the latest sign-ups (first name only)', (select count(*) from public.recent_plan_purchases() where first_name = 'Mia' and tier = 77), 1::bigint);
+  perform tests.eq('and the latest sign-ups (first name only)', (select count(*) from public.recent_plan_purchases() where first_name = 'Mia' and tier = 97), 1::bigint);
   insert into public.plan_interest (user_id, tier) values (dee, 297);
   perform tests.eq('wanting a plan is remembered', (select count(*) from public.plan_interest where user_id = dee), 1::bigint);
   perform tests.fails('and only for yourself', format('insert into public.plan_interest (user_id, tier) values (%L, 47)', mia), '42501');

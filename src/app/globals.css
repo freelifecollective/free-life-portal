@@ -2320,7 +2320,9 @@ html, body { max-width: 100%; overflow-x: clip; }
 
 /* a locked page, shown faintly in grey behind the "members only" message */
 .lk { position: relative; min-height: 70vh; }
-.lk-ghost { filter: grayscale(1) blur(1.5px); opacity: .22; pointer-events: none; user-select: none; margin-top: 8px; }
+.lk-ghost { position: relative; filter: grayscale(1) blur(1.5px); opacity: .22; pointer-events: none; user-select: none; margin-top: 8px; }
+.lk-ghost.lk-live { filter: grayscale(1) blur(.6px) contrast(.7) brightness(1.15); opacity: .5; }
+.lk-ghost.lk-live::after { content: ""; position: absolute; inset: 0; background: rgba(246,245,241,.55); }
 .lk-bar { display: block; background: #8b847e; border-radius: 6px; max-width: 100%; }
 .lk-img { display: block; background: #b7b0a9; border-radius: 10px; width: 100%; aspect-ratio: 4 / 3; }
 .lk-img.lk-tall { aspect-ratio: 3 / 4; max-width: 280px; } .lk-img.lk-wide { aspect-ratio: 16 / 9; }
@@ -2381,3 +2383,7 @@ html, body { max-width: 100%; overflow-x: clip; }
 .kn-tile { display: grid; gap: 4px; text-align: center; }
 .kn-tile b { font-family: var(--font-display); font-size: 40px; font-weight: 600; }
 .kn-tile span { color: var(--muted); font-size: 14px; }
+.nav-lock { margin-left: 8px; vertical-align: -1px; opacity: .75; }
+.tm-plan-modes { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 14px; }
+.tm-plan-how { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 0 0 12px; display: grid; gap: 8px; }
+.tm-plan-how legend { font-weight: 700; padding: 0 6px; }

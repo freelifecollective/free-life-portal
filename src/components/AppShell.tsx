@@ -29,12 +29,12 @@ const NAV: NavItem[] = [
   { label: "Outsourcing", href: "/outsourcing", min: "member", group: "DMO" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
   { label: "Chats", href: "/chats", min: "lead", downline: true },
-  { label: "Weekly Focus", href: "/support", min: "lead", downline: true, group: "DMO" },
+  { label: "Weekly Focus", href: "/support", min: "member", group: "DMO" },
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
-  { label: "Courses", href: "/classroom", min: "lead", group: "Courses" },
-  { label: "Business Launch Course", href: "/business-launch", min: "lead", group: "Courses" },
-  { label: "Courses", min: "lead", heading: true, group: "Courses" },
-  { label: "Calls", href: "/calls", min: "lead", group: "FLC Calls" },
+  { label: "Courses", href: "/classroom", min: "member", group: "Courses" },
+  { label: "Business Launch Course", href: "/business-launch", min: "member", group: "Courses" },
+  { label: "Courses", min: "member", heading: true, group: "Courses" },
+  { label: "Calls", href: "/calls", min: "lead", downline: true, group: "FLC Calls" },
   { label: "FLC Calls", min: "lead", downline: true, heading: true, group: "FLC Calls" },
   { label: "Onboarding", min: "member", heading: true, group: "Onboarding" },
   { label: "Accountability Buddy", href: "/buddy", min: "member", group: "Onboarding" },
@@ -43,12 +43,12 @@ const NAV: NavItem[] = [
   { label: "Graphic Maker", href: "/graphic-maker", min: "member", group: "Onboarding" },
   { label: "Your Organization", href: "/family-tree", min: "member", group: "Placing Sales" },
   { label: "Tasks", href: "/tasks", min: "member", group: "DMO" },
-  { label: "DMO", min: "lead", downline: true, heading: true, group: "DMO" },
+  { label: "DMO", min: "member", heading: true, group: "DMO" },
   { label: "Book a Call", href: "/book", min: "lead", leadOnly: true },
   { label: "Water Share Map", href: "/water-map", min: "member", downline: true, group: "Resources" },
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
-  { label: "Placing Sales", min: "lead", heading: true, group: "Placing Sales" },
+  { label: "Placing Sales", min: "member", heading: true, group: "Placing Sales" },
   { label: "Tracking", min: "member", heading: true, group: "Tracking" },
   { label: "Lead Tracking", href: "/tracking/leads", min: "member", group: "Tracking" },
   { label: "Know Your Numbers", href: "/tracking/numbers", min: "member", group: "Tracking" },
@@ -84,9 +84,11 @@ const NAV: NavItem[] = [
 ];
 
 /** Home, Chats and the Onboarding section stay at the top. Everything else (sections and single tabs together) is A to Z, and the tabs inside each section are A to Z too. The admin section stays at the bottom, also A to Z. */
-function ordered(items: NavItem[]): NavItem[] {
+function ordered(items: NavItem[], downline = false): NavItem[] {
   const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
-  const top = ["Home", "Chats"].flatMap((l) => items.filter((n) => n.label === l));
+  /* Lacey's downline: Choose Your Plan, Calendar, Calls and the Water Share Map sit right under Chats */
+  const topLabels = downline ? ["Home", "Chats", "Choose Your Plan", "Calendar", "Calls", "Water Share Map"] : ["Home", "Chats"];
+  const top = topLabels.flatMap((l) => items.filter((n) => n.label === l));
   /* a section is its heading followed by its tabs A to Z (a section with no tabs for this person is left out) */
   const section = (label: string, admin: boolean): NavItem[] => {
     const head = items.find((n) => n.heading && n.label === label && !!n.admin === admin);
@@ -95,7 +97,7 @@ function ordered(items: NavItem[]): NavItem[] {
   };
   const blocks = (admin: boolean, skip: string[]) => {
     const heads = items.filter((n) => n.heading && !!n.admin === admin && !skip.includes(n.label)).map((n) => section(n.label, admin));
-    const loose = items.filter((n) => !n.heading && !n.caption && !n.group && !!n.admin === admin && n.label !== "Home" && n.label !== "Chats").map((n) => [n]);
+    const loose = items.filter((n) => !n.heading && !n.caption && !n.group && !!n.admin === admin && !topLabels.includes(n.label)).map((n) => [n]);
     return [...heads, ...loose].filter((b) => b.length > 0).sort((x, y) => az(x[0], y[0])).flat();
   };
   const caption = items.filter((n) => n.caption);
@@ -136,7 +138,12 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => p.role === "downline" ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))).map((n) => ({ label: n.label, href: n.href, heading: n.heading, group: n.group, caption: n.caption, locked: p.role === "downline" && !n.heading && !n.caption && !n.downline && !canSee(p.role, n.min), badge: n.href ? badges[n.href] : undefined, live: liveNow && n.href === "/calls" }))} />
+          <NavLinks items={ordered(NAV.filter((n) => p.role === "downline" ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer)), p.role === "downline").map((n) => {
+            const downline = p.role === "downline";
+            /* leads see Financing Options on its own, right under Book a Call; the downline sees Calendar, Calls and the Water Share Map on their own too */
+            const alone = (p.role === "lead" && n.label === "Financing Options") || (downline && ["Calendar", "Calls", "Water Share Map"].includes(n.label));
+            return { label: n.label, href: n.href, heading: n.heading, group: alone ? undefined : n.group, caption: n.caption, locked: downline && !n.heading && !n.caption && !n.downline && !canSee(p.role, n.min), badge: n.href ? badges[n.href] : undefined, live: liveNow && n.href === "/calls" };
+          })} />
         </NavPanel>
         <main className="main" id="main">{session.mode === "supabase" && isAffiliate(p.role) ? <BirthdayBanner /> : null}{children}</main>
       </div>

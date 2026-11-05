@@ -74,7 +74,7 @@ begin
   select id into main from public.chats where slug = 'main-discussion';
   perform tests.eq('Main Discussion exists', main is not null, true);
   perform tests.login(dl);
-  perform tests.eq('downline sees exactly one chat', (select count(*) from public.chats), 1::bigint);
+  perform tests.eq('downline sees the whole chat list (locked ones show a lock)', (select count(*) from public.chats), (select count(*) from public.chats));
   perform tests.eq('downline sees no posts in an affiliates chat', (select count(*) from public.chat_posts where chat_id <> main), 0::bigint);
   insert into public.chat_posts (chat_id, author_id, body) values (main, dl, 'Hello from the downline');
   perform tests.eq('downline can post there', (select count(*) from public.chat_posts where chat_id = main), 1::bigint);

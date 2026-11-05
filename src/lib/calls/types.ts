@@ -39,12 +39,14 @@ export const SELECTABLE_KINDS: CallKind[] = ["community", "masterclass"];
 export const NEXT_LABEL: Record<CallKind, string> = { community: "Next Community Call", masterclass: "Next Mastermind Call", other: "Next Call" };
 export const AUDIENCE_LABEL: Record<Audience, string> = { leads_open: "Open to Leads", affiliates_only: "Open to FLC Only" };
 export const DOWNLINE_LABEL = "Open to Lacey's Downline";
+export const COMMUNITY_LABEL = "Open to the Community";
 
-/** The "open to ..." tags for a call: leads and/or the downline, or FLC only. */
-export function audienceTags(call: Pick<Call, "audience" | "downline_open">): { label: string; dark: boolean }[] {
+/** The "open to ..." tags for a call: leads and/or the downline, or FLC only. Leads (and the people reading as a lead) see "Open to the Community" instead of "Leads". */
+export function audienceTags(call: Pick<Call, "audience" | "downline_open">, viewer?: string | null): { label: string; dark: boolean }[] {
+  const asLead = viewer === "lead";
   const tags: { label: string; dark: boolean }[] = [];
-  if (call.audience === "leads_open") tags.push({ label: AUDIENCE_LABEL.leads_open, dark: false });
-  if (call.downline_open) tags.push({ label: DOWNLINE_LABEL, dark: false });
+  if (call.audience === "leads_open") tags.push({ label: asLead ? COMMUNITY_LABEL : AUDIENCE_LABEL.leads_open, dark: false });
+  if (call.downline_open && !asLead) tags.push({ label: DOWNLINE_LABEL, dark: false });
   return tags.length ? tags : [{ label: AUDIENCE_LABEL.affiliates_only, dark: true }];
 }
 

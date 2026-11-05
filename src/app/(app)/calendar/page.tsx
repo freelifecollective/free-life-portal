@@ -19,7 +19,7 @@ const timeOf = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: CALL_ZO
 
 export default async function CalendarPage(props: PageProps<"/calendar">) {
   const sp = await props.searchParams;
-  const { supabase } = await requireMember();
+  const { session, supabase } = await requireMember();
   if (!supabase) {
     return (
       <>
@@ -108,7 +108,7 @@ export default async function CalendarPage(props: PageProps<"/calendar">) {
                   const end = endsAt(start, call.duration_minutes).getTime();
                   return (
                     <CallChip key={call.id} time={timeOf(start)} title={call.title} live={now >= start.getTime() && now < end} past={now >= end}>
-                      <CallCard call={call} summary={summary} now={now} review={review} attendance={attendedBy.get(call.id)} />
+                      <CallCard viewer={session.profile.role} call={call} summary={summary} now={now} review={review} attendance={attendedBy.get(call.id)} />
                     </CallChip>
                   );
                 })}
