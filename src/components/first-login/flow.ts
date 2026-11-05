@@ -45,7 +45,7 @@ export function freshFlow(): Flow {
   };
 }
 
-export type Env = { mode: "supabase" | "preview"; userId: string };
+export type Env = { mode: "supabase" | "preview"; userId: string; toPlans?: boolean };
 
 export type StepProps = {
   f: Flow;

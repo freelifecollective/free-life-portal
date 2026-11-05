@@ -48,7 +48,7 @@ begin
   perform tests.eq('a lead does not see them', (select count(*) from public.recordings), 0::bigint);
   perform tests.logout();
   -- a coach takes a new affiliate's calls
-  insert into public.team_members (user_id, name, linked_profile, rank) values (mia, 'Max', max, 'New') returning id into tm;
+  insert into public.team_members (user_id, name, linked_profile, rank) values (mia, 'Max', max, '1A') returning id into tm;
   perform tests.eq('without a plan the affiliate takes their own leads', public.booking_target(max), max);
   perform tests.login(mia);
   perform public.set_team_call_plan(tm, 'for', null);

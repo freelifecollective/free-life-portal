@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
-import { addCheck, addTeamMember, deleteCheck, setCallPlan, deleteTeamMember, logCheckIn, setTeamRank, setTeamStatus, toggleCheck } from "@/app/(app)/tracking/actions";
+import { addCheck, addToTeam, deleteCheck, inviteTeamMember, setCallPlan, teamLeadOptions, type LeadOption, deleteTeamMember, logCheckIn, setTeamRank, setTeamStatus, toggleCheck } from "@/app/(app)/tracking/actions";
+import { LeadCombo, NOT_IN_PORTAL } from "./LeadCombo";
 import { TEAM_RANKS, type TeamCheck, type TeamMember, type TeamStatus } from "@/lib/tracking/types";
 
 type Res = { ok: true; team: TeamMember[] } | { ok: false; error: string };
-const STATUS_TEXT: Record<TeamStatus, string> = { active: "Active in FLC", not_in_portal: "Not in the portal", left: "No longer in the portal", inactive: "Not working their business" };
+const STATUS_TEXT: Record<TeamStatus, string> = { active: "Active in FLC", registered: "In the portal, choosing a plan", invited: "Invited, waiting for them to sign up", not_in_portal: "Not in the portal", left: "No longer in the portal", inactive: "Not working their business" };
 const day = (iso: string) => new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" }).format(new Date(iso));
 
 /** What the system ticks by itself, from how far they are in the Business Launch Course. */
@@ -37,7 +38,10 @@ export function TeamView({ initial, openId, ask, teamChat }: { initial: TeamMemb
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const [adding, setAdding] = useState(false);
-  const [nv, setNv] = useState({ name: "", email: "", rank: "New" });
+  const [options, setOptions] = useState<LeadOption[] | null>(null);
+  const [pickKey, setPickKey] = useState("");
+  const [nv, setNv] = useState({ name: "", email: "", rank: "1A" });
+  const [notice, setNotice] = useState("");
   const [extra, setExtra] = useState<Record<string, string>>({});
   const [note, setNote] = useState<Record<string, string>>({});
   /* the question that opens right after someone is marked as affiliated: who takes their leads' coaching calls? */
@@ -63,16 +67,30 @@ export function TeamView({ initial, openId, ask, teamChat }: { initial: TeamMemb
       <div className="tm-top">
         <div className="field"><label htmlFor="tm-rank">Show only this rank</label>
           <select id="tm-rank" value={rank} onChange={(e) => setRank(e.target.value)}><option value="">Everyone ({team.length})</option>{TEAM_RANKS.map((r) => <option key={r} value={r}>{r} ({team.filter((m) => m.rank === r).length})</option>)}</select></div>
-        <button type="button" className="btn" onClick={() => setAdding(!adding)}>{adding ? "Close" : "Add a team member"}</button>
+        <button type="button" className="btn" onClick={() => { const next = !adding; setAdding(next); setNotice(""); if (next && options === null) void teamLeadOptions().then(setOptions).catch(() => setOptions([])); }}>{adding ? "Close" : "Add a team member"}</button>
       </div>
       {adding ? (
         <div className="card-s tm-add">
-          <div className="field"><label htmlFor="tm-n">Name</label><input id="tm-n" value={nv.name} maxLength={80} onChange={(e) => setNv({ ...nv, name: e.target.value })} /></div>
-          <div className="field"><label htmlFor="tm-e">Their email (links them to their portal account)</label><input id="tm-e" type="email" value={nv.email} onChange={(e) => setNv({ ...nv, email: e.target.value })} /></div>
-          <div className="field"><label htmlFor="tm-r">Rank</label><select id="tm-r" value={nv.rank} onChange={(e) => setNv({ ...nv, rank: e.target.value })}>{TEAM_RANKS.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
-          <button type="button" className="btn primary" disabled={pending} onClick={() => run(() => addTeamMember(nv), () => { setNv({ name: "", email: "", rank: "New" }); setAdding(false); })}>Add</button>
+          <LeadCombo label="Choose one of your leads" options={options ?? []} value={pickKey} onChange={setPickKey} />
+          {pickKey === NOT_IN_PORTAL ? (
+            <>
+              <div className="field"><label htmlFor="tm-n">Their name</label><input id="tm-n" value={nv.name} maxLength={80} onChange={(e) => setNv({ ...nv, name: e.target.value })} /></div>
+              <div className="field"><label htmlFor="tm-e">Their email</label><input id="tm-e" type="email" value={nv.email} onChange={(e) => setNv({ ...nv, email: e.target.value })} /></div>
+              <p className="when" style={{ margin: 0 }}>We will email them an invitation to create their account in the FLC Portal.</p>
+            </>
+          ) : pickKey ? <p className="when" style={{ margin: 0 }}>If they are not in the portal yet, we will email them an invitation to create their account.</p> : null}
+          <div className="field"><label htmlFor="tm-r">Their rank</label><select id="tm-r" value={nv.rank} onChange={(e) => setNv({ ...nv, rank: e.target.value })}>{TEAM_RANKS.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
+          <button type="button" className="btn primary" disabled={pending || !pickKey || (pickKey === NOT_IN_PORTAL && (!nv.name.trim() || !nv.email.trim()))} onClick={() => {
+            const o = (options ?? []).find((x) => x.key === pickKey);
+            const body = pickKey === NOT_IN_PORTAL ? { name: nv.name, email: nv.email, rank: nv.rank } : { name: o?.name ?? "", email: o?.email ?? "", cardId: o?.cardId ?? null, rank: nv.rank };
+            start(async () => {
+              const r = await addToTeam(body);
+              if (r.ok) { setTeam(r.team); setNotice(r.message); setError(""); setPickKey(""); setNv({ name: "", email: "", rank: "1A" }); setAdding(false); setOptions(null); } else setError(r.error);
+            });
+          }}>Add to my team</button>
         </div>
       ) : null}
+      {notice ? <p className="ok" role="status">{notice}</p> : null}
       {error ? <p className="err" role="alert">{error}</p> : null}
       {shown.length === 0 ? <p className="card-s" style={{ margin: 0 }}>{team.length === 0 ? "Nobody yet. When you press “Affiliated” on a lead in Lead Tracking, they show up here." : "No one is at that rank."}</p> : (
         <ul className="tm-list">
@@ -127,6 +145,7 @@ export function TeamView({ initial, openId, ask, teamChat }: { initial: TeamMemb
                       <select id={`st-${m.id}`} value={m.status === "left" || m.status === "inactive" ? m.status : ""} onChange={(e) => run(() => setTeamStatus(m.id, e.target.value))}>
                         <option value="">Status: worked out automatically</option><option value="left">Mark as no longer in the portal</option><option value="inactive">Mark as not working their business</option>
                       </select>
+                      {m.status === "not_in_portal" && m.email ? <button type="button" className="linkbtn" disabled={pending} onClick={() => start(async () => { const r = await inviteTeamMember(m.id); if (r.ok) { setTeam(r.team); setNotice(r.message); setError(""); } else setError(r.error); })}>Invite them to the portal</button> : null}
                       <button type="button" className="linkbtn" onClick={() => { if (window.confirm(`Remove ${m.name} from your team list?`)) run(() => deleteTeamMember(m.id)); }}>Remove from my team</button>
                     </div>
                   </div>
@@ -149,7 +168,7 @@ export function TeamView({ initial, openId, ask, teamChat }: { initial: TeamMemb
               <legend>For how long?</legend>
               <label className="check"><input type="radio" name="plan-how" checked={planHow === "always"} onChange={() => setPlanHow("always")} /> Indefinitely</label>
               <label className="check"><input type="radio" name="plan-how" checked={planHow === "until"} onChange={() => setPlanHow("until")} /> Until they reach a rank
-                <select aria-label="Rank" value={planRank} disabled={planHow !== "until"} onChange={(e) => setPlanRank(e.target.value)} style={{ marginLeft: 8 }}>{TEAM_RANKS.filter((r) => r !== "New").map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
+                <select aria-label="Rank" value={planRank} disabled={planHow !== "until"} onChange={(e) => setPlanRank(e.target.value)} style={{ marginLeft: 8 }}>{TEAM_RANKS.filter((r) => r !== "1A").map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
             </fieldset>
           ) : null}
           <p className="when">Their leads will see your calendar when they book a call.</p>

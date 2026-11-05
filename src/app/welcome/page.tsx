@@ -12,7 +12,7 @@ async function Welcome() {
   const session = await getSession();
   if (!session) redirect("/login");
   /* Finished members are sent on by the client, once. A redirect here would also fire right after saving. */
-  return <FirstLogin env={{ mode: session.mode, userId: session.user.id }} alreadyOnboarded={Boolean(session.profile.onboarded_at)} />;
+  return <FirstLogin env={{ mode: session.mode, userId: session.user.id, toPlans: session.profile.role === "downline" }} alreadyOnboarded={Boolean(session.profile.onboarded_at)} />;
 }
 
 export default function WelcomePage() {

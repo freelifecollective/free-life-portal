@@ -7,7 +7,7 @@ export type ListT = { id: string; name: string; kind: string | null; cards: Card
 export type Board = { id: string; name: string; kind: string | null; lists: ListT[] };
 
 export type TeamCheck = { id: string; label: string; kind: "manual" | "graphic" | "welcome_chat" | "team_chat" | "course_started" | "course_half" | "course_done"; done: boolean };
-export type TeamStatus = "active" | "not_in_portal" | "left" | "inactive";
+export type TeamStatus = "active" | "registered" | "invited" | "not_in_portal" | "left" | "inactive";
 export type TeamMember = {
   id: string; name: string; email: string | null; rank: string; status: TeamStatus;
   lastCheckIn: string | null; lastNote: string | null; checks: TeamCheck[];
@@ -15,4 +15,4 @@ export type TeamMember = {
   callsMode: "for" | "together" | null; callsUntil: string | null;
 };
 /** Ranks a team member can be at, lowest first. */
-export const TEAM_RANKS = ["New", "6A", "6A2", "6A2-2", "6A2-3", "6A2-4", "6A2-5", "6A2-6", "6A2-7", "6A2-8"] as const;
+export const TEAM_RANKS = ["1A", "2A", "3A", "4A", "5A", "6A", "6A2", "6A2-2", "6A2-3", "6A2-4", "6A2-5", "6A2-6", "6A2-7", "6A2-8"] as const;
