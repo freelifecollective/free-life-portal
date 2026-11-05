@@ -112,6 +112,17 @@ export async function deleteCard(id: string): Promise<Boards> {
   const { error } = await c.supabase.from("lead_cards").delete().eq("id", id);
   return error ? FAIL() : freshB(c);
 }
+/** Puts a list at a new place on its board (0 = first) and renumbers the board's lists. */
+export async function moveList(id: string, index: number): Promise<Boards> {
+  const c = await ctx(); if (!c) return NO; if (!UUID.test(id)) return FAIL();
+  const { data: me } = await c.supabase.from("lead_lists").select("board_id").eq("id", id).maybeSingle();
+  const board = (me as { board_id: string } | null)?.board_id; if (!board) return FAIL();
+  const { data } = await c.supabase.from("lead_lists").select("id").eq("board_id", board).neq("id", id).order("position");
+  const ids = ((data ?? []) as { id: string }[]).map((r) => r.id);
+  ids.splice(Math.max(0, Math.min(ids.length, Math.floor(Number(index) || 0))), 0, id);
+  for (let i = 0; i < ids.length; i++) { const r = await c.supabase.from("lead_lists").update({ position: i }).eq("id", ids[i]); if (r.error) return FAIL(); }
+  return freshB(c);
+}
 /** Puts a card in a list at a place (0 = top) and renumbers that list. */
 export async function moveCard(id: string, listId: string, index: number): Promise<Boards> {
   const c = await ctx(); if (!c) return NO; if (!UUID.test(id) || !UUID.test(listId)) return FAIL();

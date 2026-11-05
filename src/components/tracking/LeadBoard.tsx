@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useSyncExternalStore, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addBoard, addCard, addList, addTag, affiliateCard, deleteBoard, deleteCard, deleteList, deleteTag, moveCard, registerCard, renameBoard, renameList, restoreBoards, updateCard, type CardInput } from "@/app/(app)/tracking/actions";
+import { addBoard, addCard, addList, addTag, affiliateCard, deleteBoard, deleteCard, deleteList, deleteTag, moveCard, moveList, registerCard, renameBoard, renameList, restoreBoards, updateCard, type CardInput } from "@/app/(app)/tracking/actions";
 import type { Board, Card, Tag } from "@/lib/tracking/types";
 
 type Res = { ok: true; boards: Board[]; tags: Tag[]; focus?: string } | { ok: false; error: string };
@@ -11,6 +12,13 @@ const blank: CardInput = { name: "", email: "", phone: "", instagram: "", facebo
 const ink = (hex: string) => { const n = parseInt(hex.slice(1), 16); const l = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); return l > 160 ? "#2B2522" : "#fff"; };
 const today = () => new Date().toISOString().slice(0, 10);
 const dayText = (d: string) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(d + "T00:00:00Z"));
+
+/* like Trello: tapping any tag on a card shrinks all tags to little colour bars, tapping again brings the names back (remembered on this device) */
+const TAGS_KEY = "flc_tags_compact";
+const tagListeners = new Set<() => void>();
+const subscribeTags = (cb: () => void) => { tagListeners.add(cb); window.addEventListener("storage", cb); return () => { tagListeners.delete(cb); window.removeEventListener("storage", cb); }; };
+const readCompact = () => { try { return localStorage.getItem(TAGS_KEY) === "1"; } catch { return false; } };
+const setCompact = (on: boolean) => { try { localStorage.setItem(TAGS_KEY, on ? "1" : "0"); } catch { /* still works this visit */ } tagListeners.forEach((l) => l()); };
 
 /** An internal Trello: boards with lists with lead cards and colour tags. Drag a card to move it. Several things happen by themselves (tags, follow-ups). */
 export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialTags: Tag[] }) {
@@ -22,6 +30,8 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
   const [pending, start] = useTransition();
   const [drag, setDrag] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
+  const [dragList, setDragList] = useState<string | null>(null);
+  const [overList, setOverList] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ id: string | null; listId: string } | null>(null);
   const [vals, setVals] = useState<CardInput>(blank);
   const [tagName, setTagName] = useState("");
@@ -33,6 +43,7 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
   const sureDlg = useRef<HTMLDialogElement>(null);
   const board = boards.find((b) => b.id === boardId) ?? boards[0];
   const tagById = new Map(tags.map((t) => [t.id, t]));
+  const compact = useSyncExternalStore(subscribeTags, readCompact, () => false);
 
   const apply = (r: Res, keepFocus = true) => {
     if (r.ok) { setBoards(r.boards); setTags(r.tags); setError(""); if (r.focus && r.boards.some((b) => b.id === r.focus)) setBoardId(r.focus); else if (keepFocus && !r.boards.some((b) => b.id === boardId)) setBoardId(r.boards[0]?.id ?? ""); }
@@ -73,6 +84,16 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
     setBoards(next);
     start(async () => { const r = await moveCard(id, listId, index); if (r.ok) { setPast((p) => [...p.slice(-39), boards]); setFuture([]); } apply(r); });
   }
+  function dropList(targetId: string) {
+    const id = dragList; setDragList(null); setOverList(null);
+    if (!id || id === targetId || !board) return;
+    const from = board.lists.findIndex((l) => l.id === id), to = board.lists.findIndex((l) => l.id === targetId);
+    if (from < 0 || to < 0) return;
+    const lists = [...board.lists]; const [m] = lists.splice(from, 1); lists.splice(to, 0, m);
+    const before = boards;
+    setBoards(boards.map((b) => (b.id === board.id ? { ...b, lists } : b)));
+    start(async () => { const r = await moveList(id, to); if (r.ok) { setPast((p) => [...p.slice(-39), before]); setFuture([]); } apply(r); });
+  }
   const toggleTag = (id: string) => setVals((v) => ({ ...v, tags: v.tags.includes(id) ? v.tags.filter((t) => t !== id) : [...v.tags, id] }));
 
   return (
@@ -95,9 +116,10 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
           </div>
           <div className="lb-cols">
             {board.lists.map((l) => (
-              <section key={l.id} className={"lb-list" + (over === l.id ? " over" : "")} aria-label={l.name}
-                onDragOver={(e) => { if (drag) { e.preventDefault(); setOver(l.id); } }} onDragLeave={() => setOver((o) => (o === l.id ? null : o))} onDrop={() => drop(l.id, l.cards.length)}>
-                <header className="lb-list-h">
+              <section key={l.id} className={"lb-list" + (over === l.id ? " over" : "") + (overList === l.id && dragList !== l.id ? " list-over" : "") + (dragList === l.id ? " dragging" : "")} aria-label={l.name}
+                onDragOver={(e) => { if (dragList) { e.preventDefault(); setOverList(l.id); } else if (drag) { e.preventDefault(); setOver(l.id); } }} onDragLeave={() => { setOver((o) => (o === l.id ? null : o)); setOverList((o) => (o === l.id ? null : o)); }} onDrop={() => { if (dragList) dropList(l.id); else drop(l.id, l.cards.length); }}>
+                <header className="lb-list-h" draggable onDragStart={(e) => { e.dataTransfer.setData("text/plain", l.id); e.dataTransfer.effectAllowed = "move"; setDragList(l.id); }} onDragEnd={() => { setDragList(null); setOverList(null); }}>
+                  <span className="lb-grip" aria-hidden="true" title="Drag to move this list">⋮⋮</span>
                   <button type="button" className="lb-list-name" title="Rename this list" onClick={() => { const n = ask("Rename this list", l.name); if (n) run(() => renameList(l.id, n)); }}>{l.name}</button>
                   <span className="lb-count">{l.cards.length}</span>
                   <button type="button" className="lb-x" aria-label={`Delete the list ${l.name}`} title="Delete this list" onClick={() => { if (window.confirm(`Delete the list “${l.name}”${l.cards.length ? ` and its ${l.cards.length} card${l.cards.length === 1 ? "" : "s"}` : ""}? (You can undo this.)`)) run(() => deleteList(l.id)); }}>×</button>
@@ -106,16 +128,18 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
                   {l.cards.map((c, i) => {
                     const due = c.followUp && c.followUp <= today();
                     return (
-                      <li key={c.id} className={"lb-card" + (drag === c.id ? " dragging" : "")} draggable onDragStart={() => setDrag(c.id)} onDragEnd={() => { setDrag(null); setOver(null); }}
+                      <li key={c.id} className={"lb-card" + (drag === c.id ? " dragging" : "")} draggable onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; setDrag(c.id); }} onDragEnd={() => { setDrag(null); setOver(null); }}
                         onDragOver={(e) => { if (drag && drag !== c.id) { e.preventDefault(); e.stopPropagation(); setOver(l.id); } }} onDrop={(e) => { e.stopPropagation(); drop(l.id, i); }}>
                         <button type="button" className="lb-card-x" aria-label={`Delete ${c.name}`} title="Delete this lead" onClick={() => { setSure(c); sureDlg.current?.showModal(); }}>×</button>
-                        {c.tags.length ? <span className="lb-tags">{c.tags.map((id) => { const t = tagById.get(id); return t ? <span key={id} className="lb-tag" style={{ background: t.color, color: ink(t.color) }}>{t.name}</span> : null; })}</span> : null}
+                        {c.tags.length ? <span className={"lb-tags" + (compact ? " compact" : "")}>{c.tags.map((id) => { const t = tagById.get(id); return t ? <button type="button" key={id} className={"lb-tag flip" + (compact ? " compact" : "")} style={{ background: t.color, color: ink(t.color) }} title={compact ? `${t.name} (tap to show names)` : "Tap to shrink the tags"} aria-label={compact ? t.name : `${t.name}. Tap to shrink the tags`} onClick={() => setCompact(!compact)}>{compact ? "" : t.name}</button> : null; })}</span> : null}
                         <button type="button" className="lb-card-name" onClick={() => openCard(l.id, c)}>{c.name}</button>
-                        {c.instagram || c.facebook ? <span className="lb-meta" translate="no">{[c.instagram, c.facebook].filter(Boolean).join(" · ")}</span> : null}
+                        {c.instagram ? <span className="lb-ig" translate="no">📷 {c.instagram.startsWith("@") ? c.instagram : "@" + c.instagram}</span> : null}
+                        {c.facebook ? <span className="lb-meta" translate="no">Facebook: {c.facebook}</span> : null}
                         {c.email || c.phone ? <span className="lb-meta" translate="no">{[c.email, c.phone].filter(Boolean).join(" · ")}</span> : null}
                         {c.followUp ? <span className={"lb-date" + (due ? " late" : "")}>⏰ Follow up {dayText(c.followUp)}</span> : null}
                         {c.note ? <span className="lb-note" translate="no">{c.note.length > 90 ? c.note.slice(0, 88) + "…" : c.note}</span> : null}
                         <span className="lb-acts">
+                          {c.portalUser ? <Link className="lb-send" href={`/messages/${c.portalUser}`}>Send Message</Link> : null}
                           <button type="button" className="linkbtn" disabled={pending} onClick={() => run(() => registerCard(c.id))}>Registered for the Portal</button>
                           <button type="button" className="linkbtn" disabled={pending} onClick={() => affiliate(c)}>Affiliated</button>
                         </span>
