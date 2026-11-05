@@ -12,7 +12,12 @@ const blank: CardInput = { name: "", email: "", phone: "", instagram: "", facebo
 /** Text on a tag: dark on light colours, white on dark ones. */
 const ink = (hex: string) => { const n = parseInt(hex.slice(1), 16); const l = 0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255); return l > 160 ? "#2B2522" : "#fff"; };
 const today = () => new Date().toISOString().slice(0, 10);
-const dayText = (d: string) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(d + "T00:00:00Z"));
+const dayText = (d: string) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(d + "T00:00:00Z"));
+/** Green when the follow-up is two or more days away, yellow when it is tomorrow, red when it is due (or late). */
+function tone(due: string): "ok" | "soon" | "late" {
+  const days = Math.round((Date.parse(due + "T00:00:00Z") - Date.parse(today() + "T00:00:00Z")) / 86_400_000);
+  return days >= 2 ? "ok" : days === 1 ? "soon" : "late";
+}
 
 /* like Trello: tapping any tag on a card shrinks all tags to little colour bars, tapping again brings the names back (remembered on this device) */
 const TAGS_KEY = "flc_tags_compact";
@@ -145,7 +150,6 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
                   {items.map((it) => {
                     if ("gap" in it) return <li key="gap" className="lb-gap" style={{ height: dragH }} aria-hidden="true" onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }} onDrop={(e) => { e.stopPropagation(); commitCard(); }} />;
                     const c = it.card;
-                    const due = c.followUp && c.followUp <= today();
                     return (
                       <li key={c.id} className={"lb-card" + (drag === c.id ? " drag-source" : "")} draggable onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; setDragH(e.currentTarget.getBoundingClientRect().height); setTimeout(() => setDrag(c.id), 0); }} onDragEnd={() => { setDrag(null); setPreview(null); }}
                         onDragOver={(e) => { if (!drag || drag === c.id) return; e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); const idx = visible.findIndex((x) => x.id === c.id) + (e.clientY > r.top + r.height / 2 ? 1 : 0); if (!preview || preview.listId !== l.id || preview.index !== idx) setPreview({ listId: l.id, index: idx }); }} onDrop={(e) => { e.stopPropagation(); commitCard(); }}>
@@ -155,7 +159,7 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
                         {c.instagram ? <span className="lb-ig" translate="no">📷 {c.instagram.startsWith("@") ? c.instagram : "@" + c.instagram}</span> : null}
                         {c.facebook ? <span className="lb-meta" translate="no">Facebook: {c.facebook}</span> : null}
                         {c.email || c.phone ? <span className="lb-meta" translate="no">{[c.email, c.phone].filter(Boolean).join(" · ")}</span> : null}
-                        {c.followUp ? <span className={"lb-date" + (due ? " late" : "")}>⏰ Follow up {dayText(c.followUp)}</span> : null}
+                        {c.followUp ? <span className={"lb-date " + tone(c.followUp)} title="When they were added, and when your follow-up is due">🕓 {c.createdAt ? `${dayText(c.createdAt.slice(0, 10))} - ` : ""}{dayText(c.followUp)}</span> : c.createdAt ? <span className="lb-date none" title="When they were added">🕓 {dayText(c.createdAt.slice(0, 10))}</span> : null}
                         {c.note ? <span className="lb-note" translate="no">{c.note.length > 90 ? c.note.slice(0, 88) + "…" : c.note}</span> : null}
                         <span className="lb-acts">
                           {c.portalUser ? <Link className="lb-send" href={`/messages/${c.portalUser}`}>Send Message</Link> : null}
