@@ -77,6 +77,9 @@ begin
   perform tests.login(mia);
   perform public.lead_register_in_portal(c2);
   perform tests.logout();
+  perform tests.login(mia);
+  perform tests.eq('a card for someone in the portal offers Send Message', (select username from public.lead_card_portal_users() where card_id = card), 'lenalead');
+  perform tests.logout();
   perform tests.eq('In FLC Portal tag on automatically', (select count(*) from public.lead_card_tags ct join public.lead_tags t on t.id = ct.tag_id where ct.card_id = c2 and t.system_key = 'in_portal'), 1::bigint);
 end $$;
 rollback;
