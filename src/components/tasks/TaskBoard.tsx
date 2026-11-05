@@ -12,6 +12,7 @@ import type { BadgeState } from "@/lib/badges/defs";
 import { Fireworks } from "./Fireworks";
 import { TaskForm } from "./TaskForm";
 import { TrashButton } from "./TrashButton";
+import { UndoRedo } from "@/components/UndoRedo";
 import { ROUTINES, type RoutineKey } from "@/lib/tasks/routine";
 
 /** The whole Tasks screen: today's list (drag or use the arrows to reorder), what is coming up, and what is done. */
@@ -251,10 +252,7 @@ export function TaskBoard({ initial, today, tz, badgeKeys, streaks }: { initial:
       <section aria-label="To do today">
         <div className="tasks-hrow">
           <h2 className="qh tasks-h">Today</h2>
-          <div className="undo-redo" role="group" aria-label="Undo and redo">
-            <button type="button" className="icon-btn" aria-label="Undo" title="Undo" disabled={past.length === 0 || pending} onClick={undoStep}>←</button>
-            <button type="button" className="icon-btn" aria-label="Redo" title="Redo" disabled={future.length === 0 || pending} onClick={redoStep}>→</button>
-          </div>
+          <UndoRedo canUndo={past.length > 0} canRedo={future.length > 0} busy={pending} onUndo={undoStep} onRedo={redoStep} />
         </div>
         {todayList.length === 0 ? (
           <p className="card-s" style={{ margin: 0 }}>{doneToday.length ? "Everything for today is done. Lovely work!" : "Nothing to do today. Add a task to get started."}</p>
