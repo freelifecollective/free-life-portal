@@ -13,12 +13,12 @@ export default async function LeadTrackingPage() {
   const { session, supabase } = await requireMember();
   if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Lead Tracking</PageHeading><p className="page-lede">This needs the database.</p></>;
-  const boards = await loadBoards(supabase);
+  const { boards, tags } = await loadBoards(supabase);
   return (
     <>
       <PageHeading lede="Keep track of where each of your leads is. Drag a card from list to list, add your own boards and lists, and press “Registered for the Portal” or “Affiliated” when they take that step.">Lead Tracking</PageHeading>
       <PlacedDocs placement="tracking" />
-      <LeadBoard initial={boards} />
+      <LeadBoard initial={boards} initialTags={tags} />
     </>
   );
 }

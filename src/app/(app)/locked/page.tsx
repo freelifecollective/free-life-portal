@@ -20,7 +20,7 @@ export default async function LockedPage(props: PageProps<"/locked">) {
   /* where the real page can be drawn without anyone's data, it is: the actual page, just washed out */
   const preview = f === "/calculator" ? <Calculator initialCountry="United States" />
     : f === "/create-quote" ? <QuotePicker initialCountry="United States" />
-    : f === "/tracking/leads" ? <LeadBoard initial={DEMO_BOARDS} />
+    : f === "/tracking/leads" ? <LeadBoard initial={DEMO_BOARDS} initialTags={[]} />
     : f === "/tracking/team" ? <TeamView initial={DEMO_TEAM} teamChat={null} />
     : undefined;
   return <LockedTeaser title={page.title} lede={page.lede} kind={page.kind} preview={preview} />;

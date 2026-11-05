@@ -1,4 +1,8 @@
-export type Card = { id: string; name: string; email: string | null; phone: string | null; note: string | null };
+export type Tag = { id: string; name: string; color: string; system: boolean };
+export type Card = {
+  id: string; name: string; email: string | null; phone: string | null; note: string | null;
+  instagram: string | null; facebook: string | null; tags: string[]; followUp: string | null; followDays: number;
+};
 export type ListT = { id: string; name: string; kind: string | null; cards: Card[] };
 export type Board = { id: string; name: string; kind: string | null; lists: ListT[] };
 

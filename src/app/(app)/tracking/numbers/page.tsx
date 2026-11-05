@@ -12,7 +12,7 @@ export default async function NumbersPage() {
   const { session, supabase } = await requireMember();
   if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Know Your Numbers</PageHeading><p className="page-lede">This needs the database.</p></>;
-  const [boards, team, { count: affiliated }] = await Promise.all([
+  const [{ boards }, team, { count: affiliated }] = await Promise.all([
     loadBoards(supabase), loadTeam(supabase),
     supabase.from("lead_cards").select("id", { count: "exact", head: true }).not("affiliated_at", "is", null),
   ]);
