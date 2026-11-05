@@ -2,6 +2,7 @@
 
 import { requireMember } from "@/lib/auth/guards";
 import { isAffiliate } from "@/lib/roles";
+import { sendLoginEmail } from "@/lib/auth/invite-email";
 import { loadBoards, loadTeam } from "@/lib/tracking/queries";
 import { TEAM_RANKS, type Board, type Tag, type TeamMember } from "@/lib/tracking/types";
 
@@ -132,7 +133,7 @@ export async function registerCard(id: string): Promise<Boards> {
 /** "Affiliated": the card becomes a team member. Returns where to go. */
 export async function affiliateCard(id: string, rank: string): Promise<{ ok: true; teamId: string } | { ok: false; error: string }> {
   const c = await ctx(); if (!c) return NO; if (!UUID.test(id)) return FAIL();
-  const r = (TEAM_RANKS as readonly string[]).includes(rank) ? rank : "New";
+  const r = (TEAM_RANKS as readonly string[]).includes(rank) ? rank : "1A";
   const { data, error } = await c.supabase.rpc("lead_affiliated", { p_card: id, p_rank: r });
   return error ? FAIL() : { ok: true, teamId: String(data) };
 }
@@ -188,26 +189,51 @@ export async function restoreBoards(target: Board[]): Promise<Boards> {
 const freshTeam = async (c: NonNullable<Awaited<ReturnType<typeof ctx>>>): Promise<Team> => ({ ok: true, team: await loadTeam(c.supabase) });
 export async function getTeam(): Promise<Team> { const c = await ctx(); return c ? freshTeam(c) : NO; }
 
-export async function addTeamMember(v: { name: string; email: string; rank: string }): Promise<Team> {
+export type LeadOption = { key: string; name: string; email: string | null; cardId: string | null };
+/** Every lead the person has (on their boards, who filled in their page, or who they invited), A to Z. */
+export async function teamLeadOptions(): Promise<LeadOption[]> {
+  const c = await ctx(); if (!c) return [];
+  const [{ data: cards }, { data: forms }, { data: inv }] = await Promise.all([
+    c.supabase.from("lead_cards").select("id, name, email").is("affiliated_at", null).limit(3000),
+    c.supabase.rpc("my_leads", { p_from: "2020-01-01T00:00:00Z", p_to: new Date(Date.now() + 86_400_000).toISOString() }),
+    c.supabase.rpc("my_invites"),
+  ]);
+  const out = new Map<string, LeadOption>();
+  const put = (name: string, email: string | null, cardId: string | null) => {
+    const key = email ? email.toLowerCase() : `card:${cardId}`;
+    const have = out.get(key);
+    if (!have) out.set(key, { key, name: name.trim() || email || "Unnamed lead", email, cardId });
+    else if (cardId && !have.cardId) have.cardId = cardId;
+  };
+  for (const x of (cards ?? []) as { id: string; name: string; email: string | null }[]) put(x.name, x.email, x.id);
+  for (const x of (forms ?? []) as { email: string; first_name: string | null; last_name: string | null }[]) put([x.first_name, x.last_name].filter(Boolean).join(" "), x.email, null);
+  for (const x of (inv ?? []) as { email: string; first_name: string | null; last_name: string | null }[]) put([x.first_name, x.last_name].filter(Boolean).join(" "), x.email, null);
+  return [...out.values()].sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+}
+
+/** Adds someone to the team. If they have no portal account yet, they are emailed an invitation to create one. */
+export async function addToTeam(v: { name: string; email: string; cardId?: string | null; rank?: string }): Promise<{ ok: true; team: TeamMember[]; message: string } | { ok: false; error: string }> {
   const c = await ctx(); if (!c) return NO;
   const name = clean(v.name, 80), email = clean(v.email, 254);
   if (!name) return FAIL("Give your team member a name.");
   if (email && !EMAIL.test(email)) return FAIL("That email address does not look right.");
-  const rank = (TEAM_RANKS as readonly string[]).includes(v.rank) ? v.rank : "New";
-  const { data, error } = await c.supabase.from("team_members").insert({ user_id: c.me, name, email: email || null, rank }).select("id").single();
-  if (error) return FAIL();
-  /* the starter check-in list: add it through the same function the Affiliated button uses */
-  const rows = STARTER.map((s, i) => ({ member_id: (data as { id: string }).id, user_id: c.me, label: s[0], kind: s[1], position: i }));
-  await c.supabase.from("team_checks").insert(rows);
-  return freshTeam(c);
+  const rank = (TEAM_RANKS as readonly string[]).includes(v.rank ?? "") ? v.rank! : "1A";
+  const card = v.cardId && UUID.test(v.cardId) ? v.cardId : null;
+  const { data, error } = await c.supabase.rpc("team_add_member", { p_name: name, p_email: email || null, p_rank: rank, p_card: card });
+  const row = (data as { id: string; needs_invite: boolean }[] | null)?.[0];
+  if (error || !row) return FAIL();
+  let message = `${name} is on your team.`;
+  if (row.needs_invite) {
+    const r = await c.supabase.rpc("invite_team_member", { p_member: row.id });
+    if (r.error) message = `${name} is on your team, but we could not send the invitation. Try again in a moment.`;
+    else if (r.data === "invited") {
+      const sent = await sendLoginEmail(email);
+      message = sent ? `${name} is on your team, and we emailed ${email} an invitation to create their account.` : `${name} is on your team and can create an account with ${email}, but we could not email them. Ask them to open the portal and enter that email.`;
+    }
+  }
+  return { ok: true, team: await loadTeam(c.supabase), message };
 }
-const STARTER: [string, string][] = [
-  ["Created a congratulations graphic for affiliating with the Graphic Maker", "graphic"], ["Congratulated them for starting their business in the New Members Discussion Chat", "welcome_chat"],
-  ["Congratulated them in my team chat", "team_chat"], ["Followed them on social media", "manual"], ["Let them know their next steps for getting their business started", "manual"],
-  ["Showed them where to find their landing page and invite link", "manual"], ["Introduced them to an accountability buddy", "manual"], ["Helped them set their first weekly goals", "manual"],
-  ["Booked our first check-in call", "manual"], ["Invited them to the live calls", "manual"],
-  ["They started the Business Launch Course", "course_started"], ["They completed 50% of the Business Launch Course", "course_half"], ["They finished the Business Launch Course", "course_done"],
-];
+
 export async function setTeamRank(id: string, rank: string): Promise<Team> {
   const c = await ctx(); if (!c) return NO;
   if (!UUID.test(id) || !(TEAM_RANKS as readonly string[]).includes(rank)) return FAIL();
@@ -259,4 +285,17 @@ export async function setCallPlan(id: string, mode: string, until: string): Prom
   const u = m && (TEAM_RANKS as readonly string[]).includes(until) ? until : null;
   const { error } = await c.supabase.rpc("set_team_call_plan", { p_member: id, p_mode: m, p_until: u });
   return error ? FAIL() : freshTeam(c);
+}
+
+/** Emails a team member who is not in the portal an invitation to create their account. */
+export async function inviteTeamMember(id: string): Promise<{ ok: true; team: TeamMember[]; message: string } | { ok: false; error: string }> {
+  const c = await ctx(); if (!c) return NO; if (!UUID.test(id)) return FAIL();
+  const { data: m } = await c.supabase.from("team_members").select("name, email").eq("id", id).maybeSingle();
+  const row = m as { name: string; email: string | null } | null;
+  if (!row?.email) return FAIL("Add their email address first so we can invite them.");
+  const r = await c.supabase.rpc("invite_team_member", { p_member: id });
+  if (r.error) return FAIL("We could not send the invitation. Please try again.");
+  if (r.data === "exists") return { ok: true, team: await loadTeam(c.supabase), message: `${row.name} already has an account in the portal.` };
+  const sent = await sendLoginEmail(row.email);
+  return { ok: true, team: await loadTeam(c.supabase), message: sent ? `We emailed ${row.email} an invitation to create their account.` : `${row.name} can create an account with ${row.email}, but we could not email them.` };
 }

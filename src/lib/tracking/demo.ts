@@ -8,5 +8,5 @@ export const DEMO_BOARDS: Board[] = [
 ];
 export const DEMO_TEAM: TeamMember[] = [
   { id: "t1", name: "Sample Teammate", email: null, rank: "6A", status: "active", lastCheckIn: null, lastNote: null, started: false, doneLessons: 0, totalLessons: 0, callsMode: null, callsUntil: null, checks: [] },
-  { id: "t2", name: "Another Teammate", email: null, rank: "New", status: "not_in_portal", lastCheckIn: null, lastNote: null, started: false, doneLessons: 0, totalLessons: 0, callsMode: null, callsUntil: null, checks: [] },
+  { id: "t2", name: "Another Teammate", email: null, rank: "1A", status: "not_in_portal", lastCheckIn: null, lastNote: null, started: false, doneLessons: 0, totalLessons: 0, callsMode: null, callsUntil: null, checks: [] },
 ];

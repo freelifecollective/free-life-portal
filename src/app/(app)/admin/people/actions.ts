@@ -1,26 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@supabase/supabase-js";
-import { headers } from "next/headers";
 import { requireAdmin } from "@/lib/auth/guards";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { sendLoginEmail } from "@/lib/auth/invite-email";
 
 export type InviteState = { error: string; done: string };
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Emails a login link straight away, so an invite does not depend on the person finding the login page themselves. */
-async function sendLoginEmail(email: string): Promise<boolean> {
-  try {
-    const h = await headers();
-    const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
-    /* a plain client with no cookies: the link in the email must not be tied to the admin's browser */
-    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: `${origin}/auth/callback` } });
-    return !error;
-  } catch { return false; }
-}
 
 /** Let someone create an account: they can sign in with this email from now on. */
 export async function inviteEmail(_prev: InviteState, form: FormData): Promise<InviteState> {

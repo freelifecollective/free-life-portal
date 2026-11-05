@@ -17,7 +17,7 @@ export function DoneStep({ f, env }: { f: Flow; env: Env }) {
         <li><span>Facebook</span><span>{f.fb ? "@" + f.fb : "Not added yet"}</span></li>
       </ul>
       <div className="actions">
-        <button className="btn primary" type="button" onClick={() => { router.replace("/"); router.refresh(); }}>Go to the portal</button>
+        <button className="btn primary" type="button" onClick={() => { router.replace(env.toPlans ? "/plans" : "/"); router.refresh(); }}>{env.toPlans ? "Choose my plan" : "Go to the portal"}</button>
       </div>
       {env.mode === "preview" ? (
         <form action="/logout" method="post" className="backrow"><button className="linkbtn" type="submit">Preview mode: start over</button></form>

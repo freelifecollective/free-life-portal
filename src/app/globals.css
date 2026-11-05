@@ -2410,3 +2410,17 @@ button.lb-tag.pick.on { opacity: 1; outline-color: var(--ink); outline-offset: 1
 .lb-newtag { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .lb-newtag input[type="text"], .lb-newtag input:not([type]) { flex: 1 1 180px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
 .lb-newtag input[type="color"] { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+
+/* dropdown of leads with a search box */
+.lc { position: relative; max-width: 420px; }
+.lc-label { display: block; font-family: var(--font-label); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 7px; }
+.lc-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font: inherit; cursor: pointer; text-align: left; }
+.lc-pop { position: absolute; z-index: 40; left: 0; right: 0; top: calc(100% + 4px); background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 30px rgba(43,37,34,.2); padding: 8px; display: grid; gap: 6px; }
+.lc-search { width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; box-sizing: border-box; }
+.lc-list { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; display: grid; }
+.lc-list button { width: 100%; text-align: left; background: none; border: 0; font: inherit; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.lc-list button:hover, .lc-list li[aria-selected="true"] button { background: var(--tint); }
+.lc-list small { color: var(--muted); }
+.lc-none { padding: 8px 10px; color: var(--muted); }
+.lc-other { border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-weight: 700; color: var(--accent-deep); padding: 10px; text-align: left; cursor: pointer; }
+.lc-other:hover { background: var(--tint); border-radius: 0 0 8px 8px; }
