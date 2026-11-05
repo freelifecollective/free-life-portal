@@ -2441,3 +2441,7 @@ button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding
 .lb-list.dragging { opacity: .5; }
 .lb-list.list-over { outline: 2px dashed var(--accent-deep); }
 .lb-list-h { cursor: grab; }
+/* live drag: the one being dragged leaves its place, the others slide apart, and a dashed gap shows where it will land */
+.lb-card.drag-source, .lb-list.drag-source { display: none; }
+.lb-gap { border: 2px dashed var(--accent-deep); background: rgba(171,144,128,.22); border-radius: 10px; list-style: none; }
+.lb-list.lb-list-gap { border: 2px dashed var(--accent-deep); background: rgba(171,144,128,.18); min-height: 140px; }

@@ -30,9 +30,11 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const [drag, setDrag] = useState<string | null>(null);
-  const [over, setOver] = useState<string | null>(null);
   const [dragList, setDragList] = useState<string | null>(null);
-  const [overList, setOverList] = useState<string | null>(null);
+  /* while something is being dragged, where it would land: the other cards (or lists) slide apart to make room, like Trello */
+  const [preview, setPreview] = useState<{ listId: string; index: number } | null>(null);
+  const [listPreview, setListPreview] = useState<number | null>(null);
+  const [dragH, setDragH] = useState(70);
   const [editing, setEditing] = useState<{ id: string | null; listId: string } | null>(null);
   const [vals, setVals] = useState<CardInput>(blank);
   const [tagName, setTagName] = useState("");
@@ -76,24 +78,26 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
     if (!window.confirm(`Mark ${c.name} as affiliated? They move to your My Team page.`)) return;
     start(async () => { const r = await affiliateCard(c.id, "1A"); if (r.ok) router.push(`/tracking/team?open=${r.teamId}&ask=1`); else setError(r.error); });
   }
-  function drop(listId: string, index: number) {
-    if (!drag) return;
-    const id = drag; setDrag(null); setOver(null);
+  function commitCard() {
+    const id = drag, p = preview;
+    setDrag(null); setPreview(null);
+    if (!id || !p) return;
     let moved: Card | undefined;
     const next = boards.map((b) => ({ ...b, lists: b.lists.map((l) => { const f = l.cards.find((x) => x.id === id); if (f) moved = f; return { ...l, cards: l.cards.filter((x) => x.id !== id) }; }) }))
-      .map((b) => ({ ...b, lists: b.lists.map((l) => { if (l.id !== listId || !moved) return l; const cs = [...l.cards]; cs.splice(index, 0, moved); return { ...l, cards: cs }; }) }));
+      .map((b) => ({ ...b, lists: b.lists.map((l) => { if (l.id !== p.listId || !moved) return l; const cs = [...l.cards]; cs.splice(p.index, 0, moved); return { ...l, cards: cs }; }) }));
     setBoards(next);
-    start(async () => { const r = await moveCard(id, listId, index); if (r.ok) { setPast((p) => [...p.slice(-39), boards]); setFuture([]); } apply(r); });
+    start(async () => { const r = await moveCard(id, p.listId, p.index); if (r.ok) { setPast((q) => [...q.slice(-39), boards]); setFuture([]); } apply(r); });
   }
-  function dropList(targetId: string) {
-    const id = dragList; setDragList(null); setOverList(null);
-    if (!id || id === targetId || !board) return;
-    const from = board.lists.findIndex((l) => l.id === id), to = board.lists.findIndex((l) => l.id === targetId);
-    if (from < 0 || to < 0) return;
-    const lists = [...board.lists]; const [m] = lists.splice(from, 1); lists.splice(to, 0, m);
+  function commitList() {
+    const id = dragList, idx = listPreview;
+    setDragList(null); setListPreview(null);
+    if (!id || idx === null || !board) return;
+    const mine = board.lists.find((l) => l.id === id); if (!mine) return;
+    const lists = board.lists.filter((l) => l.id !== id); lists.splice(idx, 0, mine);
+    if (lists.every((l, i) => l.id === board.lists[i].id)) return;
     const before = boards;
     setBoards(boards.map((b) => (b.id === board.id ? { ...b, lists } : b)));
-    start(async () => { const r = await moveList(id, to); if (r.ok) { setPast((p) => [...p.slice(-39), before]); setFuture([]); } apply(r); });
+    start(async () => { const r = await moveList(id, idx); if (r.ok) { setPast((q) => [...q.slice(-39), before]); setFuture([]); } apply(r); });
   }
   const toggleTag = (id: string) => setVals((v) => ({ ...v, tags: v.tags.includes(id) ? v.tags.filter((t) => t !== id) : [...v.tags, id] }));
 
@@ -112,22 +116,39 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
             <button type="button" className="linkbtn" onClick={() => { const n = ask("Rename this board", board.name); if (n) run(() => renameBoard(board.id, n)); }}>Rename</button>
             <button type="button" className="linkbtn" onClick={() => { if (window.confirm(`Delete the board “${board.name}” and every card on it? (You can undo this.)`)) run(() => deleteBoard(board.id)); }}>Delete board</button>
           </div>
-          <div className="lb-cols">
-            {board.lists.map((l) => (
-              <section key={l.id} className={"lb-list" + (over === l.id ? " over" : "") + (overList === l.id && dragList !== l.id ? " list-over" : "") + (dragList === l.id ? " dragging" : "")} aria-label={l.name}
-                onDragOver={(e) => { if (dragList) { e.preventDefault(); setOverList(l.id); } else if (drag) { e.preventDefault(); setOver(l.id); } }} onDragLeave={() => { setOver((o) => (o === l.id ? null : o)); setOverList((o) => (o === l.id ? null : o)); }} onDrop={() => { if (dragList) dropList(l.id); else drop(l.id, l.cards.length); }}>
-                <header className="lb-list-h" draggable onDragStart={(e) => { e.dataTransfer.setData("text/plain", l.id); e.dataTransfer.effectAllowed = "move"; setDragList(l.id); }} onDragEnd={() => { setDragList(null); setOverList(null); }}>
+          <div className="lb-cols" onDragOver={(e) => { if (dragList) { e.preventDefault(); const n = board.lists.filter((x) => x.id !== dragList).length; if (listPreview !== n) setListPreview(n); } }} onDrop={() => { if (dragList) commitList(); }}>
+            {(() => {
+              const out: React.ReactNode[] = [];
+              const visibleLists = board.lists.filter((l) => l.id !== dragList);
+              let vi = 0;
+              const listGap = (k: string) => <div key={k} className="lb-list lb-list-gap" aria-hidden="true" onDragOver={(e) => { if (dragList) e.preventDefault(); }} onDrop={() => commitList()} />;
+              for (const l of board.lists) {
+                const hidden = l.id === dragList;
+                if (!hidden) { if (listPreview === vi) out.push(listGap(`gap-${l.id}`)); vi++; }
+                const visible = l.cards.filter((x) => x.id !== drag);
+                const items: ({ card: Card } | { gap: true })[] = visible.map((card) => ({ card }));
+                if (drag && preview?.listId === l.id) items.splice(Math.min(preview.index, items.length), 0, { gap: true });
+                out.push(
+              <section key={l.id} className={"lb-list" + (hidden ? " drag-source" : "")} aria-label={l.name}
+                onDragOver={(e) => {
+                  if (dragList) { if (dragList === l.id) return; e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); const idx = visibleLists.findIndex((x) => x.id === l.id) + (e.clientX > r.left + r.width / 2 ? 1 : 0); if (listPreview !== idx) setListPreview(idx); }
+                  else if (drag) { e.preventDefault(); const idx = (e.target as HTMLElement).closest(".lb-list-h") ? 0 : visible.length; if (!preview || preview.listId !== l.id || preview.index !== idx) setPreview({ listId: l.id, index: idx }); }
+                }}
+                onDrop={(e) => { if (dragList) { e.stopPropagation(); commitList(); } else commitCard(); }}>
+                <header className="lb-list-h" draggable onDragStart={(e) => { e.dataTransfer.setData("text/plain", l.id); e.dataTransfer.effectAllowed = "move"; setTimeout(() => setDragList(l.id), 0); }} onDragEnd={() => { setDragList(null); setListPreview(null); }}>
                   <span className="lb-grip" aria-hidden="true" title="Drag to move this list">⋮⋮</span>
                   <button type="button" className="lb-list-name" title="Rename this list" onClick={() => { const n = ask("Rename this list", l.name); if (n) run(() => renameList(l.id, n)); }}>{l.name}</button>
                   <span className="lb-count">{l.cards.length}</span>
                   <button type="button" className="lb-x" aria-label={`Delete the list ${l.name}`} title="Delete this list" onClick={() => { if (window.confirm(`Delete the list “${l.name}”${l.cards.length ? ` and its ${l.cards.length} card${l.cards.length === 1 ? "" : "s"}` : ""}? (You can undo this.)`)) run(() => deleteList(l.id)); }}>×</button>
                 </header>
                 <ul className="lb-cards">
-                  {l.cards.map((c, i) => {
+                  {items.map((it) => {
+                    if ("gap" in it) return <li key="gap" className="lb-gap" style={{ height: dragH }} aria-hidden="true" onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }} onDrop={(e) => { e.stopPropagation(); commitCard(); }} />;
+                    const c = it.card;
                     const due = c.followUp && c.followUp <= today();
                     return (
-                      <li key={c.id} className={"lb-card" + (drag === c.id ? " dragging" : "")} draggable onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; setDrag(c.id); }} onDragEnd={() => { setDrag(null); setOver(null); }}
-                        onDragOver={(e) => { if (drag && drag !== c.id) { e.preventDefault(); e.stopPropagation(); setOver(l.id); } }} onDrop={(e) => { e.stopPropagation(); drop(l.id, i); }}>
+                      <li key={c.id} className={"lb-card" + (drag === c.id ? " drag-source" : "")} draggable onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; setDragH(e.currentTarget.getBoundingClientRect().height); setTimeout(() => setDrag(c.id), 0); }} onDragEnd={() => { setDrag(null); setPreview(null); }}
+                        onDragOver={(e) => { if (!drag || drag === c.id) return; e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); const idx = visible.findIndex((x) => x.id === c.id) + (e.clientY > r.top + r.height / 2 ? 1 : 0); if (!preview || preview.listId !== l.id || preview.index !== idx) setPreview({ listId: l.id, index: idx }); }} onDrop={(e) => { e.stopPropagation(); commitCard(); }}>
                         <button type="button" className="lb-card-x" aria-label={`Delete ${c.name}`} title="Delete this lead" onClick={() => { setSure(c); sureDlg.current?.showModal(); }}>×</button>
                         {c.tags.length ? <span className={"lb-tags" + (compact ? " compact" : "")}>{c.tags.map((id) => { const t = tagById.get(id); return t ? <button type="button" key={id} className={"lb-tag flip" + (compact ? " compact" : "")} style={{ background: t.color, color: ink(t.color) }} title={compact ? `${t.name} (tap to show names)` : "Tap to shrink the tags"} aria-label={compact ? t.name : `${t.name}. Tap to shrink the tags`} onClick={() => setCompact(!compact)}>{compact ? "" : t.name}</button> : null; })}</span> : null}
                         <button type="button" className="lb-card-name" onClick={() => openCard(l.id, c)}>{c.name}</button>
@@ -147,7 +168,11 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
                 </ul>
                 <button type="button" className="lb-add" onClick={() => openCard(l.id)}>+ Add a lead</button>
               </section>
-            ))}
+                );
+              }
+              if (listPreview !== null && listPreview >= vi) out.push(listGap("gap-end"));
+              return out;
+            })()}
             <div className="lb-list lb-new"><button type="button" className="lb-add" onClick={() => { const n = ask("Name your new list"); if (n) run(() => addList(board.id, n)); }}>+ Add a list</button></div>
           </div>
         </>
