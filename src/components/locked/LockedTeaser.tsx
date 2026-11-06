@@ -26,8 +26,9 @@ export function LockedTeaser({ title, lede, kind, preview, ownHeading = false }:
   const [open, setOpen] = useState(true);
   return (
     <div className="lk">
-      {ownHeading ? <h1 className="sr-only">{title}</h1> : <><h1 className="page-heading">{title}</h1><p className="page-lede">{lede}</p></>}
-      <div className={"lk-ghost" + (preview ? " lk-live" : "")} aria-hidden="true" inert>{preview ? <PreviewBoundary fallback={<Ghost kind={kind} />}>{preview}</PreviewBoundary> : <Ghost kind={kind} />}</div>
+      <h1 className="sr-only">{title}</h1>
+      <div className={"lk-ghost" + (preview ? " lk-live" : "")} aria-hidden="true" inert>{ownHeading ? null : <><p className="page-heading" role="presentation">{title}</p><p className="page-lede">{lede}</p></>}
+        {preview ? <PreviewBoundary fallback={<Ghost kind={kind} />}>{preview}</PreviewBoundary> : <Ghost kind={kind} />}</div>
       <div className="lk-cover" onClick={() => setOpen(true)} aria-hidden="true" />
       {open ? (
         <div className="lk-overlay" role="dialog" aria-modal="true" aria-labelledby="lk-title">

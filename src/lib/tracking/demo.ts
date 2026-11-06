@@ -20,7 +20,16 @@ export const DEMO_BOARDS: Board[] = [
   ] },
   { id: "d2", name: "Leads in the FLC Portal", kind: "portal", lists: [] },
 ];
-export const DEMO_TEAM: TeamMember[] = [
-  { id: "t1", name: "Sample Teammate", email: null, rank: "6A", status: "active", lastCheckIn: null, lastNote: null, started: false, doneLessons: 0, totalLessons: 0, callsMode: null, callsUntil: null, checks: [] },
-  { id: "t2", name: "Another Teammate", email: null, rank: "1A", status: "not_in_portal", lastCheckIn: null, lastNote: null, started: false, doneLessons: 0, totalLessons: 0, callsMode: null, callsUntil: null, checks: [] },
-];
+const ago = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
+const checks = (done: number) => (["Sent a welcome message", "Added to the team chat", "Made their graphic", "Started the Business Launch course", "Halfway through the course", "Finished the course", "Booked their first call"] as const).map((label, i) => ({ id: `c${i}`, label, kind: (["manual", "team_chat", "graphic", "course_started", "course_half", "course_done", "manual"] as const)[i], done: i < done }));
+type T = [name: string, email: string | null, rank: string, status: TeamMember["status"], checkIn: number | null, note: string | null, lessons: number, done: number];
+const member = ([name, email, rank, status, checkIn, note, lessons, done]: T, i: number): TeamMember => ({ id: `t${i}`, name, email, rank, status, lastCheckIn: checkIn === null ? null : ago(checkIn), lastNote: note, started: lessons > 0, doneLessons: lessons, totalLessons: 12, callsMode: null, callsUntil: null, checks: checks(done) });
+export const DEMO_TEAM: TeamMember[] = ([
+  ["Maya Chen", "maya@example.com", "4A", "active", 2, "Doing great, hosting her first group call this week.", 12, 7],
+  ["Jordan Ellis", "jordan@example.com", "3A", "active", 5, "Asked about the quote tool. Sent her a walkthrough.", 9, 5],
+  ["Priya Raman", "priya@example.com", "2A", "active", 9, "Halfway through the course, busy with work.", 6, 4],
+  ["Chris Dalton", "chris@example.com", "1A", "registered", 3, "Signed up Monday. Booked a call for Friday.", 2, 2],
+  ["Alex Rivera", "alex@example.com", "1A", "invited", null, null, 0, 0],
+  ["Sam Wilson", null, "1A", "not_in_portal", 14, "Prefers texting. Will join the portal after the holidays.", 0, 1],
+  ["Taylor Kim", "taylor@example.com", "2A", "inactive", 30, "Went quiet. Check in next week.", 3, 3],
+] as T[]).map(member);
