@@ -55,7 +55,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
   /* selection (Update Documents only): click, ctrl/cmd-click, tick boxes, or drag a box around items */
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  const [bulk, setBulk] = useState<"move" | "copy" | "delete" | null>(null);
+  const [bulk, setBulk] = useState<"move" | "copy" | "delete" | "access" | null>(null);
   const area = useRef<HTMLDivElement>(null);
   const bulkDlg = useRef<HTMLDialogElement>(null);
   const lastPointer = useRef("mouse");
@@ -292,6 +292,7 @@ export function DocBrowser({ folderId, trail, folders, files, thumbUrls, allFold
           <strong>{sel.size} selected</strong>
           <button className="btn small" type="button" onClick={() => { setBulk("move"); bulkDlg.current?.showModal(); }}>Move</button>
           <button className="btn small" type="button" onClick={() => { setBulk("copy"); bulkDlg.current?.showModal(); }}>Copy</button>
+          <button className="btn small" type="button" onClick={() => { setBulk("access"); bulkDlg.current?.showModal(); }}>Who can see</button>
           <button className="btn small danger-btn" type="button" onClick={() => { setBulk("delete"); bulkDlg.current?.showModal(); }}>Delete</button>
           <button className="linkbtn" type="button" onClick={() => setSel(new Set())}>Clear</button>
         </div>

@@ -78,6 +78,16 @@ export async function setFileAccess(id: string, leads: boolean, downline: boolea
   return { ok: true };
 }
 
+/** Who else can see one document (paying affiliates always see everything). Used when many are changed at once; downloads are left as they were. */
+export async function setFilePeople(id: string, leads: boolean, downline: boolean): Promise<Result> {
+  if (!UUID.test(id)) return { ok: false, error: "Something went wrong." };
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("doc_files").update({ for_leads: !!leads, for_downline: !!downline }).eq("id", id);
+  if (error) return { ok: false, error: "We could not save that." };
+  refresh();
+  return { ok: true };
+}
+
 export async function deleteItem(kind: "folder" | "file", id: string): Promise<Result> {
   if (!UUID.test(id)) return { ok: false, error: "Something went wrong." };
   const { supabase } = await requireAdmin();
