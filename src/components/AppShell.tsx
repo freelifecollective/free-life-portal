@@ -93,7 +93,7 @@ function ordered(items: NavItem[], downline = false): NavItem[] {
   /* a section is its heading followed by its tabs A to Z (a section with no tabs for this person is left out) */
   const section = (label: string, admin: boolean): NavItem[] => {
     const head = items.find((n) => n.heading && n.label === label && !!n.admin === admin);
-    const kids = items.filter((n) => !n.heading && n.group === label && !!n.admin === admin).sort(az);
+    const kids = items.filter((n) => !n.heading && n.group === label && !!n.admin === admin && !topLabels.includes(n.label)).sort(az);
     return head && kids.length ? [head, ...kids] : [];
   };
   const blocks = (admin: boolean, skip: string[]) => {
@@ -139,12 +139,14 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
       </header>
       <div className="app-body">
         <NavPanel>
-          <NavLinks items={ordered(NAV.filter((n) => p.role === "downline" ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer)), p.role === "downline").map((n) => {
+          <NavLinks items={(() => {
             const downline = p.role === "downline";
-            /* leads see Financing Options, Calendar and Calls as single tabs in the A to Z list; the downline sees Calendar, Calls and the Water Share Map on their own too */
-            const alone = (p.role === "lead" && ["Financing Options", "Calendar", "Calls"].includes(n.label)) || (downline && ["Calendar", "Calls", "Water Share Map"].includes(n.label));
-            return { label: n.label, href: n.href, heading: n.heading, group: alone ? undefined : n.group, caption: n.caption, locked: downline && !n.heading && !n.caption && !n.downline && !canSee(p.role, n.min), badge: n.href ? badges[n.href] : undefined, live: liveNow && n.href === "/calls" };
-          })} />
+            /* leads see Financing Options, Calendar and Calls as single tabs in the A to Z list; the downline sees Calendar, Calls and the Water Share Map on their own too. This happens before the sections are built, so no empty "FLC Calls" section is left behind. */
+            const single = (n: NavItem) => (p.role === "lead" && ["Financing Options", "Calendar", "Calls"].includes(n.label)) || (downline && ["Calendar", "Calls", "Water Share Map"].includes(n.label));
+            const mine = NAV.filter((n) => downline ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))
+              .map((n) => (single(n) ? { ...n, group: undefined } : n));
+            return ordered(mine, downline).map((n) => ({ label: n.label, href: n.href, heading: n.heading, group: n.group, caption: n.caption, locked: downline && !n.heading && !n.caption && !n.downline && !canSee(p.role, n.min), badge: n.href ? badges[n.href] : undefined, live: liveNow && n.href === "/calls" }));
+          })()} />
         </NavPanel>
         <main className="main" id="main">{session.mode === "supabase" && isAffiliate(p.role) ? <BirthdayBanner /> : null}{children}</main>
       </div>
