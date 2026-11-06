@@ -22,14 +22,14 @@ export async function createCourse(title: string, cover = ""): Promise<R> {
   return { ok: true, id: (data as { id: string }).id };
 }
 
-export async function saveCourse(c: { id: string; title: string; description: string; audience: string; published: boolean; cover_url?: string }): Promise<R> {
+export async function saveCourse(c: { id: string; title: string; description: string; forMembers: boolean; forDownline: boolean; forLeads: boolean; published: boolean; cover_url?: string }): Promise<R> {
   if (!UUID.test(c.id)) return { ok: false, error: "Something went wrong." };
   const title = c.title.trim();
   if (!title || title.length > 120) return { ok: false, error: "Give the course a title of up to 120 characters." };
   if (c.description.length > 1000) return { ok: false, error: "Keep the description under 1000 characters." };
-  if (c.audience !== "everyone" && c.audience !== "affiliates") return { ok: false, error: "Choose who can see the course." };
+  if (!c.forMembers && !c.forDownline && !c.forLeads) return { ok: false, error: "Tick at least one group who can see the course." };
   const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("classroom_courses").update({ title, description: c.description.trim() || null, audience: c.audience, published: !!c.published, cover_url: coverOf(c.cover_url ?? "") }).eq("id", c.id);
+  const { error } = await supabase.from("classroom_courses").update({ title, description: c.description.trim() || null, for_members: !!c.forMembers, for_downline: !!c.forDownline, for_leads: !!c.forLeads, published: !!c.published, cover_url: coverOf(c.cover_url ?? "") }).eq("id", c.id);
   if (error) return { ok: false, error: "We could not save that. Please try again." };
   refresh();
   return { ok: true };
