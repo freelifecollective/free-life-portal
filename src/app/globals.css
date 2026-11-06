@@ -2441,3 +2441,13 @@ button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding
 .lb-list.dragging { opacity: .5; }
 .lb-list.list-over { outline: 2px dashed var(--accent-deep); }
 .lb-list-h { cursor: grab; }
+/* live drag: the one being dragged leaves its place, the others slide apart, and a dashed gap shows where it will land */
+.lb-card.drag-source, .lb-list.drag-source { display: none; }
+.lb-gap { border: 2px dashed var(--accent-deep); background: rgba(171,144,128,.22); border-radius: 10px; list-style: none; }
+.lb-list.lb-list-gap { border: 2px dashed var(--accent-deep); background: rgba(171,144,128,.18); min-height: 140px; }
+/* the two dates on a lead card: added, then follow-up due (green: 2+ days away, yellow: tomorrow, red: due) */
+.lb-date { border-radius: 6px; padding: 3px 9px; font-weight: 700; font-size: 12.5px; justify-self: start; }
+.lb-date.ok { background: #DDF0E3; color: #1F6B3E; }
+.lb-date.soon { background: #FBEFC2; color: #7A5B00; }
+.lb-date.late { background: #F6D9D4; color: #9A2A1C; }
+.lb-date.none { background: var(--tint); color: var(--muted); }

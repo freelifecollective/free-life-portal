@@ -44,6 +44,7 @@ begin
   perform tests.logout();
   -- an Instagram handle puts the Instagram tag on by itself
   insert into public.lead_cards (list_id, user_id, name, email, instagram) values (l_new, mia, 'Lena Lead', 'lena@example.com', '@lena') returning id into card;
+  perform tests.eq('a new card is due three days from today', (select follow_up_on from public.lead_cards where id = card), current_date + 3);
   perform tests.eq('Instagram Lead tag on automatically', (select count(*) from public.lead_card_tags ct join public.lead_tags t on t.id = ct.tag_id where ct.card_id = card and t.system_key = 'instagram'), 1::bigint);
   -- the affiliate messages the lead
   insert into public.direct_messages (sender_id, recipient_id, body) values (mia, lena, 'Hi Lena!');
@@ -55,6 +56,7 @@ begin
   perform tests.eq('the hourly check moves it', public.queue_lead_followups(), 1);
   select x.name into ln from public.lead_cards c join public.lead_lists x on x.id = c.list_id where c.id = card;
   perform tests.eq('to Follow Up Due', ln, 'Follow Up Due');
+  perform tests.eq('the date stays so it shows as due', (select follow_up_on from public.lead_cards where id = card), current_date - 1);
   perform tests.eq('and nudges the affiliate', (select count(*) from public.notifications where user_id = mia and kind = 'lead_followup'), 1::bigint);
   -- a card moved by hand to Circle Back in 60 Days starts a countdown
   update public.lead_cards set list_id = (select id from public.lead_lists where name = 'Circle Back in 60 Days') where id = card;
