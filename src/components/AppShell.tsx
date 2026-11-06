@@ -24,7 +24,6 @@ type NavItem = { label: string; href?: string; min: Role; admin?: boolean; headi
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
   { label: "Home", href: "/", min: "lead", downline: true },
-  { label: "Choose Your Plan", href: "/plans", min: "downline", downline: true, downlineOnly: true },
   { label: "Calendar", href: "/calendar", min: "lead", downline: true, group: "FLC Calls" },
   { label: "Outsourcing", href: "/outsourcing", min: "member", group: "DMO" },
   { label: "Financing Options", href: "/financing", min: "lead", group: "Placing Sales" },
@@ -87,9 +86,9 @@ const NAV: NavItem[] = [
 /** Home, Chats and the Onboarding section stay at the top. Everything else (sections and single tabs together) is A to Z, and the tabs inside each section are A to Z too. The admin section stays at the bottom, also A to Z. */
 function ordered(items: NavItem[], downline = false, lead = false): NavItem[] {
   const az = (a: NavItem, b: NavItem) => a.label.localeCompare(b.label, "en", { sensitivity: "base" });
-  /* Lacey's downline: Choose Your Plan, Calendar, Calls and the Water Share Map sit right under Chats */
+  /* Lacey's downline: Calendar, Calls and the Water Share Map sit right under Chats (Choose Your Plan is in the profile picture menu) */
   /* a lead sees everything A to Z with only Home at the top */
-  const topLabels = downline ? ["Home", "Chats", "Choose Your Plan", "Calendar", "Calls", "Water Share Map"] : lead ? ["Home"] : ["Home", "Chats"];
+  const topLabels = downline ? ["Home", "Chats", "Calendar", "Calls", "Water Share Map"] : lead ? ["Home"] : ["Home", "Chats"];
   const top = topLabels.flatMap((l) => items.filter((n) => n.label === l));
   /* a section is its heading followed by its tabs A to Z (a section with no tabs for this person is left out) */
   const section = (label: string, admin: boolean): NavItem[] => {
@@ -134,7 +133,7 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
             </Link>
           )}
           {session.mode === "supabase" ? <NotificationBell count={unread} userId={session.user.id} /> : null}
-          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={isAffiliate(p.role)} showCloser={!!p.call_closer} />
+          <UserMenu url={p.avatar_url} initials={initials} preview={session.mode === "preview"} label={`${p.first_name ?? "Your"} profile picture`} showSubscription={isAffiliate(p.role)} showCloser={!!p.call_closer} showPlans={p.role === "downline"} />
         </div>
         </div>
       </header>
