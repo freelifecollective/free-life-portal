@@ -13,12 +13,12 @@ export async function loadBoards(supabase: SupabaseClient): Promise<{ boards: Bo
     supabase.from("lead_card_tags").select("card_id, tag_id").limit(20000),
     supabase.rpc("lead_card_portal_users"),
   ]);
-  const portal = new Map(((pu ?? []) as { card_id: string; username: string }[]).map((r) => [r.card_id, r.username]));
+  const portal = new Map(((pu ?? []) as { card_id: string; username: string; profile_id: string }[]).map((r) => [r.card_id, r]));
   const tagsOf = new Map<string, string[]>();
   for (const r of (ct ?? []) as { card_id: string; tag_id: string }[]) tagsOf.set(r.card_id, [...(tagsOf.get(r.card_id) ?? []), r.tag_id]);
   const cards = new Map<string, Card[]>();
   for (const c of (cs ?? []) as { id: string; list_id: string; name: string; email: string | null; phone: string | null; note: string | null; instagram: string | null; facebook: string | null; follow_up_on: string | null; follow_up_days: number; created_at: string }[]) {
-    cards.set(c.list_id, [...(cards.get(c.list_id) ?? []), { id: c.id, name: c.name, email: c.email, phone: c.phone, note: c.note, instagram: c.instagram, facebook: c.facebook, tags: tagsOf.get(c.id) ?? [], followUp: c.follow_up_on, followDays: c.follow_up_days, createdAt: c.created_at, portalUser: portal.get(c.id) ?? null }]);
+    cards.set(c.list_id, [...(cards.get(c.list_id) ?? []), { id: c.id, name: c.name, email: c.email, phone: c.phone, note: c.note, instagram: c.instagram, facebook: c.facebook, tags: tagsOf.get(c.id) ?? [], followUp: c.follow_up_on, followDays: c.follow_up_days, createdAt: c.created_at, portalUser: portal.get(c.id)?.username ?? null, portalId: portal.get(c.id)?.profile_id ?? null }]);
   }
   const lists = new Map<string, ListT[]>();
   for (const l of (ls ?? []) as { id: string; board_id: string; name: string; kind: string | null }[]) lists.set(l.board_id, [...(lists.get(l.board_id) ?? []), { id: l.id, name: l.name, kind: l.kind, cards: cards.get(l.id) ?? [] }]);
