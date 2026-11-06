@@ -29,12 +29,21 @@ const setCompact = (on: boolean) => { try { localStorage.setItem(TAGS_KEY, on ? 
 /** True when a click on a pop-up's backdrop landed outside the pop-up itself (clicks on its own padding do not count). */
 const clickedOutside = (e: React.MouseEvent<HTMLElement>) => { const r = e.currentTarget.getBoundingClientRect(); return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom; };
 
+/* the board you had open is remembered on this device, so a refresh keeps you on it */
+const BOARD_KEY = "flc_lead_board";
+const boardListeners = new Set<() => void>();
+const subscribeBoard = (cb: () => void) => { boardListeners.add(cb); window.addEventListener("storage", cb); return () => { boardListeners.delete(cb); window.removeEventListener("storage", cb); }; };
+const readBoard = () => { try { return localStorage.getItem(BOARD_KEY) ?? ""; } catch { return ""; } };
+const rememberBoard = (id: string) => { try { localStorage.setItem(BOARD_KEY, id); } catch { /* still works this visit */ } boardListeners.forEach((l) => l()); };
+
 /** An internal Trello: boards with lists with lead cards and colour tags. Drag a card to move it. Several things happen by themselves (tags, follow-ups). */
 export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialTags: Tag[] }) {
   const router = useRouter();
   const [boards, setBoards] = useState(initial);
   const [tags, setTags] = useState(initialTags);
-  const [boardId, setBoardId] = useState(initial[0]?.id ?? "");
+  const savedBoard = useSyncExternalStore(subscribeBoard, readBoard, () => "");
+  const boardId = savedBoard;
+  const setBoardId = rememberBoard;
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const [drag, setDrag] = useState<string | null>(null);
