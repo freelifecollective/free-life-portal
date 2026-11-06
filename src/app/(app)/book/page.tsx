@@ -17,7 +17,7 @@ export default async function BookPage() {
   const isLead = session.profile.role === "lead";
   const [{ data: infoRows }, { data: slots }, { data: mine }] = await Promise.all([
     supabase.rpc("booking_info"),
-    supabase.rpc("open_slots", { p_days: 14 }),
+    supabase.rpc("open_slots", { p_days: 60 }),
     supabase.from("booked_calls").select("id, starts_at").eq("lead_id", session.user.id).is("completed_at", null).gt("starts_at", new Date(nowMs() - 3 * 3600_000).toISOString()).order("starts_at"),
   ]);
   const info = ((infoRows ?? []) as Info[])[0];

@@ -15,16 +15,26 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }:
   const [pick, setPick] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
-  const groups = useMemo(() => {
-    const m = new Map<string, { label: string; times: string[] }>();
-    for (const iso of slots) {
-      const d = new Date(iso);
-      const k = dayKey(d);
-      if (!m.has(k)) m.set(k, { label: d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }), times: [] });
-      m.get(k)!.times.push(iso);
-    }
-    return [...m.values()];
+  /* free times by day (in the time zone of this device) */
+  const byDay = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const iso of slots) { const k = dayKey(new Date(iso)); m.set(k, [...(m.get(k) ?? []), iso]); }
+    return m;
   }, [slots]);
+  const firstDay = slots.length ? new Date(slots[0]) : new Date(nowIso);
+  const [month, setMonth] = useState(() => new Date(firstDay.getFullYear(), firstDay.getMonth(), 1));
+  const [day, setDay] = useState<string | null>(slots.length ? dayKey(firstDay) : null);
+  const today = new Date(nowIso);
+  const lastSlot = slots.length ? new Date(slots[slots.length - 1]) : today;
+  const canBack = month.getFullYear() * 12 + month.getMonth() > today.getFullYear() * 12 + today.getMonth();
+  const canNext = month.getFullYear() * 12 + month.getMonth() < lastSlot.getFullYear() * 12 + lastSlot.getMonth();
+  const cells = useMemo(() => {
+    const first = new Date(month.getFullYear(), month.getMonth(), 1);
+    const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    return [...Array.from({ length: first.getDay() }, () => null), ...Array.from({ length: count }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))];
+  }, [month]);
+  const dayTimes = day ? byDay.get(day) ?? [] : [];
+  const dayLabel = dayTimes.length ? new Date(dayTimes[0]).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "";
   const time = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const full = (iso: string) => new Date(iso).toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
   const confirm = () => start(async () => {
@@ -36,7 +46,7 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }:
   });
 
   return (
-    <div className="stack" style={{ maxWidth: 720 }}>
+    <div className="stack" style={{ maxWidth: 860 }}>
       {mine.length ? (
         <section className="card-s" aria-label="Your booked call">
           <h2 className="qh" style={{ marginTop: 0 }}>Your booked call</h2>
@@ -54,14 +64,33 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }:
       <section className="card-s" aria-label="Pick a time">
         <h2 className="qh" style={{ marginTop: 0 }}>{mine.length ? "Need a different time?" : "Pick a time"}</h2>
         <p className="when" style={{ marginTop: 0 }}>{`Calls are ${minutes} minutes with ${who}${withCloser ? ", who is taking calls for your coach" : ""}. Times are shown in your own time zone.`}</p>
-        {groups.length === 0 ? <p style={{ margin: 0 }}>There are no free times in the next two weeks. Check back soon.</p> : (
-          <div className="bk-days">
-            {groups.map((g) => (
-              <div key={g.label} className="bk-day">
-                <h3 translate="no">{g.label}</h3>
-                <div className="bk-slots">{g.times.map((iso) => <button key={iso} type="button" className="bk-slot" aria-pressed={pick === iso} onClick={() => setPick(iso)} translate="no">{time(iso)}</button>)}</div>
+        {slots.length === 0 ? <p style={{ margin: 0 }}>There are no free times coming up. Check back soon.</p> : (
+          <div className="bk-cal">
+            <div className="bk-month">
+              <div className="bk-month-h">
+                <button type="button" className="icon-btn" aria-label="Previous month" disabled={!canBack} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>‹</button>
+                <h3 translate="no">{month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</h3>
+                <button type="button" className="icon-btn" aria-label="Next month" disabled={!canNext} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>›</button>
               </div>
-            ))}
+              <div className="bk-grid" role="grid" aria-label="Choose a day">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((w) => <span key={w} className="bk-dow">{w}</span>)}
+                {cells.map((d, i) => {
+                  if (!d) return <span key={`e${i}`} />;
+                  const k = dayKey(d);
+                  const free = byDay.has(k);
+                  return <button key={k} type="button" className={"bk-cell" + (free ? " free" : "") + (day === k ? " on" : "")} disabled={!free} aria-pressed={day === k} aria-label={d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) + (free ? "" : ", no times")} onClick={() => { setDay(k); setPick(null); }} translate="no">{d.getDate()}</button>;
+                })}
+              </div>
+              <p className="when" style={{ margin: "10px 0 0" }}>Days in colour have free times.</p>
+            </div>
+            <div className="bk-times" aria-live="polite">
+              {dayTimes.length ? (
+                <>
+                  <h3 translate="no">{dayLabel}</h3>
+                  <div className="bk-col">{dayTimes.map((iso) => <button key={iso} type="button" className="bk-slot" aria-pressed={pick === iso} onClick={() => setPick(iso)} translate="no">{time(iso)}</button>)}</div>
+                </>
+              ) : <p className="when" style={{ margin: 0 }}>Choose a day to see the free times.</p>}
+            </div>
           </div>
         )}
         {pick ? (
