@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addBoard, addCard, addList, addTag, affiliateCard, deleteBoard, deleteCard, deleteList, deleteTag, moveCard, moveList, registerCard, renameBoard, renameList, restoreBoards, updateCard, type CardInput } from "@/app/(app)/tracking/actions";
@@ -40,6 +40,16 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
   const [preview, setPreview] = useState<{ listId: string; index: number } | null>(null);
   const [listPreview, setListPreview] = useState<number | null>(null);
   const [dragH, setDragH] = useState(70);
+  /* right-click (or press and hold) on the board name: Rename and Delete board */
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const holdTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!menu) return;
+    const away = (e: Event) => { if (!(e.target as HTMLElement).closest?.(".ctx-menu")) setMenu(null); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(null); };
+    document.addEventListener("pointerdown", away); document.addEventListener("keydown", esc); window.addEventListener("scroll", () => setMenu(null), { once: true });
+    return () => { document.removeEventListener("pointerdown", away); document.removeEventListener("keydown", esc); };
+  }, [menu]);
   const [editing, setEditing] = useState<{ id: string | null; listId: string } | null>(null);
   const [vals, setVals] = useState<CardInput>(blank);
   const [tagName, setTagName] = useState("");
@@ -117,10 +127,18 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
       {!board ? <p className="page-lede">You have no boards. Make one with “+ New board”.</p> : (
         <>
           <div className="lb-head">
-            <h2 className="qh" style={{ margin: 0 }}>{board.name}</h2>
-            <button type="button" className="linkbtn" onClick={() => { const n = ask("Rename this board", board.name); if (n) run(() => renameBoard(board.id, n)); }}>Rename</button>
-            <button type="button" className="linkbtn" onClick={() => { if (window.confirm(`Delete the board “${board.name}” and every card on it? (You can undo this.)`)) run(() => deleteBoard(board.id)); }}>Delete board</button>
+            <h2 className="qh lb-title" style={{ margin: 0 }} tabIndex={0} title="Right-click for options"
+              onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY }); }}
+              onKeyDown={(e) => { if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) { e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); setMenu({ x: r.left, y: r.bottom }); } }}
+              onTouchStart={(e) => { const t = e.touches[0]; holdTimer.current = window.setTimeout(() => setMenu({ x: t.clientX, y: t.clientY }), 550); }}
+              onTouchEnd={() => { if (holdTimer.current) window.clearTimeout(holdTimer.current); }} onTouchMove={() => { if (holdTimer.current) window.clearTimeout(holdTimer.current); }}>{board.name}</h2>
           </div>
+          {menu ? (
+            <div className="ctx-menu" role="menu" style={{ left: Math.min(menu.x, window.innerWidth - 190), top: menu.y }}>
+              <button type="button" role="menuitem" onClick={() => { setMenu(null); const n = ask("Rename this board", board.name); if (n) run(() => renameBoard(board.id, n)); }}>Rename</button>
+              <button type="button" role="menuitem" className="danger" onClick={() => { setMenu(null); if (window.confirm(`Delete the board “${board.name}” and every card on it? (You can undo this.)`)) run(() => deleteBoard(board.id)); }}>Delete board</button>
+            </div>
+          ) : null}
           <div className="lb-cols" onDragOver={(e) => { if (dragList) { e.preventDefault(); const n = board.lists.filter((x) => x.id !== dragList).length; if (listPreview !== n) setListPreview(n); } }} onDrop={() => { if (dragList) commitList(); }}>
             {(() => {
               const out: React.ReactNode[] = [];
