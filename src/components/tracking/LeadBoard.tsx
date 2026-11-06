@@ -162,8 +162,8 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
                         {c.followUp ? <span className={"lb-date " + tone(c.followUp)} title="When they were added, and when your follow-up is due">🕓 {c.createdAt ? `${dayText(c.createdAt.slice(0, 10))} - ` : ""}{dayText(c.followUp)}</span> : c.createdAt ? <span className="lb-date none" title="When they were added">🕓 {dayText(c.createdAt.slice(0, 10))}</span> : null}
                         {c.note ? <span className="lb-note" translate="no">{c.note.length > 90 ? c.note.slice(0, 88) + "…" : c.note}</span> : null}
                         <span className="lb-acts">
-                          {c.portalUser ? <Link className="lb-send" href={`/messages/${c.portalUser}`}>Send Message</Link> : null}
-                          <button type="button" className="linkbtn" disabled={pending} onClick={() => run(() => registerCard(c.id))}>Registered for the Portal</button>
+                          {c.portalUser ? <Link className="linkbtn lb-link" href={`/messages/${c.portalUser}`}>Send Message</Link> : null}
+                          {board.kind !== "portal" ? <button type="button" className="linkbtn" disabled={pending} onClick={() => run(() => registerCard(c.id))}>Registered for the Portal</button> : null}
                           <button type="button" className="linkbtn" disabled={pending} onClick={() => affiliate(c)}>Affiliated</button>
                         </span>
                       </li>
