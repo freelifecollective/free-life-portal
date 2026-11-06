@@ -2323,8 +2323,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .lk { position: relative; height: calc(100dvh - 190px); min-height: 320px; overflow: hidden; overscroll-behavior: contain; }
 .lk-cover { position: absolute; inset: 0; z-index: 2; cursor: pointer; }
 .lk-ghost { position: relative; filter: grayscale(1) blur(1.5px); opacity: .22; pointer-events: none; user-select: none; margin-top: 8px; }
-.lk-ghost.lk-live { filter: grayscale(.85); opacity: .78; }
-.lk-ghost.lk-live::after { content: ""; position: absolute; inset: 0; background: rgba(246,245,241,.1); }
+.lk-ghost.lk-live { filter: grayscale(.85); opacity: .7; }
+.lk-ghost.lk-live::after { content: ""; position: absolute; inset: 0; background: rgba(246,245,241,.24); }
 .lk-bar { display: block; background: #8b847e; border-radius: 6px; max-width: 100%; }
 .lk-img { display: block; background: #b7b0a9; border-radius: 10px; width: 100%; aspect-ratio: 4 / 3; }
 .lk-img.lk-tall { aspect-ratio: 3 / 4; max-width: 280px; } .lk-img.lk-wide { aspect-ratio: 16 / 9; }
@@ -2468,3 +2468,6 @@ button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding
 .lb-list { display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - 210px); min-height: 0; }
 .lb-list > .lb-cards { display: grid; flex: 1 1 auto; min-height: 8px; overflow-y: auto; overflow-x: hidden; margin: 0 -4px; padding: 0 4px; align-content: start; scrollbar-width: thin; }
 .lb-list > .lb-list-h, .lb-list > .lb-add { flex: none; }
+
+/* locked call closers: pictures and the first line of the bio only; everything else is stand-in text, blurred */
+.cc-blur { filter: blur(6px); user-select: none; pointer-events: none; }
