@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addBoard, addCard, addList, addTag, affiliateCard, deleteBoard, deleteCard, deleteList, deleteTag, moveCard, moveList, registerCard, renameBoard, renameList, restoreBoards, updateCard, type CardInput } from "@/app/(app)/tracking/actions";
+import { addBoard, addCard, addList, addTag, affiliateCard, getBoards, deleteBoard, deleteCard, deleteList, deleteTag, moveCard, moveList, registerCard, renameBoard, renameList, restoreBoards, updateCard, type CardInput } from "@/app/(app)/tracking/actions";
+import { openDockChat } from "@/components/messages/MessageDock";
 import { UndoRedo } from "@/components/UndoRedo";
 import type { Board, Card, Tag } from "@/lib/tracking/types";
 
@@ -63,6 +63,15 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
   const tagById = new Map(tags.map((t) => [t.id, t]));
   const compact = useSyncExternalStore(subscribeTags, readCompact, () => false);
 
+  /* the board checks for changes now and then (a lead messaged, a follow-up came due) while you are not in the middle of something */
+  const busyRef = useRef(false);
+  useEffect(() => { busyRef.current = pending || !!drag || !!dragList || !!editing || !!sure; });
+  useEffect(() => {
+    const refresh = () => { if (document.hidden || busyRef.current) return; void getBoards().then((r) => { if (r.ok && !busyRef.current) { setBoards(r.boards); setTags(r.tags); } }); };
+    const t = window.setInterval(refresh, 15000);
+    window.addEventListener("focus", refresh);
+    return () => { window.clearInterval(t); window.removeEventListener("focus", refresh); };
+  }, []);
   const apply = (r: Res, keepFocus = true) => {
     if (r.ok) { setBoards(r.boards); setTags(r.tags); setError(""); if (r.focus && r.boards.some((b) => b.id === r.focus)) setBoardId(r.focus); else if (keepFocus && !r.boards.some((b) => b.id === boardId)) setBoardId(r.boards[0]?.id ?? ""); }
     else setError(r.error);
@@ -180,7 +189,7 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
                         {c.followUp ? <span className={"lb-date " + tone(c.followUp)} title="When they were added, and when your follow-up is due">🕓 {c.createdAt ? `${dayText(c.createdAt.slice(0, 10))} - ` : ""}{dayText(c.followUp)}</span> : c.createdAt ? <span className="lb-date none" title="When they were added">🕓 {dayText(c.createdAt.slice(0, 10))}</span> : null}
                         {c.note ? <span className="lb-note" translate="no">{c.note.length > 90 ? c.note.slice(0, 88) + "…" : c.note}</span> : null}
                         <span className="lb-acts">
-                          {c.portalUser ? <Link className="linkbtn lb-link" href={`/messages/${c.portalUser}`}>Send Message</Link> : null}
+                          {c.portalId ? <button type="button" className="linkbtn lb-link" onClick={() => openDockChat(c.portalId!)}>Send Message</button> : null}
                           {board.kind !== "portal" ? <button type="button" className="linkbtn" disabled={pending} onClick={() => run(() => registerCard(c.id))}>Registered for the Portal</button> : null}
                           <button type="button" className="linkbtn" disabled={pending} onClick={() => affiliate(c)}>Affiliated</button>
                         </span>
