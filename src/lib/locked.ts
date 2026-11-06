@@ -24,5 +24,6 @@ export const LOCKED: Record<string, { title: string; lede: string; kind: GhostKi
   "/tracking/leads": { title: "Lead Tracking", lede: "Keep track of where each of your leads is, from first message to affiliate.", kind: "cards" },
   "/tracking/numbers": { title: "Know Your Numbers", lede: "The numbers behind your business.", kind: "table" },
   "/tracking/team": { title: "My Team", lede: "Everyone on your team, with check-in lists to help them get started.", kind: "list" },
+  "/support": { title: "Weekly Focus", lede: "What do you want to improve on or deepen your knowledge in?", kind: "list" },
   "/advertising/landing-page": { title: "Landing Page", lede: "The page your leads see when you send them your link.", kind: "video" },
 };
