@@ -141,8 +141,8 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
         <NavPanel>
           <NavLinks items={ordered(NAV.filter((n) => p.role === "downline" ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer)), p.role === "downline").map((n) => {
             const downline = p.role === "downline";
-            /* leads see Financing Options on its own, right under Book a Call; the downline sees Calendar, Calls and the Water Share Map on their own too */
-            const alone = (p.role === "lead" && n.label === "Financing Options") || (downline && ["Calendar", "Calls", "Water Share Map"].includes(n.label));
+            /* leads see Financing Options, Calendar and Calls as single tabs in the A to Z list; the downline sees Calendar, Calls and the Water Share Map on their own too */
+            const alone = (p.role === "lead" && ["Financing Options", "Calendar", "Calls"].includes(n.label)) || (downline && ["Calendar", "Calls", "Water Share Map"].includes(n.label));
             return { label: n.label, href: n.href, heading: n.heading, group: alone ? undefined : n.group, caption: n.caption, locked: downline && !n.heading && !n.caption && !n.downline && !canSee(p.role, n.min), badge: n.href ? badges[n.href] : undefined, live: liveNow && n.href === "/calls" };
           })} />
         </NavPanel>
