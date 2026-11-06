@@ -1,17 +1,20 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { copyFile, deleteItem, makeCopyFolder, moveItem, treeOf } from "@/app/(app)/documents/actions";
+import { copyFile, deleteItem, makeCopyFolder, moveItem, setFilePeople, setFolderAccess, treeOf } from "@/app/(app)/documents/actions";
 import type { DocFolder } from "@/lib/documents/types";
 
 export type Picked = { kind: "folder" | "file"; id: string; name: string };
 
 /** Move, copy or delete the selected documents and folders, one step at a time, with progress. */
 export function BulkDialog({ mode, items, folders, currentFolder, onClose, onDone }: {
-  mode: "move" | "copy" | "delete"; items: Picked[]; folders: DocFolder[]; currentFolder: string | null; onClose: () => void; onDone: () => void;
+  mode: "move" | "copy" | "delete" | "access"; items: Picked[]; folders: DocFolder[]; currentFolder: string | null; onClose: () => void; onDone: () => void;
 }) {
   const [to, setTo] = useState<string>("");
   const [busy, setBusy] = useState(false);
+  const [leads, setLeads] = useState(false);
+  const [downline, setDownline] = useState(false);
+  const [cascade, setCascade] = useState(true);
   const [lines, setLines] = useState<string[]>([]);
   const [problems, setProblems] = useState<string[]>([]);
   const stop = useRef(false);
@@ -34,6 +37,13 @@ export function BulkDialog({ mode, items, folders, currentFolder, onClose, onDon
         let n = 0;
         for (const i of items) { const r = await moveItem(i.kind, i.id, dest); if (r.ok) { n++; say(`Moved ${i.name}`); } else bad.push(`${i.name}: ${r.error}`); }
         say(`${n} moved.`);
+      } else if (mode === "access") {
+        let n = 0;
+        for (const i of items) {
+          const r = i.kind === "folder" ? await setFolderAccess(i.id, leads, downline, cascade) : await setFilePeople(i.id, leads, downline);
+          if (r.ok) { n++; say(`Updated ${i.name}`); } else bad.push(`${i.name}: ${r.error}`);
+        }
+        say(`${n} updated.`);
       } else if (mode === "delete") {
         let n = 0;
         for (const i of items) { const r = await deleteItem(i.kind, i.id); if (r.ok) { n++; say(`Deleted ${i.name}`); } else bad.push(`${i.name}: ${r.error}`); }
@@ -74,13 +84,20 @@ export function BulkDialog({ mode, items, folders, currentFolder, onClose, onDon
     if (!bad.length) onDone();
   }
 
-  const title = mode === "move" ? "Move to…" : mode === "copy" ? "Copy to…" : "Delete these?";
+  const title = mode === "move" ? "Move to…" : mode === "copy" ? "Copy to…" : mode === "access" ? "Who can see these?" : "Delete these?";
   return (
     <div>
       <h2 className="qh" style={{ marginTop: 0 }}>{title}</h2>
       <p className="when" style={{ margin: "0 0 12px" }}>{items.length} selected: {items.slice(0, 4).map((i) => i.name).join(", ")}{items.length > 4 ? ` and ${items.length - 4} more` : ""}</p>
       {mode === "delete" ? (
         <p>This also deletes everything inside any folders you selected, and it can&apos;t be undone from here.</p>
+      ) : mode === "access" ? (
+        <div className="field" style={{ gap: 8 }}>
+          <p className="when" style={{ margin: 0 }}>Paying affiliates always see everything. Choose who else can see all of the {items.length} you picked. Leave both unticked to keep them for affiliates only.</p>
+          <label className="check"><input type="checkbox" checked={leads} onChange={(e) => setLeads(e.target.checked)} disabled={busy} /> Leads</label>
+          <label className="check"><input type="checkbox" checked={downline} onChange={(e) => setDownline(e.target.checked)} disabled={busy} /> Lacey&apos;s downline</label>
+          {items.some((i) => i.kind === "folder") ? <label className="check"><input type="checkbox" checked={cascade} onChange={(e) => setCascade(e.target.checked)} disabled={busy} /> Also change everything inside the folders I picked</label> : null}
+        </div>
       ) : (
         <div className="field">
           <label htmlFor="bulk-to">{mode === "move" ? "Move" : "Copy"} into</label>
@@ -94,7 +111,7 @@ export function BulkDialog({ mode, items, folders, currentFolder, onClose, onDon
       {problems.length ? <ul className="err" role="alert" style={{ marginTop: 10, paddingLeft: 18 }}>{problems.slice(0, 6).map((p, i) => <li key={i}>{p}</li>)}</ul> : null}
       <div className="dlg-actions">
         <button className="btn" type="button" disabled={busy} onClick={onClose}>{problems.length ? "Close" : "Cancel"}</button>
-        <button className={"btn " + (mode === "delete" ? "" : "primary")} type="button" disabled={busy} onClick={run} style={mode === "delete" ? { borderColor: "#9b2c2c", color: "#9b2c2c" } : undefined}>{busy ? "Working…" : mode === "move" ? "Move here" : mode === "copy" ? "Copy here" : "Delete"}</button>
+        <button className={"btn " + (mode === "delete" ? "" : "primary")} type="button" disabled={busy} onClick={run} style={mode === "delete" ? { borderColor: "#9b2c2c", color: "#9b2c2c" } : undefined}>{busy ? "Working…" : mode === "move" ? "Move here" : mode === "copy" ? "Copy here" : mode === "access" ? "Save who can see" : "Delete"}</button>
       </div>
     </div>
   );
