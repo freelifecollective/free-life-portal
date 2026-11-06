@@ -7,9 +7,11 @@ export const instant = false;
 export const metadata = { title: "Chats" };
 
 export default async function ChatsIndex() {
-  const { supabase } = await requireMember();
+  const { session, supabase } = await requireMember();
   if (!supabase) return <><PageHeading>Chats</PageHeading><p className="page-lede">Chats need the database, which preview mode does not have.</p></>;
-  const first = (await listChatSections(supabase)).flatMap((s) => s.chats)[0];
+  const all = (await listChatSections(supabase)).flatMap((s) => s.chats);
+  /* Lacey's downline open on their own chat; everyone else on the first one */
+  const first = (session.profile.role === "downline" ? all.find((c) => c.slug === "main-discussion") : undefined) ?? all[0];
   if (first) redirect(`/chats/${first.slug}`);
   return <><PageHeading>Chats</PageHeading><p className="page-lede">No chats are available yet.</p></>;
 }

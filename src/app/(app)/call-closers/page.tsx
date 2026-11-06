@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { ApplyForm } from "@/components/closers/ApplyForm";
 import { CloserCard } from "@/components/closers/CloserCard";
-import { OpenHoursCard } from "@/components/booking/OpenHoursCard";
 import { PageHeading } from "@/components/PageHeading";
 import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
@@ -10,6 +9,7 @@ import { HireRequests, type Request } from "@/components/closers/HireRequests";
 import { authorsById } from "@/lib/chats/queries";
 import type { Application, CloserCardData } from "@/lib/closers/types";
 import { isAffiliate } from "@/lib/roles";
+import { previewStore } from "@/lib/locked/preview";
 
 export const instant = false;
 export const metadata = { title: "Call Closers for Hire" };
@@ -34,15 +34,14 @@ export default async function CallClosersPage() {
   const requests: Request[] = inc.map((r) => ({ ...r, name: people.get(r.member_id)?.name ?? "A member", avatar_url: people.get(r.member_id)?.avatar_url ?? null }));
   return (
     <>
-      <OpenHoursCard />
       <PageHeading lede="Hire an experienced closer to take your coaching calls for you for one or two calls or hire them indefinitely going forward.">Call Closers for Hire</PageHeading>
       <PlacedDocs placement="closers" />
       <div className="stack">
         <HireRequests requests={requests} />
         {closers.length === 0 ? <section className="card-s"><p style={{ margin: 0 }}>No call closers are listed yet.</p></section> : (
-          <div className="closer-grid">{closers.map((c) => <CloserCard key={c.id} c={c} me={session.user.id} hire={hire} />)}</div>
+          <div className="closer-grid">{closers.map((c) => <CloserCard key={c.id} c={c} me={session.user.id} hire={hire} teaser={!!previewStore.getStore()} />)}</div>
         )}
-        <div style={{ maxWidth: 820 }}><ApplyForm mine={mine} isCloser={isCloser} /></div>
+        {previewStore.getStore() ? null : <div style={{ maxWidth: 820 }}><ApplyForm mine={mine} isCloser={isCloser} /></div>}
       </div>
     </>
   );

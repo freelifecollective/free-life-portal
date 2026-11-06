@@ -14,7 +14,7 @@ import { HireButton, type ActiveHire } from "./HireButton";
  * A call closer as a card that flips. The front is their cover: a big photo with their name and where they are over it, then their experience and bio.
  * The back is their numbers, with the Hire button. Pressing empty space on the back flips it over to the cover again.
  */
-export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hire: ActiveHire | null }) {
+export function CloserCard({ c, me, hire, teaser = false }: { c: CloserCardData; me: string; hire: ActiveHire | null; teaser?: boolean }) {
   const [back, setBack] = useState(false);
   const name = closerName(c);
   const first = c.first_name ?? "them";
@@ -38,6 +38,27 @@ export function CloserCard({ c, me, hire }: { c: CloserCardData; me: string; hir
     if ((e.target as HTMLElement).closest("a, input, select, textarea, label, dialog, .cc-edit")) return;
     setBack(true);
   };
+
+  /* the locked preview: the picture and the first line of the bio are real, everything else is stand-in text, blurred */
+  if (teaser) {
+    const line = (c.bio ?? "").split(/\r?\n/)[0].trim();
+    const first = line.length > 110 ? `${line.slice(0, 107).trimEnd()}…` : line;
+    return (
+      <article className="cc-flip"><div className="cc-inner"><div className="cc-face cc-front">
+        <div className="cc-head">
+          <div className="cc-cover">
+            {photo ? (<><div className="cc-cover-bg" style={{ backgroundImage: `url("${photo}")` }} aria-hidden="true" /><img src={photo} alt="" /></>) : <div className="cc-cover-empty"><Avatar url={null} initials="?" size={64} /></div>}
+          </div>
+          <div className="cc-ident cc-blur" aria-hidden="true"><h2>Call Closer Name</h2><p className="cc-loc">City, Country</p><p className="cc-exp"><span>Experience</span><b>Several years</b></p></div>
+        </div>
+        <div className="cc-front-body">
+          {first ? <p className="cc-bio">{first}</p> : null}
+          <p className="cc-bio cc-blur" aria-hidden="true">The rest of their story, what they love about helping people, and how they run their calls is shown to paying members.</p>
+          <p className="cc-bio cc-blur" aria-hidden="true">See their stats and hire them when you join.</p>
+        </div>
+      </div></div></article>
+    );
+  }
 
   return (
     <article className={"cc-flip" + (back ? " flipped" : "")}>
