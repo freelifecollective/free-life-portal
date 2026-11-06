@@ -2,9 +2,10 @@ import "server-only";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSession } from "@/lib/auth/session";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, previewMemberId } from "@/lib/supabase/server";
 import type { AppSession } from "@/lib/profile/types";
 import { previewStore } from "@/lib/locked/preview";
+import { previewLandingUsername } from "@/lib/locked/account";
 
 export type SignedIn = { session: AppSession; supabase: SupabaseClient };
 
@@ -15,7 +16,9 @@ export async function requireMember(): Promise<{ session: AppSession; supabase: 
   if (real.profile.removed_at) redirect("/removed");
   if (!real.profile.onboarded_at) redirect("/welcome");
   /* a locked page being drawn for the downline: the page believes a member opened it (the database does not) */
-  const session = previewStore.getStore() && real.profile.role === "downline" ? { ...real, profile: { ...real.profile, role: "member" as const } } : real;
+  const previewing = !!previewStore.getStore() && real.profile.role === "downline";
+  const pid = previewing ? await previewMemberId() : null;
+  const session = previewing ? { ...real, user: pid ? { ...real.user, id: pid } : real.user, profile: { ...real.profile, id: pid ?? real.profile.id, role: "member" as const, username: (await previewLandingUsername()) ?? real.profile.username } } : real;
   return { session, supabase: session.mode === "supabase" ? await createClient() : null };
 }
 
