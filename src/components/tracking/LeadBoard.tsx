@@ -26,6 +26,9 @@ const subscribeTags = (cb: () => void) => { tagListeners.add(cb); window.addEven
 const readCompact = () => { try { return localStorage.getItem(TAGS_KEY) === "1"; } catch { return false; } };
 const setCompact = (on: boolean) => { try { localStorage.setItem(TAGS_KEY, on ? "1" : "0"); } catch { /* still works this visit */ } tagListeners.forEach((l) => l()); };
 
+/** True when a click on a pop-up's backdrop landed outside the pop-up itself (clicks on its own padding do not count). */
+const clickedOutside = (e: React.MouseEvent<HTMLElement>) => { const r = e.currentTarget.getBoundingClientRect(); return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom; };
+
 /** An internal Trello: boards with lists with lead cards and colour tags. Drag a card to move it. Several things happen by themselves (tags, follow-ups). */
 export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialTags: Tag[] }) {
   const router = useRouter();
@@ -209,14 +212,14 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
         </>
       )}
 
-      <dialog ref={dlg} className="rs-dialog lb-dialog" aria-labelledby="lb-dlg-title">
+      <dialog ref={dlg} className="rs-dialog lb-dialog" aria-labelledby="lb-dlg-title" onMouseDown={(e) => { if (clickedOutside(e)) dlg.current?.close(); }}>
         <h2 id="lb-dlg-title" className="qh" style={{ marginTop: 0 }}>{editing?.id ? "Lead details" : "Add a lead"}</h2>
         <div className="lb-grid2">
-          <div className="field"><label htmlFor="lb-name">Name</label><input id="lb-name" value={vals.name} maxLength={80} onChange={(e) => setVals({ ...vals, name: e.target.value })} /></div>
+          <div className="field"><label htmlFor="lb-name">Name</label><input id="lb-name" type="text" value={vals.name} maxLength={80} onChange={(e) => setVals({ ...vals, name: e.target.value })} /></div>
           <div className="field"><label htmlFor="lb-email">Email</label><input id="lb-email" type="email" value={vals.email} maxLength={254} onChange={(e) => setVals({ ...vals, email: e.target.value })} /></div>
-          <div className="field"><label htmlFor="lb-ig">Instagram handle</label><input id="lb-ig" value={vals.instagram} maxLength={60} placeholder="@name" onChange={(e) => setVals({ ...vals, instagram: e.target.value })} /></div>
-          <div className="field"><label htmlFor="lb-fb">Facebook name</label><input id="lb-fb" value={vals.facebook} maxLength={80} onChange={(e) => setVals({ ...vals, facebook: e.target.value })} /></div>
-          <div className="field"><label htmlFor="lb-phone">Phone number</label><input id="lb-phone" value={vals.phone} maxLength={40} onChange={(e) => setVals({ ...vals, phone: e.target.value })} /></div>
+          <div className="field"><label htmlFor="lb-ig">Instagram handle</label><input id="lb-ig" type="text" value={vals.instagram} maxLength={60} placeholder="@name" onChange={(e) => setVals({ ...vals, instagram: e.target.value })} /></div>
+          <div className="field"><label htmlFor="lb-fb">Facebook name</label><input id="lb-fb" type="text" value={vals.facebook} maxLength={80} onChange={(e) => setVals({ ...vals, facebook: e.target.value })} /></div>
+          <div className="field"><label htmlFor="lb-phone">Phone number</label><input id="lb-phone" type="text" value={vals.phone} maxLength={40} onChange={(e) => setVals({ ...vals, phone: e.target.value })} /></div>
         </div>
         <div className="field"><label htmlFor="lb-note">Notes</label><textarea id="lb-note" rows={3} maxLength={1000} value={vals.note} onChange={(e) => setVals({ ...vals, note: e.target.value })} /></div>
         <div className="lb-grid2">
@@ -243,7 +246,7 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
         <div className="dlg-actions"><button type="button" className="btn" onClick={() => dlg.current?.close()}>Cancel</button><button type="button" className="btn primary" disabled={pending} onClick={saveCard}>{pending ? "Saving…" : "Save"}</button></div>
       </dialog>
 
-      <dialog ref={sureDlg} className="rs-dialog" aria-labelledby="lb-sure-title" onClose={() => setSure(null)}>
+      <dialog ref={sureDlg} className="rs-dialog" aria-labelledby="lb-sure-title" onClose={() => setSure(null)} onMouseDown={(e) => { if (clickedOutside(e)) sureDlg.current?.close(); }}>
         <h2 id="lb-sure-title" className="qh" style={{ marginTop: 0 }}>Delete this lead?</h2>
         <p>Are you sure you want to delete <strong translate="no">{sure?.name}</strong> from this list?</p>
         <p className="when">You can bring them back with the undo arrow at the top.</p>
