@@ -2460,3 +2460,4 @@ button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding
 .ctx-menu button:hover, .ctx-menu button:focus-visible { background: var(--tint); }
 .ctx-menu button.danger { color: #b42318; font-weight: 600; }
 .ctx-menu button.danger:hover { background: #fdf3f2; }
+.lb-dialog .field input[type="date"], .lb-dialog .field input[type="number"] { width: 100%; box-sizing: border-box; padding: 0 14px; height: 48px; border: 1px solid var(--line); border-radius: 12px; font: inherit; background: #fff; }
