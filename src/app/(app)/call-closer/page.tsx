@@ -3,6 +3,7 @@ import { CloserHub, type Person, type Stats } from "@/components/closer-hub/Clos
 import { ClientList } from "@/components/closer-hub/ClientList";
 import { HireRequests, type Request } from "@/components/closers/HireRequests";
 import { totalCalls } from "@/lib/closer/total";
+import { LanguagesCard } from "@/components/closer-hub/LanguagesCard";
 import { AvailabilityPanel } from "@/components/booking/AvailabilityPanel";
 import { PageHeading } from "@/components/PageHeading";
 import { requireMember } from "@/lib/auth/guards";
@@ -22,7 +23,7 @@ export default async function CallCloserPage(props: PageProps<"/call-closer">) {
   const { data: prof } = await supabase.from("profiles").select("call_closer").eq("id", me).maybeSingle();
   if (!(prof as { call_closer: boolean } | null)?.call_closer) redirect("/");
   const [r1, r2, r3, r4, r5] = await Promise.all([
-    supabase.from("call_closer_details").select("paused, price_per_call_cents, calls_taken, close_rate").eq("member_id", me).maybeSingle(),
+    supabase.from("call_closer_details").select("paused, price_per_call_cents, calls_taken, close_rate, native_language, languages").eq("member_id", me).maybeSingle(),
     supabase.rpc("closer_stats", { p_id: me }),
     supabase.from("closer_hires").select("id, member_id, calls_total, calls_used, note, status").eq("closer_id", me).in("status", ["pending", "active"]).order("created_at"),
     supabase.from("booked_calls").select("id, member_id, lead_name, lead_id, completed_at, starts_at, note, outcome, pay_points, pay_call_cents, pay_products_cents, pay_currency, paid_cents, paid_at").eq("closer_id", me).order("starts_at", { ascending: false }).limit(300),
@@ -53,7 +54,7 @@ export default async function CallCloserPage(props: PageProps<"/call-closer">) {
   for (const [id, a] of authors) people[id] = { id, name: a.name, avatar_url: a.avatar_url };
   const requests: Request[] = hireRows.map((h) => ({ ...h, name: people[h.member_id]?.name ?? "A member", avatar_url: people[h.member_id]?.avatar_url ?? null }));
 
-  const d = det as { paused: boolean; price_per_call_cents: number | null; calls_taken: string | null; close_rate: number | null } | null;
+  const d = det as { paused: boolean; price_per_call_cents: number | null; calls_taken: string | null; close_rate: number | null; native_language?: string | null; languages?: string[] | null } | null;
   const s = ((st ?? []) as { calls_counted: number; review_count: number; avg_rating: number | null; members_counted: number; members_base: string | null }[])[0];
   const recorded = calls.filter((c) => c.outcome === "took_place");
   const closed = recorded.filter((c) => Object.keys(c.products).length > 0).length;
@@ -70,6 +71,7 @@ export default async function CallCloserPage(props: PageProps<"/call-closer">) {
       <PageHeading lede="Your clients, your calls, what you are owed and how you are doing.">Call Closer</PageHeading>
       <div className="stack" style={{ maxWidth: 860 }}>
         {requests.some((r) => r.status === "pending") ? <HireRequests requests={requests} /> : null}
+        <LanguagesCard native={d?.native_language ?? null} others={d?.languages ?? []} />
       </div>
       <CloserHub clients={<ClientList paused={!!d?.paused} clients={requests.filter((r) => r.status === "active")} />} availability={<AvailabilityPanel supabase={supabase} userId={me} googleStatus={typeof sp.google === "string" ? sp.google : null} />} now={nowMs()} calls={calls} people={people} rules={rules} stats={stats} price={d?.price_per_call_cents ?? null} />
     </>

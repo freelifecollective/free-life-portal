@@ -41,8 +41,8 @@ export default async function BookPage() {
       const { data: cl } = await admin.from("profiles").select("id").in("id", ids).eq("call_closer", true);
       const closerIds = ((cl ?? []) as { id: string }[]).map((r) => r.id);
       if (closerIds.length) {
-        const { data: d } = await admin.from("call_closer_details").select("member_id, bio").in("member_id", closerIds);
-        for (const r of (d ?? []) as { member_id: string; bio: string | null }[]) if (people[r.member_id]) people[r.member_id].bio = introOf(r.bio);
+        const { data: d } = await admin.from("call_closer_details").select("member_id, bio, native_language").in("member_id", closerIds);
+        for (const r of (d ?? []) as { member_id: string; bio: string | null; native_language: string | null }[]) if (people[r.member_id]) { people[r.member_id].bio = introOf(r.bio); people[r.member_id].language = r.native_language; }
       }
     }
   }
