@@ -18,3 +18,5 @@
 - Landing page: the video address, the background photo, and the footer link addresses (Terms of Use, Privacy Policy, Earnings Disclaimer).
 - Create a Quote: prices for every country other than the United States.
 - Know Your Numbers: decide what else to show.
+
+- Locked-page previews: set PREVIEW_MEMBER_EMAIL and PREVIEW_MEMBER_PASSWORD (Vercel) to a normal member account kept EMPTY (no tasks, leads, chats). Downline see the real pages through it, washed out. Without them the pages show only what the downline person can already see.
