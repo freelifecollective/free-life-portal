@@ -60,6 +60,7 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser, p
                 <div className="bk-booked-body">
                   <h2 className="qh" style={{ margin: 0 }} translate="no">{`Congrats! Your call with ${name} is booked for ${full(m.starts_at)}.`}</h2>
                   {p?.bio ? <p style={{ margin: "8px 0 0" }}><strong>{`A little about ${name.split(" ")[0]}: `}</strong><span translate="no">{p.bio}</span></p> : null}
+                  <p style={{ margin: "10px 0 0" }} translate="no">{`This call will be ${minutes} minutes, held as a video call right here in the portal, inside this tab. Open this tab five minutes before the call starts and press “Join the call” when it appears. The call starts at ${new Date(m.starts_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" })}. Please write down any questions you have and ${name.split(" ")[0]} will answer them on the call.`}</p>
                   <div className="rs-actions" style={{ margin: "12px 0 0" }}>
                     <RoomLink id={m.id} startsAt={m.starts_at} nowIso={nowIso} minutes={minutes} />
                     {new Date(m.starts_at).getTime() > new Date(nowIso).getTime() ? <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await cancelBooking(m.id); router.refresh(); })}>Cancel this call</button> : null}
