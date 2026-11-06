@@ -19,7 +19,7 @@ const who = (p: Person | undefined) => p?.name ?? "A member";
 const PersonChip = ({ p, id }: { p: Person | undefined; id: string }) => <PersonLink id={id} name={who(p)} className="who"><Avatar url={p?.avatar_url ?? null} initials={who(p).charAt(0).toUpperCase()} size={32} /><span className="who-name"><strong>{who(p)}</strong></span></PersonLink>;
 
 /** The call closer's own area. */
-export function CloserHub({ availability, clients, calls, people, rules, stats, price, now }: { availability?: ReactNode; clients?: ReactNode; now: number; calls: HubCall[]; people: Record<string, Person>; rules: PayRule[]; stats: Stats; price: number | null }) {
+export function CloserHub({ availability, clients, calls, people, rules, stats, price, now, personal = false }: { personal?: boolean; availability?: ReactNode; clients?: ReactNode; now: number; calls: HubCall[]; people: Record<string, Person>; rules: PayRule[]; stats: Stats; price: number | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState<string | null>(null);
@@ -39,7 +39,8 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
       <div className="ch-top">
         <div className="ch-col">{availability}</div>
         <div className="ch-col">
-        {clients}
+        {personal ? null : clients}
+      {personal ? null : <>
       <section className="card-s ch-owed" aria-label="Money owed to you">
         <h2 className="qh" style={{ marginTop: 0 }}>Money owed to you</h2>
         {byMember.size === 0 ? <p style={{ margin: 0 }}>Nothing is owed to you right now.</p> : (
@@ -77,6 +78,7 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
         <p className="when" style={{ marginTop: 0 }}>{price !== null ? `Your call price is ${money(price, "USD")} (an admin can change it). ` : "An admin sets your call price. "}For products, set a rule for each group of ranks. The rank is the rank of the affiliate who hired you.</p>
         <PayRules rules={rules} />
       </section>
+      </>}
         </div>
         <div className="ch-col">
       <section className="card-s ch-upcoming" aria-label="Upcoming calls">
@@ -86,7 +88,7 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
             {upcoming.map((c) => (
               <li key={c.id}>
                 <div><strong translate="no">{c.lead_name}</strong><br /><span className="when" translate="no">{formatInZone(new Date(c.starts_at))}</span></div>
-                <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>
+                {personal ? null : <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>}
                 {c.lead_id ? <RoomLink id={c.id} startsAt={c.starts_at} nowIso={new Date(now).toISOString()} /> : null}
                 {c.note ? <p className="when" style={{ margin: 0, flexBasis: "100%" }} translate="no">{c.note}</p> : null}
               </li>
@@ -101,11 +103,11 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
             {past.map((c) => (
               <li key={c.id}>
                 <div><strong translate="no">{c.lead_name}</strong><br /><span className="when" translate="no">{formatInZone(new Date(c.starts_at))}</span></div>
-                <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>
+                {personal ? null : <div className="ch-for"><span className="when">For</span><PersonChip p={people[c.member_id]} id={c.member_id} /></div>}
                 <div className="ch-act">
                   <span className={"tag" + (c.outcome === null ? "" : " tag-dark")}>{status(c)}</span>
-                  {c.outcome === "took_place" ? <span className="when">{money(totalOf(c), cur(c))}</span> : null}
-                  <button type="button" className="btn small" onClick={() => setEditing(c.id)}>{c.outcome === null ? "Record this call" : "Edit"}</button>
+                  {c.outcome === "took_place" && !personal ? <span className="when">{money(totalOf(c), cur(c))}</span> : null}
+                  {personal ? null : <button type="button" className="btn small" onClick={() => setEditing(c.id)}>{c.outcome === null ? "Record this call" : "Edit"}</button>}
                 </div>
               </li>
             ))}
@@ -116,18 +118,18 @@ export function CloserHub({ availability, clients, calls, people, rules, stats, 
         <h2 className="qh" style={{ marginTop: 0 }}>Your stats</h2>
         <div className="ch-stats">
           <p><b>{stats.calls}</b><span>Calls taken</span></p>
-          <p><b>{stats.closeRate}</b><span>Close rate</span></p>
+          {personal ? null : <><p><b>{stats.closeRate}</b><span>Close rate</span></p>
           <p><b>{stats.rating ? `★ ${stats.rating}` : "–"}</b><span>{`Reviews (${stats.reviews})`}</span></p>
-          <p><b>{stats.members}</b><span>FLC members booked</span></p>
+          <p><b>{stats.members}</b><span>FLC members booked</span></p></>}
         </div>
-        {stats.recorded > 0 ? <p className="when" style={{ margin: "10px 0 0" }}>{`From the calls you recorded here: ${stats.closed} of ${stats.recorded} led to a sale.`}</p> : null}
+        {!personal && stats.recorded > 0 ? <p className="when" style={{ margin: "10px 0 0" }}>{`From the calls you recorded here: ${stats.closed} of ${stats.recorded} led to a sale.`}</p> : null}
       </section>
         </div>
       </div>
 
 
 
-      {editCall ? <CallEditor key={editCall.id + editCall.outcome + totalOf(editCall)} call={editCall} forName={who(people[editCall.member_id])} rules={rules} open onClose={() => setEditing(null)} /> : null}
+      {editCall && !personal ? <CallEditor key={editCall.id + editCall.outcome + totalOf(editCall)} call={editCall} forName={who(people[editCall.member_id])} rules={rules} open onClose={() => setEditing(null)} /> : null}
     </div>
   );
 }

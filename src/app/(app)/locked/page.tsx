@@ -30,6 +30,7 @@ const REAL: Record<string, () => Promise<{ default: Page }>> = {
   "/advertising/landing-page": () => import("../advertising/landing-page/page"),
   "/tracking/numbers": () => import("../tracking/numbers/page"),
   "/support": () => import("../support/page"),
+  "/booking-calendar": () => import("../booking-calendar/page"),
 };
 const GRIDS: Record<string, [string, "resources" | "advertising"]> = {
   "/resources/books": ["books", "resources"], "/resources/product-information": ["product-information", "resources"],
