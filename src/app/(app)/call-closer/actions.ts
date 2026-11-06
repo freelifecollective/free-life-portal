@@ -79,3 +79,18 @@ export async function saveRules(rules: { rank_from: number; rank_to: number; kin
   refresh();
   return { ok: true };
 }
+
+/** A call closer sets the language they take calls in (shown first) and any others. */
+export async function saveLanguages(native: string, others: string[]): Promise<{ ok: boolean; error?: string }> {
+  const nat = native.trim().slice(0, 40);
+  const list = [...new Set(others.map((x) => x.trim().slice(0, 40)).filter((x) => x && x !== nat))];
+  if (!nat) return { ok: false, error: "Choose your native language." };
+  if (list.length > 12) return { ok: false, error: "Choose up to 12 languages." };
+  const { supabase } = await requireMember();
+  if (!supabase) return { ok: false, error: "This needs the database." };
+  const { error } = await supabase.rpc("save_my_closer_languages", { p_native: nat, p_languages: list });
+  if (error) return { ok: false, error: error.code === "PGRST202" || error.code === "42883" ? "Languages need a database update that has not been run yet." : "We could not save that. Please try again." };
+  revalidatePath("/call-closer");
+  revalidatePath("/call-closers");
+  return { ok: true };
+}

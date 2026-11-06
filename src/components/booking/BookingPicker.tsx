@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { bookCall, cancelBooking } from "@/app/(app)/book/actions";
 import { Avatar } from "@/components/Avatar";
+import { expectText } from "@/lib/booking/expect";
 import { RoomLink } from "@/components/room/RoomLink";
 
 export type Mine = { id: string; starts_at: string; person?: string; closer?: boolean };
-export type Person = { name: string; avatar_url: string | null; bio: string | null };
+export type Person = { name: string; avatar_url: string | null; bio: string | null; language?: string | null };
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
@@ -60,10 +61,10 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser, p
                 <div className="bk-booked-body">
                   <h2 className="qh" style={{ margin: 0 }} translate="no">{`Congrats! Your call with ${name} is booked for ${full(m.starts_at)}.`}</h2>
                   {p?.bio ? <p style={{ margin: "8px 0 0" }}><strong>{`A little about ${name.split(" ")[0]}: `}</strong><span translate="no">{p.bio}</span></p> : null}
-                  <p style={{ margin: "10px 0 0" }} translate="no">{`This call will be ${minutes} minutes, held as a video call right here in the portal, inside this tab. Open this tab five minutes before the call starts and press “Join the call” when it appears. The call starts at ${new Date(m.starts_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" })}. Please write down any questions you have and ${name.split(" ")[0]} will answer them on the call.`}</p>
+                  <p style={{ margin: "10px 0 0" }} translate="no" lang={p?.language ? undefined : "en"}>{expectText(p?.language, { minutes, name: name.split(" ")[0], time: new Date(m.starts_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" }) })}</p>
                   <div className="rs-actions" style={{ margin: "12px 0 0" }}>
-                    <RoomLink id={m.id} startsAt={m.starts_at} nowIso={nowIso} minutes={minutes} />
-                    {new Date(m.starts_at).getTime() > new Date(nowIso).getTime() ? <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await cancelBooking(m.id); router.refresh(); })}>Cancel this call</button> : null}
+                    <RoomLink id={m.id} startsAt={m.starts_at} nowIso={nowIso} minutes={minutes} auto />
+                    {new Date(m.starts_at).getTime() > new Date(nowIso).getTime() ? <button type="button" className="btn small" disabled={pending} onClick={() => { const soon = new Date(m.starts_at).getTime() - new Date(nowIso).getTime() < 24 * 3600_000; if (soon && !window.confirm(`This call is less than 24 hours away. If you cancel now, it will not be rebooked. Cancel anyway?`)) return; start(async () => { await cancelBooking(m.id); router.refresh(); }); }}>Cancel this call</button> : null}
                   </div>
                 </div>
               </div>
@@ -71,8 +72,9 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser, p
           })}
         </section>
       ) : null}
-      <section className="card-s" aria-label="Pick a time">
-        <h2 className="qh" style={{ marginTop: 0 }}>{mine.length ? "Need a different time?" : "Pick a time"}</h2>
+      {mine.length ? <CallFrame startsAt={mine[0].starts_at} nowIso={nowIso} name={people[mine[0].person ?? ""]?.name ?? who} /> : null}
+      {!mine.length ? <section className="card-s" aria-label="Pick a time">
+        <h2 className="qh" style={{ marginTop: 0 }}>Pick a time</h2>
         <p className="when" style={{ marginTop: 0 }}>{`Calls are ${minutes} minutes with ${who}${withCloser ? ", who is taking calls for your coach" : ""}. Times are shown in your own time zone.`}</p>
         {slots.length === 0 ? <p style={{ margin: 0 }}>There are no free times coming up. Check back soon.</p> : (
           <div className="bk-cal">
@@ -119,7 +121,24 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser, p
           </div>
         )}
         {error ? <p className="err" role="alert">{error}</p> : null}
-      </section>
+      </section> : null}
     </div>
+  );
+}
+
+/** Where the video will appear: the page looks like it will at the time of the call. When the time comes, the call opens here for them. */
+function CallFrame({ startsAt, nowIso, name }: { startsAt: string; nowIso: string; name: string }) {
+  const [now, setNow] = useState(() => new Date(nowIso).getTime());
+  useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 30_000); return () => window.clearInterval(t); }, []);
+  const mins = Math.max(0, Math.round((new Date(startsAt).getTime() - now) / 60_000));
+  const left = mins >= 2880 ? `${Math.floor(mins / 1440)} days` : mins >= 120 ? `${Math.floor(mins / 60)} hours` : mins > 1 ? `${mins} minutes` : mins === 1 ? "1 minute" : "now";
+  return (
+    <section className="bk-frame" aria-label="Your video call">
+      <div className="bk-frame-inner">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5" /><path d="M15.5 10.5l6-3.5v10l-6-3.5" /></svg>
+        <p className="bk-frame-t" translate="no">{mins > 15 ? `Your video call with ${name.split(" ")[0]} will appear here` : mins > 0 ? `Your call with ${name.split(" ")[0]} is about to begin` : `Your call with ${name.split(" ")[0]} is starting`}</p>
+        <p className="when" style={{ margin: 0 }} translate="no">{mins > 0 ? `Starts in ${left}. Keep this tab open.` : "Opening your call…"}</p>
+      </div>
+    </section>
   );
 }

@@ -49,7 +49,7 @@ export function CloserCard({ c, me, hire, teaser = false }: { c: CloserCardData;
           <div className="cc-cover">
             {photo ? (<><div className="cc-cover-bg" style={{ backgroundImage: `url("${photo}")` }} aria-hidden="true" /><img src={photo} alt="" /></>) : <div className="cc-cover-empty"><Avatar url={null} initials="?" size={64} /></div>}
           </div>
-          <div className="cc-ident cc-blur" aria-hidden="true"><h2>Call Closer Name</h2><p className="cc-loc">City, Country</p><p className="cc-exp"><span>Experience</span><b>Several years</b></p></div>
+          <div className="cc-ident cc-blur" aria-hidden="true"><h2>Call Closer Name</h2><p className="cc-loc">City, Country</p><p className="cc-exp"><span>Experience</span><b>Several years</b></p><p className="cc-exp"><span>Takes calls in</span><b>Language, Language</b></p></div>
         </div>
         <div className="cc-front-body">
           {first ? <p className="cc-bio">{first}</p> : null}
@@ -77,6 +77,7 @@ export function CloserCard({ c, me, hire, teaser = false }: { c: CloserCardData;
               <h2>{name}</h2>
               {c.location ? <p className="cc-loc">{c.location}</p> : null}
               {c.experience_text ? <p className="cc-exp"><span>Experience</span><b>{c.experience_text}</b></p> : null}
+              {c.native_language || c.languages?.length ? <p className="cc-exp"><span>Takes calls in</span><b translate="no">{[c.native_language ? `${c.native_language} (native)` : "", ...(c.languages ?? [])].filter(Boolean).join(", ")}</b></p> : null}
             </div>
           </div>
           <div className="cc-front-body">
