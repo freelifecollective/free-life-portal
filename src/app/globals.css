@@ -2452,3 +2452,4 @@ button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding
 .lb-date.late { background: #F6D9D4; color: #9A2A1C; }
 .lb-date.none { background: var(--tint); color: var(--muted); }
 .lb-card { cursor: pointer; }
+.lb-acts .lb-link { text-decoration: underline; }
