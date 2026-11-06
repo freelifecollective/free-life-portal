@@ -3,9 +3,11 @@ import { Calculator } from "@/components/calculator/Calculator";
 import { LeadBoard } from "@/components/tracking/LeadBoard";
 import { QuotePicker } from "@/components/quote/QuotePicker";
 import { TeamView } from "@/components/tracking/TeamView";
-import { DEMO_BOARDS, DEMO_TEAM } from "@/lib/tracking/demo";
+import { DEMO_BOARDS, DEMO_TAGS, DEMO_TEAM } from "@/lib/tracking/demo";
 import { LockedTeaser } from "@/components/locked/LockedTeaser";
 import { requireMember } from "@/lib/auth/guards";
+import { FamilyTree } from "@/components/tree/FamilyTree";
+import { DEMO_TREE } from "@/lib/tree/demo";
 import { LOCKED } from "@/lib/locked";
 import { previewStore } from "@/lib/locked/preview";
 import { ResourceGrid } from "@/components/resources/ResourceGrid";
@@ -22,7 +24,6 @@ const REAL: Record<string, () => Promise<{ default: Page }>> = {
   "/calls": () => import("../calls/page"),
   "/buddy": () => import("../buddy/page"),
   "/graphic-maker": () => import("../graphic-maker/page"),
-  "/family-tree": () => import("../family-tree/page"),
   "/tasks": () => import("../tasks/page"),
   "/call-closers": () => import("../call-closers/page"),
   "/facebook-follows": () => import("../facebook-follows/page"),
@@ -49,7 +50,8 @@ export default async function LockedPage(props: PageProps<"/locked">) {
   /* where the real page can be drawn without anyone's data, it is: the actual page, just washed out */
   const preview = f === "/calculator" ? <Calculator initialCountry="United States" />
     : f === "/create-quote" ? <QuotePicker initialCountry="United States" />
-    : f === "/tracking/leads" ? <LeadBoard initial={DEMO_BOARDS} initialTags={[]} />
+    : f === "/tracking/leads" ? <LeadBoard initial={DEMO_BOARDS} initialTags={DEMO_TAGS} />
+    : f === "/family-tree" ? <FamilyTree chartId="demo" chartName="My Organization" charts={[{ id: "demo", name: "My Organization" }]} initial={DEMO_TREE} ownerName="You" ownerRank="4A" token={null} rootEdited />
     : f === "/tracking/team" ? <TeamView initial={DEMO_TEAM} teamChat={null} />
     : undefined;
   let real: React.ReactNode;
