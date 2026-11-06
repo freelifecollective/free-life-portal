@@ -2463,3 +2463,7 @@ button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding
 .ctx-menu button.danger { color: #b42318; font-weight: 600; }
 .ctx-menu button.danger:hover { background: #fdf3f2; }
 .lb-dialog .field input[type="date"], .lb-dialog .field input[type="number"] { width: 100%; box-sizing: border-box; padding: 0 14px; height: 48px; border: 1px solid var(--line); border-radius: 12px; font: inherit; background: #fff; }
+/* a long list scrolls inside itself (like Trello), with its title and "+ Add a lead" always in view */
+.lb-list { display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - 210px); min-height: 0; }
+.lb-list > .lb-cards { display: grid; flex: 1 1 auto; min-height: 8px; overflow-y: auto; overflow-x: hidden; margin: 0 -4px; padding: 0 4px; align-content: start; scrollbar-width: thin; }
+.lb-list > .lb-list-h, .lb-list > .lb-add { flex: none; }
