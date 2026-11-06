@@ -2315,7 +2315,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 @keyframes pl-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pl-bubble { animation: none; } }
 /* a locked menu item */
-.nav a.nav-locked, .nav button.nav-locked { width: 100%; text-align: left; background: none; border: 0; font: inherit; color: var(--muted); cursor: pointer; padding: 8px 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-decoration: none; }
+.nav a.nav-locked, .nav button.nav-locked { width: 100%; text-align: left; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 10px 14px; border-radius: 10px; display: flex; justify-content: flex-start; align-items: center; gap: 8px; text-decoration: none; font-family: var(--font-label); font-weight: 600; font-size: 14px; letter-spacing: 0.04em; white-space: nowrap; }
+@media (max-width: 768px) { .nav a.nav-locked, .nav button.nav-locked { padding: 14px; font-size: 16px; } }
 .nav a.nav-locked:hover, .nav button.nav-locked:hover { background: rgba(255,255,255,.55); color: var(--ink); }
 
 /* a locked page, shown faintly in grey behind the "members only" message */
@@ -2383,7 +2384,8 @@ html, body { max-width: 100%; overflow-x: clip; }
 .kn-tile { display: grid; gap: 4px; text-align: center; }
 .kn-tile b { font-family: var(--font-display); font-size: 40px; font-weight: 600; }
 .kn-tile span { color: var(--muted); font-size: 14px; }
-.nav-lock { margin-left: 8px; vertical-align: -1px; opacity: .75; }
+.nav-lock { margin-left: 8px; vertical-align: -1px; opacity: .75; flex: none; }
+.nav .nav-toggle > span:first-child { display: inline-flex; align-items: center; white-space: nowrap; }
 .tm-plan-modes { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 14px; }
 .tm-plan-how { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 0 0 12px; display: grid; gap: 8px; }
 .tm-plan-how legend { font-weight: 700; padding: 0 6px; }
