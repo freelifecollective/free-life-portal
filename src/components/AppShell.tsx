@@ -45,6 +45,7 @@ const NAV: NavItem[] = [
   { label: "Tasks", href: "/tasks", min: "member", group: "DMO" },
   { label: "DMO", min: "member", heading: true, group: "DMO" },
   { label: "Book a Call", href: "/book", min: "lead", leadOnly: true },
+  { label: "Learn More", href: "/learn-more", min: "lead", leadOnly: true },
   { label: "Water Share Map", href: "/water-map", min: "member", downline: true, group: "Resources" },
   { label: "Call Closers for Hire", href: "/call-closers", min: "member", group: "Placing Sales" },
   { label: "Facebook Follows", href: "/facebook-follows", min: "member", group: "Onboarding" },
