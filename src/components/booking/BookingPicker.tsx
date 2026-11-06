@@ -33,7 +33,7 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }:
     const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
     return [...Array.from({ length: first.getDay() }, () => null), ...Array.from({ length: count }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))];
   }, [month]);
-  const dayTimes = day ? byDay.get(day) ?? [] : [];
+  const dayTimes = day ? [...(byDay.get(day) ?? [])].sort() : [];
   const dayLabel = dayTimes.length ? new Date(dayTimes[0]).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "";
   const time = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const full = (iso: string) => new Date(iso).toLocaleString("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
@@ -87,21 +87,27 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }:
               {dayTimes.length ? (
                 <>
                   <h3 translate="no">{dayLabel}</h3>
-                  <div className="bk-col">{dayTimes.map((iso) => <button key={iso} type="button" className="bk-slot" aria-pressed={pick === iso} onClick={() => setPick(iso)} translate="no">{time(iso)}</button>)}</div>
+                  <div className="bk-col">{dayTimes.map((iso) => (
+                    <div key={iso} className="bk-slotwrap">
+                      <button type="button" className="bk-slot" aria-pressed={pick === iso} onClick={() => setPick(pick === iso ? null : iso)} translate="no">{time(iso)}</button>
+                      {pick === iso ? (
+                        <div className="bk-confirm" role="group" aria-label="Confirm this time">
+                          <strong>Book this time?</strong>
+                          <span className="when" translate="no">{full(iso)}</span>
+                          <div className="bk-confirm-btns">
+                            <button type="button" className="btn primary small" disabled={pending} onClick={confirm}>{pending ? "Booking…" : "Book my call"}</button>
+                            <button type="button" className="btn small" onClick={() => setPick(null)}>Not now</button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                  </div>
                 </>
               ) : <p className="when" style={{ margin: 0 }}>Choose a day to see the free times.</p>}
             </div>
           </div>
         )}
-        {pick ? (
-          <div className="card-s" style={{ marginTop: 16, background: "var(--tint)" }}>
-            <p style={{ margin: "0 0 10px" }}><strong>Book this time?</strong><br /><span translate="no">{full(pick)}</span></p>
-            <div className="rs-actions" style={{ marginTop: 0 }}>
-              <button type="button" className="btn primary" disabled={pending} onClick={confirm}>{pending ? "Booking…" : "Book my call"}</button>
-              <button type="button" className="btn" onClick={() => setPick(null)}>Not now</button>
-            </div>
-          </div>
-        ) : null}
         {error ? <p className="err" role="alert">{error}</p> : null}
       </section>
     </div>
