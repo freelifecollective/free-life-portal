@@ -3,6 +3,8 @@ import { PageHeading } from "@/components/PageHeading";
 import { PlacedDocs } from "@/components/documents/PlacedDocs";
 import { requireMember } from "@/lib/auth/guards";
 import { loadBoards, loadTeam } from "@/lib/tracking/queries";
+import { AdResults } from "@/components/tracking/AdResults";
+import type { AdRow } from "./actions";
 import { isAffiliate } from "@/lib/roles";
 
 export const instant = false;
@@ -12,10 +14,12 @@ export default async function NumbersPage() {
   const { session, supabase } = await requireMember();
   if (!isAffiliate(session.profile.role)) redirect("/");
   if (!supabase) return <><PageHeading>Know Your Numbers</PageHeading><p className="page-lede">This needs the database.</p></>;
-  const [{ boards }, team, { count: affiliated }] = await Promise.all([
+  const [{ boards }, team, { count: affiliated }, { data: ads }] = await Promise.all([
     loadBoards(supabase), loadTeam(supabase),
     supabase.from("lead_cards").select("id", { count: "exact", head: true }).not("affiliated_at", "is", null),
+    supabase.from("ad_results").select("id, day, campaign, spend, leads, source").order("day", { ascending: false }).order("created_at", { ascending: false }).limit(200),
   ]);
+  const adRows: AdRow[] = ((ads ?? []) as { id: string; day: string; campaign: string | null; spend: number | string; leads: number; source: string }[]).map((r) => ({ ...r, spend: Number(r.spend) }));
   const onBoards = boards.reduce((n, b) => n + b.lists.reduce((m, l) => m + l.cards.length, 0), 0);
   const inPortal = boards.filter((b) => b.kind === "portal").reduce((n, b) => n + b.lists.reduce((m, l) => m + l.cards.length, 0), 0);
   const active = team.filter((m) => m.status === "active").length;
@@ -25,6 +29,7 @@ export default async function NumbersPage() {
       <PageHeading lede="The numbers behind your business, taken from Lead Tracking and My Team.">Know Your Numbers</PageHeading>
       <PlacedDocs placement="numbers" />
       <div className="kn-tiles">{tiles.map(([label, n]) => <div key={label} className="card-s kn-tile"><b>{n}</b><span>{label}</span></div>)}</div>
+      <AdResults rows={adRows} />
       {boards.map((b) => (
         <section key={b.id} style={{ marginTop: 26 }}>
           <h2 className="qh">{b.name}</h2>
