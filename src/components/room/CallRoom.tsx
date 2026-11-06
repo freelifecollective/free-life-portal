@@ -15,8 +15,9 @@ const ICE: RTCIceServer[] = [
  * A video call between two people, right in the portal. The video goes straight between them; the portal only helps them find each other,
  * and notes (every 20 seconds, while they are connected) that the call is happening. After five minutes together it counts as a completed call.
  */
-export function CallRoom({ id, me, otherName, completedAlready, makeSignal, beat, onLeave }: {
+export function CallRoom({ id, me, otherName, completedAlready, makeSignal, beat, onLeave, isHost = false, endCall, checkEnded }: {
   id: string; me: string; otherName: string; completedAlready: boolean; makeSignal: MakeSignal; beat: Beat; onLeave: () => void;
+  isHost?: boolean; endCall?: (id: string) => Promise<{ ok: boolean }>; checkEnded?: (id: string) => Promise<boolean>;
 }) {
   const local = useRef<HTMLVideoElement>(null);
   const remote = useRef<HTMLVideoElement>(null);
@@ -26,6 +27,7 @@ export function CallRoom({ id, me, otherName, completedAlready, makeSignal, beat
   const [mic, setMic] = useState(true);
   const [cam, setCam] = useState(true);
   const [done, setDone] = useState(completedAlready);
+  const [ended, setEnded] = useState(false);
   const connected = useRef(false);
   const beatRef = useRef(beat);
   useEffect(() => { beatRef.current = beat; });
@@ -100,13 +102,17 @@ export function CallRoom({ id, me, otherName, completedAlready, makeSignal, beat
     }, 20_000);
     const first = window.setTimeout(() => { if (connected.current) void beatRef.current(id).then((r) => { if (alive && r.completed) setDone(true); }).catch(() => {}); }, 4000);
 
+    /* the call stays open until the person taking it ends it; the other person finds out within a few seconds */
+    const watch = window.setInterval(() => { if (!isHost && checkEnded) void checkEnded(id).then((e) => { if (alive && e) setEnded(true); }).catch(() => {}); }, 8000);
+
     return () => {
       alive = false;
+      window.clearInterval(watch);
       window.clearInterval(timer); window.clearTimeout(first);
       closePc(); sig?.close();
       stream.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [id, me, makeSignal]);
+  }, [id, me, makeSignal, isHost, checkEnded]);
 
   const toggle = (kind: "audio" | "video") => {
     const tracks = kind === "audio" ? stream.current?.getAudioTracks() : stream.current?.getVideoTracks();
@@ -117,6 +123,14 @@ export function CallRoom({ id, me, otherName, completedAlready, makeSignal, beat
   };
   const line = state === "starting" ? "Getting your camera ready…" : state === "waiting" ? `Waiting for ${otherName} to join…` : state === "connecting" ? "Connecting…" : state === "live" ? `You are connected with ${otherName}.` : problem;
 
+  if (ended) {
+    return (
+      <div className="room" data-state="ended">
+        <div className="room-stage"><div className="room-wait" role="status"><p>{`${otherName} has ended the call. Thank you for joining!`}</p></div></div>
+        <div className="room-bar"><button type="button" className="room-btn leave" onClick={onLeave}>Close</button></div>
+      </div>
+    );
+  }
   return (
     <div className="room" data-state={state}>
       <div className="room-stage">
@@ -128,6 +142,7 @@ export function CallRoom({ id, me, otherName, completedAlready, makeSignal, beat
         <button type="button" className={"room-btn" + (mic ? "" : " off")} onClick={() => toggle("audio")} aria-pressed={!mic}>{mic ? "Mute" : "Unmute"}</button>
         <button type="button" className={"room-btn" + (cam ? "" : " off")} onClick={() => toggle("video")} aria-pressed={!cam}>{cam ? "Camera off" : "Camera on"}</button>
         <button type="button" className="room-btn leave" onClick={onLeave}>Leave</button>
+        {isHost && endCall ? <button type="button" className="room-btn leave" onClick={() => { if (window.confirm(`End the call for everyone? ${otherName} will be disconnected.`)) void endCall(id).then(onLeave); }}>End call for everyone</button> : null}
       </div>
       {state === "live" ? <p className="when room-note" role="status">{done ? "This call has been counted as completed. ✓" : "Once you have been together for five minutes, this call is counted as completed automatically."}</p> : null}
       {state === "problem" ? <p className="err" role="alert">{problem}</p> : null}

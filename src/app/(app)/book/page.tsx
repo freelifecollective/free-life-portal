@@ -19,7 +19,7 @@ export default async function BookPage() {
   const [{ data: infoRows }, { data: slots }, { data: mine }] = await Promise.all([
     supabase.rpc("booking_info"),
     supabase.rpc("open_slots", { p_days: 60 }),
-    supabase.from("booked_calls").select("id, starts_at, member_id, closer_id").eq("lead_id", session.user.id).is("completed_at", null).gt("starts_at", new Date(nowMs() - 3 * 3600_000).toISOString()).order("starts_at"),
+    supabase.from("booked_calls").select("id, starts_at, member_id, closer_id").eq("lead_id", session.user.id).is("completed_at", null).is("ended_at", null).gt("starts_at", new Date(nowMs() - 3 * 3600_000).toISOString()).order("starts_at"),
   ]);
   const info = ((infoRows ?? []) as Info[])[0];
   let times = ((slots ?? []) as { slot: string }[]).map((x) => x.slot);
