@@ -2495,3 +2495,7 @@ button.lb-tag.flip.compact { min-width: 40px; width: 40px; height: 10px; padding
 .bk-month-h h3 { font-size: 20px; }
 .bk-dow { font-size: 12.5px; }
 @media (max-width: 900px) { .bk-cal { grid-template-columns: 1fr; gap: 24px; } }
+
+.bk-booked { display: flex; gap: 18px; align-items: flex-start; }
+.bk-booked + .bk-booked { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.bk-booked-body { flex: 1; min-width: 0; }

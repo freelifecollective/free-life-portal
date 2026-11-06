@@ -3,14 +3,16 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { bookCall, cancelBooking } from "@/app/(app)/book/actions";
+import { Avatar } from "@/components/Avatar";
 import { RoomLink } from "@/components/room/RoomLink";
 
-export type Mine = { id: string; starts_at: string };
+export type Mine = { id: string; starts_at: string; person?: string; closer?: boolean };
+export type Person = { name: string; avatar_url: string | null; bio: string | null };
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
 /** Free times grouped by day, in the time zone of the device you are on. Pick one, confirm, done. */
-export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }: { nowIso: string; slots: string[]; mine: Mine[]; who: string; minutes: number; withCloser: boolean }) {
+export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser, people = {} }: { nowIso: string; slots: string[]; mine: Mine[]; who: string; minutes: number; withCloser: boolean; people?: Record<string, Person> }) {
   const router = useRouter();
   const [pick, setPick] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -49,16 +51,23 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }:
     <div className="stack" style={{ maxWidth: 1400 }}>
       {mine.length ? (
         <section className="card-s" aria-label="Your booked call">
-          <h2 className="qh" style={{ marginTop: 0 }}>Your booked call</h2>
-          {mine.map((m) => (
-            <div key={m.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <div><strong translate="no">{full(m.starts_at)}</strong><br /><span className="when">{`With ${who}`}</span></div>
-              <div className="rs-actions" style={{ margin: 0 }}>
-                <RoomLink id={m.id} startsAt={m.starts_at} nowIso={nowIso} minutes={minutes} />
-                {new Date(m.starts_at).getTime() > new Date(nowIso).getTime() ? <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await cancelBooking(m.id); router.refresh(); })}>Cancel this call</button> : null}
+          {mine.map((m) => {
+            const p = m.person ? people[m.person] : undefined;
+            const name = p?.name ?? who;
+            return (
+              <div key={m.id} className="bk-booked">
+                <Avatar url={p?.avatar_url ?? null} initials={name.charAt(0).toUpperCase()} size={72} />
+                <div className="bk-booked-body">
+                  <h2 className="qh" style={{ margin: 0 }} translate="no">{`Congrats! Your call with ${name} is booked for ${full(m.starts_at)}.`}</h2>
+                  {p?.bio ? <p style={{ margin: "8px 0 0" }}><strong>{`A little about ${name.split(" ")[0]}: `}</strong><span translate="no">{p.bio}</span></p> : null}
+                  <div className="rs-actions" style={{ margin: "12px 0 0" }}>
+                    <RoomLink id={m.id} startsAt={m.starts_at} nowIso={nowIso} minutes={minutes} />
+                    {new Date(m.starts_at).getTime() > new Date(nowIso).getTime() ? <button type="button" className="btn small" disabled={pending} onClick={() => start(async () => { await cancelBooking(m.id); router.refresh(); })}>Cancel this call</button> : null}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
       ) : null}
       <section className="card-s" aria-label="Pick a time">
