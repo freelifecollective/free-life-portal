@@ -46,7 +46,7 @@ export function BookingPicker({ nowIso, slots, mine, who, minutes, withCloser }:
   });
 
   return (
-    <div className="stack" style={{ maxWidth: 860 }}>
+    <div className="stack" style={{ maxWidth: 1400 }}>
       {mine.length ? (
         <section className="card-s" aria-label="Your booked call">
           <h2 className="qh" style={{ marginTop: 0 }}>Your booked call</h2>
