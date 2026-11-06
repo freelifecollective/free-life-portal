@@ -106,7 +106,11 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
     if (!editing) return;
     const before = boards;
     start(async () => {
-      const r: Res = editing.id ? await updateCard(editing.id, vals) : await addCard(editing.listId, vals);
+      let r: Res = editing.id ? await updateCard(editing.id, vals) : await addCard(editing.listId, vals);
+      if (r.ok && editing.id) {
+        const was = boards.flatMap((b) => b.lists).find((l) => l.cards.some((x) => x.id === editing.id))?.id;
+        if (was && was !== editing.listId) r = await moveCard(editing.id, editing.listId, 99999);
+      }
       if (r.ok) { setPast((p) => [...p.slice(-39), before]); setFuture([]); apply(r); dlg.current?.close(); } else setError(r.error);
     });
   }
@@ -230,6 +234,18 @@ export function LeadBoard({ initial, initialTags }: { initial: Board[]; initialT
           <div className="field"><label htmlFor="lb-fb">Facebook name</label><input id="lb-fb" type="text" value={vals.facebook} maxLength={80} onChange={(e) => setVals({ ...vals, facebook: e.target.value })} /></div>
           <div className="field"><label htmlFor="lb-phone">Phone number</label><input id="lb-phone" type="text" value={vals.phone} maxLength={40} onChange={(e) => setVals({ ...vals, phone: e.target.value })} /></div>
         </div>
+        {editing?.id ? (
+          <div className="lb-grid2">
+            <div className="field"><label htmlFor="lb-board">Board</label>
+              <select id="lb-board" value={boards.find((b) => b.lists.some((l) => l.id === editing.listId))?.id ?? ""} onChange={(e) => { const b = boards.find((x) => x.id === e.target.value); if (b?.lists[0]) setEditing({ ...editing, listId: b.lists[0].id }); }}>
+                {boards.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select></div>
+            <div className="field"><label htmlFor="lb-list">List</label>
+              <select id="lb-list" value={editing.listId} onChange={(e) => setEditing({ ...editing, listId: e.target.value })}>
+                {(boards.find((b) => b.lists.some((l) => l.id === editing.listId))?.lists ?? []).map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select></div>
+          </div>
+        ) : null}
         <div className="field"><label htmlFor="lb-note">Notes</label><textarea id="lb-note" rows={3} maxLength={1000} value={vals.note} onChange={(e) => setVals({ ...vals, note: e.target.value })} /></div>
         <div className="lb-grid2">
           <div className="field"><label htmlFor="lb-fu">Next follow-up date</label><input id="lb-fu" type="date" value={vals.followUp} onChange={(e) => setVals({ ...vals, followUp: e.target.value })} /></div>

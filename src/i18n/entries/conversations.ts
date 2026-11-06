@@ -390,6 +390,7 @@ export const conversations: readonly Entry[] = [
   ["Add tag", "Añadir etiqueta", "Ajouter l'étiquette", "Aggiungi etichetta", "Tag hinzufügen"],
   ["Delete this lead?", "¿Eliminar este lead?", "Supprimer ce lead ?", "Eliminare questo lead?", "Diesen Lead löschen?"],
   ["You can bring them back with the undo arrow at the top.", "Puedes recuperarlo con la flecha de deshacer de arriba.", "Vous pouvez le récupérer avec la flèche d'annulation en haut.", "Puoi recuperarlo con la freccia annulla in alto.", "Mit dem Rückgängig-Pfeil oben kannst du ihn zurückholen."],
+  ["Board", "Tablero", "Tableau", "Bacheca", "Board"],
   ["Balanced", "Equilibrado", "Équilibré", "Bilanciato", "Ausgeglichen"],
   ["Add your first accounts", "Añade tus primeras cuentas", "Ajoute tes premiers comptes", "Aggiungi i tuoi primi account", "Füge deine ersten Konten hinzu"],
   ["Anyone with this link can look at this chart (they cannot change it). Stop sharing and the link stops working.", "Cualquiera con este enlace puede ver este gráfico (no puede cambiarlo). Deja de compartir y el enlace deja de funcionar.", "Toute personne avec ce lien peut voir ce graphique (sans pouvoir le modifier). Arrête le partage et le lien ne fonctionne plus.", "Chiunque abbia questo link può vedere questo grafico (senza modificarlo). Interrompi la condivisione e il link smette di funzionare.", "Jeder mit diesem Link kann dieses Diagramm ansehen (aber nicht ändern). Beende das Teilen und der Link funktioniert nicht mehr."],
