@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "./Avatar";
 
 /** Your picture at the top right. Click it for your settings and to sign out. */
-export function UserMenu({ url, initials, preview, label, showSubscription, showCloser }: { url: string | null; initials: string; preview: boolean; label: string; showSubscription: boolean; showCloser: boolean; }) {
+export function UserMenu({ url, initials, preview, label, showSubscription, showCloser, showPlans = false }: { url: string | null; initials: string; preview: boolean; label: string; showSubscription: boolean; showCloser: boolean; showPlans?: boolean; }) {
   const path = usePathname();
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === path; // changing page closes it
@@ -31,6 +31,7 @@ export function UserMenu({ url, initials, preview, label, showSubscription, show
       {open ? (
         <div className="user-pop" role="menu">
           <Link href="/settings" role="menuitem">Profile</Link>
+          {showPlans ? <Link href="/plans" role="menuitem">Choose Your Plan</Link> : null}
           {showCloser ? <Link href="/call-closer" role="menuitem">Call Closer</Link> : null}
           {showSubscription ? <Link href="/settings/subscription" role="menuitem">My Plan</Link> : null}
           <Link href="/settings/app" role="menuitem">Get the App</Link>
