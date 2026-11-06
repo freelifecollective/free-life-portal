@@ -2323,7 +2323,7 @@ html, body { max-width: 100%; overflow-x: clip; }
 .lk { position: relative; min-height: 70vh; }
 .lk-ghost { position: relative; filter: grayscale(1) blur(1.5px); opacity: .22; pointer-events: none; user-select: none; margin-top: 8px; }
 .lk-ghost.lk-live { filter: grayscale(1) blur(.6px) contrast(.7) brightness(1.15); opacity: .5; }
-.lk-ghost.lk-live::after { content: ""; position: absolute; inset: 0; background: rgba(246,245,241,.55); }
+.lk-ghost.lk-live::after { content: ""; position: absolute; inset: 0; background: rgba(246,245,241,.38); }
 .lk-bar { display: block; background: #8b847e; border-radius: 6px; max-width: 100%; }
 .lk-img { display: block; background: #b7b0a9; border-radius: 10px; width: 100%; aspect-ratio: 4 / 3; }
 .lk-img.lk-tall { aspect-ratio: 3 / 4; max-width: 280px; } .lk-img.lk-wide { aspect-ratio: 16 / 9; }
