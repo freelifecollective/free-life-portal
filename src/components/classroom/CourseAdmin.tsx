@@ -29,7 +29,7 @@ export function CourseList({ courses }: { courses: CourseRow[] }) {
       </form>
       {courses.map((c, i) => (
         <div key={c.id} className="card-s" style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>{c.cover_url ? <img src={c.cover_url} alt="" style={{ width: 64, height: 48, objectFit: "cover", borderRadius: 8 }} /> : null}<div><strong translate="no">{c.title}</strong> {!c.published ? <span className="tag">Draft</span> : null}<br /><span className="when">{`${c.lessons} lessons · ${c.audience === "everyone" ? "Everyone" : "Affiliates only"}`}</span></div></div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>{c.cover_url ? <img src={c.cover_url} alt="" style={{ width: 64, height: 48, objectFit: "cover", borderRadius: 8 }} /> : null}<div><strong translate="no">{c.title}</strong> {!c.published ? <span className="tag">Draft</span> : null}<br /><span className="when">{`${c.lessons} lessons · ${[c.for_members ?? true ? "FLC Members" : "", c.for_downline ? "Lacey's Downline" : "", c.for_leads ?? c.audience === "everyone" ? "Leads" : ""].filter(Boolean).join(" + ")}`}</span></div></div>
           <div className="rs-actions" style={{ marginTop: 0 }}>
             <button type="button" className="btn small" disabled={pending || i === 0} aria-label="Move up" onClick={() => start(async () => { await moveCourse(c.id, -1); router.refresh(); })}>↑</button>
             <button type="button" className="btn small" disabled={pending || i === courses.length - 1} aria-label="Move down" onClick={() => start(async () => { await moveCourse(c.id, 1); router.refresh(); })}>↓</button>
@@ -66,7 +66,7 @@ export function CourseEditor({ course, lessons }: { course: CourseRow; lessons: 
   const router = useRouter();
   const [title, setTitle] = useState(course.title);
   const [description, setDescription] = useState(course.description ?? "");
-  const [audience, setAudience] = useState<string>(course.audience);
+  const [who, setWho] = useState({ members: course.for_members ?? true, downline: course.for_downline ?? false, leads: course.for_leads ?? course.audience === "everyone" });
   const [published, setPublished] = useState(course.published);
   const [cover, setCover] = useState(course.cover_url ?? "");
   const [msg, setMsg] = useState("");
@@ -74,13 +74,16 @@ export function CourseEditor({ course, lessons }: { course: CourseRow; lessons: 
   const [pending, start] = useTransition();
   return (
     <div className="stack" style={{ maxWidth: 760 }}>
-      <form className="card-s set-form" onSubmit={(e) => { e.preventDefault(); start(async () => { setMsg(""); const r = await saveCourse({ id: course.id, title, description, audience, published, cover_url: cover }); setMsg(r.ok ? "Saved." : r.error); router.refresh(); }); }}>
+      <form className="card-s set-form" onSubmit={(e) => { e.preventDefault(); start(async () => { setMsg(""); const r = await saveCourse({ id: course.id, title, description, forMembers: who.members, forDownline: who.downline, forLeads: who.leads, published, cover_url: cover }); setMsg(r.ok ? "Saved." : r.error); router.refresh(); }); }}>
         <h2 className="qh" style={{ margin: 0 }}>Course details</h2>
         <div className="field"><label htmlFor="cd-title">Title</label><input id="cd-title" type="text" required maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
         <CourseCoverField idPrefix="cd" value={cover} onChange={setCover} />
         <div className="field"><label htmlFor="cd-desc">Description (optional)</label><textarea id="cd-desc" rows={3} maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-        <div className="field"><label htmlFor="cd-aud">Who can see it</label>
-          <select id="cd-aud" value={audience} onChange={(e) => setAudience(e.target.value)}><option value="affiliates">Affiliates only</option><option value="everyone">Everyone, including leads</option></select></div>
+        <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}><legend style={{ padding: 0, marginBottom: 6, fontWeight: 600 }}>Who can see it</legend>
+          {([["members", "FLC Members"], ["downline", "Lacey's Downline"], ["leads", "Leads"]] as const).map(([k, label]) => (
+            <label key={k} className="check" style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 4 }}><input type="checkbox" checked={who[k]} onChange={(e) => setWho({ ...who, [k]: e.target.checked })} /> <span>{label}</span></label>
+          ))}
+        </fieldset>
         <label className="check" style={{ display: "flex", gap: 10, alignItems: "center" }}><input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} /> <span>Show this course to members</span></label>
         <div className="set-actions"><button className="btn primary" type="submit" disabled={pending}>Save course</button><span role="status" className="when">{msg}</span></div>
       </form>
