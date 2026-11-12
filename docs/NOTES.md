@@ -1,8 +1,8 @@
 # Things to come back to
 
 ## Plans (the sales page, `src/lib/plans.ts`)
-- The three plans are **$47, $97 and $297 a month**. The names (Starter, Builder, Leader) and the little feature lists under each are **placeholders**: write the real features, and link each "Choose this plan" button to its sales page / checkout.
-- Checkout is not connected: the button only remembers that someone wants the plan (table `plan_interest`). A payment provider still has to be chosen.
+- The three plans are **$47, $97 and $297 a month** (Starter, Builder, Leader). Each card's "Choose this plan" opens that plan's sales page in place of the cards (`?plan=47|97|297`, so it can be linked to); "Take me back to the other plans" brings the cards back. All the words live in `src/lib/plans.ts`.
+- Checkout is not connected: the "Join" button on a sales page only remembers that someone wants the plan (table `plan_interest`). The payment processor is **Payarc**; connecting it is the next step.
 - Plan counts and the "just purchased" bubble use real data. An admin sets a member's plan on Members and Leads → Current members.
 
 ## White-label plan ($297), parked
