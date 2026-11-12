@@ -16,6 +16,14 @@ export type Profile = {
   role: Role;
   onboarded_at: string | null;
   removed_at?: string | null;
+  /** paid plan tier (47, 97 or 297), null when not paying */
+  plan?: number | null;
+  /** joined at the $33 founders price */
+  founder?: boolean;
+  /** when the founders price ended (missed payments or cancelling) */
+  founder_lost_at?: string | null;
+  /** part of Lacey's Downline */
+  lacey_downline?: boolean;
 };
 
 export type AppSession = {

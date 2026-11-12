@@ -75,3 +75,13 @@ export async function setPlan(id: string, plan: string): Promise<{ ok: boolean }
   revalidatePath("/admin/people"); revalidatePath("/plans");
   return { ok: !error };
 }
+
+/** The founders price ($33 Starter) and the Lacey's Downline mark, set by hand until Payarc does it. */
+export async function setPlanFlag(id: string, flag: "founder" | "lacey_downline", on: boolean): Promise<{ ok: boolean }> {
+  const { supabase } = await requireAdmin();
+  if (!UUID.test(id) || (flag !== "founder" && flag !== "lacey_downline")) return { ok: false };
+  const change = flag === "founder" ? { founder: on, founder_lost_at: null } : { lacey_downline: on };
+  const { error } = await supabase.from("profiles").update(change).eq("id", id);
+  revalidatePath("/admin/people"); revalidatePath("/plans");
+  return { ok: !error };
+}
