@@ -13,6 +13,7 @@ import { isAffiliate } from "@/lib/roles";
 export const instant = false;
 export const metadata = { title: "Landing Page" };
 
+type Coach = { coach_first_name: string | null; coach_last_name: string | null };
 type Mine = { copy: LandingCopy | null; video_url: string | null; poster_url: string | null; video_choice: "standard" | "coach" };
 
 export default async function LandingPageTab() {
@@ -22,14 +23,14 @@ export default async function LandingPageTab() {
   const builder = planAtLeast(session.profile, 97);
 
   let mine: Mine | null = null;
-  let coach: { coach_first_name: string | null; coach_last_name: string | null } | null = null;
+  let coach: Coach | null = null;
   if (supabase) {
     const [{ data: row }, { data: c }] = await Promise.all([
       supabase.from("landing_pages").select("copy, video_url, poster_url, video_choice").eq("member_id", session.user.id).maybeSingle<Mine>(),
       builder ? Promise.resolve({ data: null }) : supabase.rpc("my_coach_video"),
     ]);
     mine = row ?? null;
-    coach = (c as typeof coach) ?? null;
+    coach = (c as Coach | null) ?? null;
   }
   const coachName = coach ? [coach.coach_first_name, coach.coach_last_name].filter(Boolean).join(" ") : "";
 
