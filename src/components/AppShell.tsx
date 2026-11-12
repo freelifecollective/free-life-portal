@@ -19,7 +19,7 @@ import { UserMenu } from "./UserMenu";
 import { ProfilePopupProvider } from "./people/ProfilePopup";
 import { isAffiliate } from "@/lib/roles";
 
-type NavItem = { label: string; href?: string; min: Role; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean; downline?: boolean; downlineOnly?: boolean; caption?: boolean };
+type NavItem = { label: string; href?: string; min: Role; plan?: number; belowPlan?: number; admin?: boolean; heading?: boolean; group?: string; leadOnly?: boolean; closerOnly?: boolean; downline?: boolean; downlineOnly?: boolean; caption?: boolean };
 
 /** Items without a link are built in a later phase and show as "Soon". */
 const NAV: NavItem[] = [
@@ -61,7 +61,8 @@ const NAV: NavItem[] = [
   { label: "Pictures/Videos", href: "/advertising/pictures-videos", min: "member", group: "Advertising" },
   { label: "Canva Templates", href: "/advertising/canva-templates", min: "member", group: "Advertising" },
   { label: "Evidence Manual", href: "/advertising/evidence-manual", min: "member", group: "Advertising" },
-  { label: "Landing Page", href: "/advertising/landing-page", min: "member", group: "Advertising" },
+  { label: "Landing Page", href: "/advertising/landing-page", min: "member", group: "Advertising", belowPlan: 97 },
+  { label: "Funnels", href: "/advertising/funnels", min: "member", group: "Advertising", plan: 97 },
   { label: "Admin Only", min: "admin", admin: true, caption: true },
   { label: "Members and Leads", min: "admin", admin: true, heading: true, group: "Members and Leads" },
   { label: "Members, Leads and Invites", href: "/admin/people", min: "admin", admin: true, group: "Members and Leads" },
@@ -144,7 +145,9 @@ export function AppShell({ session, badges = {}, unread = 0, showTour = false, b
             const downline = p.role === "downline";
             /* leads see Financing Options, Calendar and Calls as single tabs in the A to Z list; the downline sees Calendar, Calls and the Water Share Map on their own too. This happens before the sections are built, so no empty "FLC Calls" section is left behind. */
             const single = (n: NavItem) => (p.role === "lead" && ["Financing Options", "Calendar", "Calls"].includes(n.label)) || (downline && ["Calendar", "Calls", "Water Share Map"].includes(n.label));
-            const mine = NAV.filter((n) => downline ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))
+            /* Builder and Leader see Funnels in place of Landing Page (admins see both) */
+            const onPlan = (n: NavItem) => p.role === "admin" || ((!n.plan || (p.plan ?? 0) >= n.plan) && (!n.belowPlan || (p.plan ?? 0) < n.belowPlan));
+            const mine = NAV.filter(onPlan).filter((n) => downline ? !n.admin && !n.leadOnly && !n.closerOnly : canSee(p.role, n.min) && !n.downlineOnly && (!n.leadOnly || p.role === "lead") && (!n.closerOnly || !!p.call_closer))
               .map((n) => (single(n) ? { ...n, group: undefined } : n));
             return ordered(mine, downline, p.role === "lead").map((n) => ({ label: n.label, href: n.href, heading: n.heading, group: n.group, caption: n.caption, locked: downline && !n.heading && !n.caption && !n.downline && !canSee(p.role, n.min), badge: n.href ? badges[n.href] : undefined, live: liveNow && n.href === "/calls" }));
           })()} />
