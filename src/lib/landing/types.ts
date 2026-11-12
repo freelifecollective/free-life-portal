@@ -1,3 +1,5 @@
+import type { LandingCopy } from "@/components/landing/content";
+
 /** The shared goal for registrations to the next call, across every member's page. */
 export const REGISTRATION_GOAL = 500;
 
@@ -10,6 +12,12 @@ export type PublicLanding = {
   instagram: string | null;
   facebook: string | null;
   theme: "light" | "dark";
+  /** Builder and Leader only: their own words (any left out use the standard ones) */
+  copy?: LandingCopy | null;
+  /** the video to show: their own (Builder), their coach's (if chosen), or null for the standard one */
+  video_url?: string | null;
+  /** Builder and Leader only: their own picture on the video */
+  poster_url?: string | null;
 };
 
 export type PublicCall = {
