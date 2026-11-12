@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { createCourse, deleteCourse, saveCourse, saveLessons, type LessonInput } from "@/app/(app)/my-courses/actions";
@@ -49,7 +50,7 @@ export function CourseBuilder({ course, lessons: initial, userId, username }: { 
   return (
     <div className="mc">
       <div className="mc-top">
-        <a className="linkbtn" href="/my-courses">← My Courses</a>
+        <Link className="linkbtn" href="/my-courses">← My Courses</Link>
         <div className="mv-actions">
           {course.published && username ? <a className="btn small" href={`/c/${username}/${course.slug}`} target="_blank" rel="noopener noreferrer">Open the course page</a> : null}
           <button type="button" className="btn primary" disabled={pending} onClick={save}>Save course</button>
