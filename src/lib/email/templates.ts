@@ -5,11 +5,11 @@ type Ctx = { siteUrl: string; unsubscribeUrl: string | null };
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-function shell(title: string, paras: string[], cta: { label: string; url: string } | null, ctx: Ctx): Rendered {
+function shell(title: string, paras: string[], cta: { label: string; url: string } | null, ctx: Ctx, reason = "you registered for a call with the Free Life Collective"): Rendered {
   const body = paras.map((p) => `<p style="margin:0 0 16px;line-height:1.55">${esc(p)}</p>`).join("");
   const button = cta ? `<p style="margin:24px 0"><a href="${esc(cta.url)}" style="background:#AB9080;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:700;display:inline-block">${esc(cta.label)}</a></p>` : "";
   const foot = ctx.unsubscribeUrl
-    ? `<p style="margin:32px 0 0;font-size:12px;color:#756A64">You are getting this because you registered for a call with the Free Life Collective. <a href="${esc(ctx.unsubscribeUrl)}" style="color:#756A64">Unsubscribe</a></p>`
+    ? `<p style="margin:32px 0 0;font-size:12px;color:#756A64">You are getting this because ${esc(reason)}. <a href="${esc(ctx.unsubscribeUrl)}" style="color:#756A64">Unsubscribe</a></p>`
     : `<p style="margin:32px 0 0;font-size:12px;color:#756A64">Free Life Collective</p>`;
   const html = `<!doctype html><html><body style="margin:0;background:#F6F5F1;font-family:Helvetica,Arial,sans-serif;color:#2B2522"><div style="max-width:560px;margin:0 auto;padding:32px 20px"><h1 style="font-family:Georgia,serif;font-weight:400;font-size:26px;margin:0 0 20px">${esc(title)}</h1>${body}${button}${foot}</div></body></html>`;
   const text = [title, "", ...paras, ...(cta ? ["", `${cta.label}: ${cta.url}`] : []), "", ctx.unsubscribeUrl ? `Unsubscribe: ${ctx.unsubscribeUrl}` : "Free Life Collective"].join("\n");
@@ -39,6 +39,15 @@ export function renderEmail(template: string, payload: Record<string, unknown>, 
       const token = typeof payload.token === "string" && /^[0-9a-f]{20,64}$/.test(payload.token) ? payload.token : "";
       if (!token) return null;
       return shell(`${name}, here is your quote`, [`Hi ${name}, ${from} put together a quote for you.`, "Tap the button to see it. You can save the picture or share the link with anyone you like."], { label: "See your quote", url: `${ctx.siteUrl}/q/${token}` }, ctx);
+    }
+    case "member_message": {
+      /* written by a Builder or Leader member for people who filled in a form on their funnel */
+      const subject = typeof payload.subject === "string" ? payload.subject.trim().slice(0, 200) : "";
+      const body = typeof payload.body === "string" ? payload.body.slice(0, 10000) : "";
+      if (!subject || !body.trim()) return null;
+      const from = typeof payload.from_name === "string" && payload.from_name.trim() ? payload.from_name.trim() : "someone you met online";
+      const paras = body.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+      return shell(subject, paras, null, ctx, `you signed up on a page by ${from}`);
     }
     default:
       return null;

@@ -16,6 +16,9 @@
 - Editor: `/advertising/funnels/<id>`. Click to choose, drag elements between columns, settings on the right (content and look: padding, margin, fonts, sizes, colours, corners, border, shadow, background picture), computer/phone preview, undo/redo, saves itself a moment after each change.
 - Live pages: `/f/<username>/<funnel>/<step>` (first step when none is named). They go offline if the owner moves below Builder. Form sign-ups land in `funnel_submissions` and show under Forms.
 - Later: inline text editing on the canvas, more elements (countdown, testimonials), a spam limit on form sign-ups.
+- Emails and texts (Funnels → Emails): members start from ready-made ones (`src/lib/messages/defaults.ts`) or write their own. `{first_name}`, `{last_name}`, `{email}` are filled in when sent.
+- Automations (Funnels → Automations): when a form on a funnel (or any funnel) is filled in, the database lines up each step: emails into `email_outbox` (template `member_message`, sent by the existing drain once the email service is on), texts into `sms_outbox` (no sender yet: connect Telnyx). Wallet charges for each email/text are not in yet.
+- The existing email sender uses Resend. Amazon SES is about ten times cheaper per email if member automations get busy; switching is a small change in `src/lib/email/send.ts`.
 
 ## White-label plan ($297), parked
 - Each $297 customer gets a completely separate portal (own leads and members, members named something other than "FLC Members", their own name instead of "Lacey's Downline", which is optional).
