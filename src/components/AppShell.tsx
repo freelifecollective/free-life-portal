@@ -32,6 +32,7 @@ const NAV: NavItem[] = [
   { label: "Verbiage + Objections", href: "/responses", min: "member", group: "Placing Sales" },
   { label: "Courses", href: "/classroom", min: "member", group: "Courses" },
   { label: "Business Launch Course", href: "/business-launch", min: "member", group: "Courses" },
+  { label: "My Courses", href: "/my-courses", min: "member", group: "Courses", plan: 97 },
   { label: "Courses", min: "member", heading: true, group: "Courses" },
   { label: "Calls", href: "/calls", min: "lead", downline: true, group: "FLC Calls" },
   { label: "FLC Calls", min: "lead", downline: true, heading: true, group: "FLC Calls" },

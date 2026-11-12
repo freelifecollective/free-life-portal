@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { SUPABASE_URL } from "@/lib/env";
+import { shrinkImage } from "@/lib/images/shrink";
 import { toEmbedUrl } from "@/lib/landing/video";
 import { createClient } from "@/lib/supabase/client";
 import { ELEMENT_LABELS, FIELD_LABELS, FONTS, type El, type FormField, type PageSettings, type Style } from "@/lib/funnels/types";
@@ -58,17 +59,11 @@ function Select<T extends string>({ label, value, options, onChange, empty = "De
   );
 }
 
-/** Upload a picture (shrunk to at most 2000px) to the member's own folder and hand back its address. */
+/** Upload a picture (shrunk to fit) to the member's own folder and hand back its address. */
 async function upload(userId: string, file: File): Promise<string> {
-  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
-  const k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
-  const c = document.createElement("canvas");
-  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
-  c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
-  const png = file.type === "image/png";
-  const blob = await new Promise<Blob>((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("export"))), png ? "image/png" : "image/jpeg", 0.88));
-  const path = `${userId}/funnels/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${png ? "png" : "jpg"}`;
-  const { error } = await createClient().storage.from("landing").upload(path, blob, { contentType: png ? "image/png" : "image/jpeg", cacheControl: "31536000" });
+  const { blob, ext, type } = await shrinkImage(file);
+  const path = `${userId}/funnels/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+  const { error } = await createClient().storage.from("landing").upload(path, blob, { contentType: type, cacheControl: "31536000" });
   if (error) throw error;
   return `${SUPABASE_URL}/storage/v1/object/public/landing/${path}`;
 }

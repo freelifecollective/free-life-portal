@@ -20,6 +20,11 @@
 - Automations (Funnels → Automations): when a form on a funnel (or any funnel) is filled in, the database lines up each step: emails into `email_outbox` (template `member_message`, sent by the existing drain once the email service is on), texts into `sms_outbox` (no sender yet: connect Telnyx). Wallet charges for each email/text are not in yet.
 - The existing email sender uses Resend. Amazon SES is about ten times cheaper per email if member automations get busy; switching is a small change in `src/lib/email/send.ts`.
 
+## My Courses (Builder and Leader)
+- Courses → My Courses: members build their own courses (details, cover, price and currency, lessons with Vimeo/YouTube video and notes, free-preview lessons) to sell outside of Enagic. Separate from the FLC courses (`member_courses`, `member_lessons`).
+- Public course page: `/c/<username>/<course>` (published only, owner on Builder/Leader). Paid lessons show only their titles.
+- Still to build: connecting the member's own Stripe or PayPal (Stripe Connect / PayPal partner onboarding), checkout, and enrolled students watching the lessons.
+
 ## White-label plan ($297), parked
 - Each $297 customer gets a completely separate portal (own leads and members, members named something other than "FLC Members", their own name instead of "Lacey's Downline", which is optional).
 - First login after paying walks them through: platform name, logo, brand colours and everything else needed to white-label it; a few things stay fixed (some things they cannot change or download).

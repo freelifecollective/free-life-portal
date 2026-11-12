@@ -2,7 +2,7 @@
 
 /** Keep in sync with `reserved_usernames` in supabase/migrations (a test checks this). */
 export const RESERVED_USERNAMES = [
-  "admin", "login", "api", "support", "settings", "root", "help", "portal", "community",
+  "admin", "login", "api", "support", "settings", "root", "help", "portal", "community", "my-courses", "funnels",
   "calendar", "classroom", "profile", "dashboard", "team", "calls", "documents", "search",
   "welcome", "auth", "logout", "signup", "channels", "courses", "recordings", "buddy",
   "calculator", "graphics", "messages", "notifications", "onboarding", "privacy", "terms",
