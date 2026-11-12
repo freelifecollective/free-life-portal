@@ -2319,6 +2319,23 @@ html, body { max-width: 100%; overflow-x: clip; }
 @keyframes pl-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pl-bubble { animation: none; } }
 
+/* Landing Page tab: Builder's own words, video and picture; the coach-video switch for everyone else */
+.lpc { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 18px; max-width: 1020px; margin: 0 0 18px; align-items: start; }
+.lpc-card { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin: 0; }
+.lpc-h { margin: 0 0 4px; font-size: 22px; }
+.lpc-h3 { margin: 18px 0 8px; font-size: 16px; }
+.lpc-form { display: grid; gap: 12px; margin-top: 12px; }
+.lpc-form textarea { width: 100%; resize: vertical; }
+.lpc-form input[type=text], .lpc-form textarea { box-sizing: border-box; max-width: 100%; }
+.lpc-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.lpc-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+.lpc-row input[type=url] { flex: 1; min-width: 220px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; }
+.lpc-poster { width: 220px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+.lpc-poster-actions { display: grid; gap: 8px; justify-items: start; }
+.lpc-choice { max-width: 1020px; margin-bottom: 14px; display: grid; gap: 10px; }
+.lpc-radio { display: flex; gap: 10px; align-items: center; font-size: 16px; cursor: pointer; }
+.lpc-upsell { margin: 0 0 14px; color: var(--muted); }
+
 /* A plan's sales page, shown in place of the three cards */
 .ps { max-width: 1020px; display: grid; gap: 28px; animation: pl-in .3s ease; }
 .ps-back { justify-self: start; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 6px 2px; font: inherit; font-weight: 700; color: var(--accent-deep); cursor: pointer; }

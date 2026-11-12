@@ -21,6 +21,7 @@
 ## Other parked items
 - Payment provider choice, email service and domain setup, Google credentials (calendar), native-speaker check of the translations.
 - Landing page: the video address, the background photo, and the footer link addresses (Terms of Use, Privacy Policy, Earnings Disclaimer).
+- Landing page choices (Landing Page tab): Builder/Leader change the words (`COPY_FIELDS` in `components/landing/content.ts`), their video (Vimeo or YouTube link) and the picture on the video. $33/$47 get a switch between the standard video and their coach's video, shown only when the coach is on Builder/Leader and has their own video. If someone moves down from Builder, their own words, video and picture stop showing (they are kept). A completely different design comes with Funnels.
 - Create a Quote: prices for every country other than the United States.
 - Know Your Numbers: decide what else to show.
 

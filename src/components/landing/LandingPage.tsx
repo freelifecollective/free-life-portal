@@ -11,7 +11,7 @@ import { OwnerTools } from "./OwnerTools";
 import { SocialButtons } from "./SocialButtons";
 import { HeroVideo } from "./HeroVideo";
 import { Marquee } from "./Marquee";
-import { LANDING as T } from "./content";
+import { LANDING as T, wordsFor } from "./content";
 import { LanguagePicker } from "@/components/LanguagePicker";
 
 type Owner = { userId: string; hasPagePhoto: boolean } | null;
@@ -20,22 +20,25 @@ type Owner = { userId: string; hasPagePhoto: boolean } | null;
 export function LandingPage({ page, call, owner }: { page: PublicLanding; call: PublicCall | null; owner: Owner }) {
   const name = [page.first_name, page.last_name].filter(Boolean).join(" ");
   const initials = (page.first_name.charAt(0) + (page.last_name ?? "").charAt(0)).toUpperCase();
+  const w = wordsFor(page.copy);
+  /* the member's own words are theirs: the page's translator leaves them as they wrote them */
+  const own = (k: keyof NonNullable<PublicLanding["copy"]>) => (page.copy?.[k]?.trim() ? { translate: "no" as const } : {});
   return (
     <div className="lpn">
       <LandingTracker username={page.username} skip={owner !== null} />
 
       <section className="lpn-hero">
         <div className="lpn-hero-in">
-          <p className="lpn-eyebrow">{T.hero.eyebrow}</p>
-          <h1 className="lpn-h1">{T.hero.title1}<br /><em>{T.hero.title2}</em></h1>
-          <p className="lpn-sub">{T.hero.sub}</p>
-          <HeroVideo>
+          <p className="lpn-eyebrow" {...own("eyebrow")}>{w.eyebrow}</p>
+          <h1 className="lpn-h1"><span {...own("title1")}>{w.title1}</span><br /><em {...own("title2")}>{w.title2}</em></h1>
+          <p className="lpn-sub" {...own("sub")}>{w.sub}</p>
+          <HeroVideo videoUrl={page.video_url || T.videoEmbedUrl || null} poster={page.poster_url ?? null} cta={w.cta} joinTitle={w.join_title}>
             {call ? (
               <>
                 <p className="lp-call-title"><UserText text={call.title} publicCall={{ id: call.id, field: "title" }} /></p>
                 <p className="lp-call-time">{formatInZone(new Date(call.starts_at))} · {callLength(call)} <LocalTime iso={call.starts_at} /></p>
                 {call.speakers?.length ? <div style={{ margin: "4px 0 12px" }}><SpeakerBubbles speakers={call.speakers} /></div> : null}
-                <p className="lp-sub" style={{ margin: "10px 0 16px" }}>{T.join.sub}</p>
+                <p className="lp-sub" style={{ margin: "10px 0 16px" }} {...own("join_sub")}>{w.join_sub}</p>
                 <LandingRegister username={page.username} callId={call.id} />
               </>
             ) : <p className="lp-lead">Our next call is being scheduled. Check back soon.</p>}
