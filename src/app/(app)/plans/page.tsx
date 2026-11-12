@@ -1,7 +1,7 @@
 import { PageHeading } from "@/components/PageHeading";
 import { PlansView, type Bubble } from "@/components/plans/PlansView";
 import { requireMember } from "@/lib/auth/guards";
-import { isPlanTier } from "@/lib/plans";
+import { hasFounderPrice, isPlanTier } from "@/lib/plans";
 
 export const instant = false;
 export const metadata = { title: "Choose Your Plan" };
@@ -19,7 +19,7 @@ export default async function PlansPage() {
   return (
     <>
       <PageHeading lede="Become a paying member and unlock everything: pick the plan that fits you. You can change it later.">Choose Your Plan</PageHeading>
-      <PlansView counts={byTier} bubbles={bubbles} mine={mine} />
+      <PlansView counts={byTier} bubbles={bubbles} mine={mine} founder={hasFounderPrice(session.profile)} />
     </>
   );
 }

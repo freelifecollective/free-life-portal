@@ -4,6 +4,8 @@ import { plansBelow, type Plan } from "@/lib/plans";
 
 type Props = {
   plan: Plan;
+  /** what this person pays: $33 for founders on Starter */
+  price: number;
   count: number;
   mine: boolean;
   thanks: boolean;
@@ -13,7 +15,7 @@ type Props = {
 };
 
 /** The sales page for one plan. It replaces the three plan cards until "Take me back to the other plans" is pressed. */
-export function PlanSales({ plan, count, mine, thanks, pending, onBack, onChoose }: Props) {
+export function PlanSales({ plan, price, count, mine, thanks, pending, onBack, onChoose }: Props) {
   const below = plansBelow(plan.tier);
   const prev = below[below.length - 1];
 
@@ -22,7 +24,7 @@ export function PlanSales({ plan, count, mine, thanks, pending, onBack, onChoose
   ) : thanks ? (
     <p className="pl-yours" role="status">Thank you! Checkout is opening soon. We have noted that you want this plan.</p>
   ) : (
-    <button type="button" className="btn primary ps-cta" disabled={pending} onClick={onChoose}>{`Join ${plan.name} for $${plan.tier}/month`}</button>
+    <button type="button" className="btn primary ps-cta" disabled={pending} onClick={onChoose}>{`Join ${plan.name} for $${price}/month`}</button>
   );
 
   return (
@@ -37,7 +39,8 @@ export function PlanSales({ plan, count, mine, thanks, pending, onBack, onChoose
         <h2 className="qh ps-headline">{plan.headline}</h2>
         <p className="ps-pitch">{plan.pitch}</p>
         <div className="ps-buy">
-          <p className="pl-price"><b>${plan.tier}</b><span>/month</span></p>
+          <p className="pl-price"><b>${price}</b><span>/month</span>{price !== plan.tier ? <s className="pl-was">${plan.tier}</s> : null}</p>
+          {price !== plan.tier ? <p className="pl-founder">Your founders price</p> : null}
           <p className="pl-count">{count === 1 ? "1 paying member on this plan" : `${count} paying members on this plan`}</p>
           {action}
         </div>
@@ -72,7 +75,7 @@ export function PlanSales({ plan, count, mine, thanks, pending, onBack, onChoose
 
       <section className="ps-final">
         <h3 className="qh">{`Ready to start with ${plan.name}?`}</h3>
-        <p className="pl-price"><b>${plan.tier}</b><span>/month</span></p>
+        <p className="pl-price"><b>${price}</b><span>/month</span>{price !== plan.tier ? <s className="pl-was">${plan.tier}</s> : null}</p>
         <p className="when">You can change your plan later.</p>
         {action}
       </section>

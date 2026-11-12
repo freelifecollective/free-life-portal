@@ -6,6 +6,7 @@ import { createClient, previewMemberId } from "@/lib/supabase/server";
 import type { AppSession } from "@/lib/profile/types";
 import { previewStore } from "@/lib/locked/preview";
 import { previewLandingUsername } from "@/lib/locked/account";
+import { planAtLeast, type PlanTier } from "@/lib/plans";
 
 export type SignedIn = { session: AppSession; supabase: SupabaseClient };
 
@@ -20,6 +21,14 @@ export async function requireMember(): Promise<{ session: AppSession; supabase: 
   const pid = previewing ? await previewMemberId() : null;
   const session = previewing ? { ...real, user: pid ? { ...real.user, id: pid } : real.user, profile: { ...real.profile, id: pid ?? real.profile.id, role: "member" as const, username: (await previewLandingUsername()) ?? real.profile.username } } : real;
   return { session, supabase: session.mode === "supabase" ? await createClient() : null };
+}
+
+/** A member on this plan or a higher one (admins always). Anyone else is sent to the sales page for that plan. */
+export async function requirePlan(min: PlanTier): Promise<SignedIn> {
+  const { session, supabase } = await requireMember();
+  if (!supabase) redirect("/");
+  if (!planAtLeast(session.profile, min)) redirect(`/plans?plan=${min}`);
+  return { session, supabase };
 }
 
 /** An admin. Anyone else is sent home. The database enforces the same rule, this just keeps the pages tidy. */

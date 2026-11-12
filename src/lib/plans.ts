@@ -93,5 +93,19 @@ export const PLANS: Plan[] = [
   },
 ];
 
+/** The founders price for Starter, kept for life while payments continue. */
+export const FOUNDER_PRICE = 33;
+
+type PlanHolder = { role?: string; plan?: number | null; founder?: boolean; founder_lost_at?: string | null };
+
+/** Does this person still have the founders price? */
+export const hasFounderPrice = (p: PlanHolder | null | undefined) => !!p?.founder && !p.founder_lost_at;
+
+/** What this person pays (or would pay) for a plan: Starter is $33 for founders, everything else is the list price. */
+export const priceFor = (tier: PlanTier, p: PlanHolder | null | undefined) => (tier === 47 && hasFounderPrice(p) ? FOUNDER_PRICE : tier);
+
+/** Is this person on this plan or a higher one? Admins always are. The database checks the same with plan_at_least(). */
+export const planAtLeast = (p: PlanHolder | null | undefined, min: PlanTier) => p?.role === "admin" || (p?.plan ?? 0) >= min;
+
 /** Every plan below this one, cheapest first: what "Everything in ..." stands for. */
 export const plansBelow = (tier: PlanTier) => PLANS.filter((p) => p.tier < tier);

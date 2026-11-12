@@ -4,6 +4,11 @@
 - The three plans are **$47, $97 and $297 a month** (Starter, Builder, Leader). Each card's "Choose this plan" opens that plan's sales page in place of the cards (`?plan=47|97|297`, so it can be linked to); "Take me back to the other plans" brings the cards back. All the words live in `src/lib/plans.ts`.
 - Checkout is not connected: the "Join" button on a sales page only remembers that someone wants the plan (table `plan_interest`). The payment processor is **Payarc**; connecting it is the next step.
 - Plan counts and the "just purchased" bubble use real data. An admin sets a member's plan on Members and Leads → Current members.
+- **Seven plans**: $33 founders (Starter), and $47 / $97 / $297, each for Lacey's Downline or for people outside it. `profiles.plan` is the tier; `profiles.founder`, `founder_lost_at` and `lacey_downline` say which version. Admins set them by hand (Plan column) until Payarc does it.
+- Founders rules (for the Payarc work): $33 for life while payments continue; two missed payments in a row moves the next payment to $47 for good (set `founder_lost_at`); upgrading then downgrading keeps $33; cancelling and rejoining starts at $47.
+- **Plan access**: Builder ($97) and Leader ($297) pages use `requirePlan(97)` / `requirePlan(297)` (sends others to that plan's sales page); database rules use `plan_at_least(97)`. Existing pages are not limited by plan yet: decide what members without a plan keep before launch.
+- Still to decide: what differs between the Lacey's Downline and outside version of each plan; whether $297 gets any Free Life AI allowance.
+- Wallet (Builder and Leader only): texts, emails and AI beyond the allowance. Top-ups charge the card on file. $97: the platform pays the card fee. $297: the card fee comes out of the top-up and they get no AI allowance from the platform (to confirm).
 
 ## White-label plan ($297), parked
 - Each $297 customer gets a completely separate portal (own leads and members, members named something other than "FLC Members", their own name instead of "Lacey's Downline", which is optional).
