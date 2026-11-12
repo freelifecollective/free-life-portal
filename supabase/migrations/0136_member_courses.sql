@@ -65,3 +65,6 @@ as $$
 $$;
 revoke all on function public.public_member_course(text, text) from public;
 grant execute on function public.public_member_course(text, text) to anon, authenticated;
+
+-- the portal's own pages for funnels and courses can never be someone's username
+insert into public.reserved_usernames (username) values ('my-courses'), ('funnels') on conflict do nothing;
