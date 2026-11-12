@@ -10,6 +10,13 @@
 - Still to decide: what differs between the Lacey's Downline and outside version of each plan; whether $297 gets any Free Life AI allowance.
 - Wallet (Builder and Leader only): texts, emails and AI beyond the allowance. Top-ups charge the card on file. $97: the platform pays the card fee. $297: the card fee comes out of the top-up and they get no AI allowance from the platform (to confirm).
 
+## Funnels (Builder and Leader)
+- Advertising → Funnels replaces Landing Page for Builder/Leader (admins see both). Bubbles at the top: Funnels, Forms, Automations, Emails.
+- A page is sections → rows (1–4 columns) → elements (headline, sub-headline, paragraph, image, video, button, form, bullet list, divider, spacer), kept as JSON per step (`src/lib/funnels/types.ts`). Every save goes through `sanitizePage` (known keys only, colours/links/sizes checked, no HTML).
+- Editor: `/advertising/funnels/<id>`. Click to choose, drag elements between columns, settings on the right (content and look: padding, margin, fonts, sizes, colours, corners, border, shadow, background picture), computer/phone preview, undo/redo, saves itself a moment after each change.
+- Live pages: `/f/<username>/<funnel>/<step>` (first step when none is named). They go offline if the owner moves below Builder. Form sign-ups land in `funnel_submissions` and show under Forms.
+- Later: inline text editing on the canvas, more elements (countdown, testimonials), a spam limit on form sign-ups.
+
 ## White-label plan ($297), parked
 - Each $297 customer gets a completely separate portal (own leads and members, members named something other than "FLC Members", their own name instead of "Lacey's Downline", which is optional).
 - First login after paying walks them through: platform name, logo, brand colours and everything else needed to white-label it; a few things stay fixed (some things they cannot change or download).
